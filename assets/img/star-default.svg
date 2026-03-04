@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Fondo oscuro -->
+  <rect width="200" height="200" fill="#1A1A1A"/>
+  <!-- Silueta (figura gen�rica) -->
+  <ellipse cx="100" cy="72" rx="32" ry="28" fill="#2d2d2d"/>
+  <path d="M68 100 Q68 140 100 180 Q132 140 132 100 L132 92 L68 92 Z" fill="#2d2d2d"/>
+  <!-- Escudo / murci�lago Valencia (simplificado) -->
+  <g transform="translate(100,95) scale(0.5)">
+    <path d="M0 -40 L25 20 L0 35 L-25 20 Z" fill="#FF6600" stroke="#fff" stroke-width="2"/>
+    <path d="M-8 0 L8 0 M0 -8 L0 8" stroke="#fff" stroke-width="2"/>
+  </g>
+</svg>

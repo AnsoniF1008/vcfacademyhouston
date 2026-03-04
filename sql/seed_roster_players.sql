@@ -1,0 +1,20 @@
+-- Seed 18 players into roster (categoria_id 3 = U10)
+INSERT INTO roster (nombre, apellido, dorsal, posicion, foto_url, categoria_id, activo) VALUES
+('Tiziano', 'Barrio', NULL, 'Mediocampista', NULL, 3, 1),
+('Vicente', 'Ortegano Bracho', NULL, 'Portero', NULL, 3, 1),
+('Alexander', 'Morejon', NULL, 'Delantero', NULL, 3, 1),
+('Juan', 'Morales', NULL, 'Mediocampista', NULL, 3, 1),
+('Alessandro', 'Montilla Mejilla', NULL, 'Defensa', NULL, 3, 1),
+('Mateo', 'Mata Altuve', NULL, 'Mediocampista', NULL, 3, 1),
+('Juan', 'Lopez Rincon', NULL, 'Defensa', NULL, 3, 1),
+('Antoine', 'Haddad', NULL, 'Defensa', NULL, 3, 1),
+('Miguel', 'Gonzalez Gonzalez', NULL, 'Mediocampista', NULL, 3, 1),
+('Jayden', 'Gomez', NULL, 'Mediocampista', NULL, 3, 1),
+('Leonardo', 'Garcia Fuenmayor', NULL, 'Delantero', NULL, 3, 1),
+('Jacob', 'Diaz', NULL, 'Mediocampista', NULL, 3, 1),
+('Sebastian', 'Brito-Stirpe', NULL, 'Defensa', NULL, 3, 1),
+('Mateo', 'Briceno Diaz', NULL, 'Delantero', NULL, 3, 1),
+('Rodrigo', 'Bermudez Portillo', NULL, 'Portero', NULL, 3, 1),
+('Fabian', 'Perez Marcano', NULL, 'Delantero', NULL, 3, 1),
+('Santiago', 'Yepez Moreno', NULL, 'Mediocampista', NULL, 3, 1),
+('Justin', 'Flores', NULL, 'Defensa', NULL, 3, 1);

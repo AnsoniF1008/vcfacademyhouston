@@ -1,0 +1,24 @@
+-- Player card: stats, radar skills, and link MOTM winner to roster
+ALTER TABLE motm_nominees ADD COLUMN roster_id INT UNSIGNED NULL AFTER orden;
+ALTER TABLE motm_nominees ADD FOREIGN KEY (roster_id) REFERENCES roster(id) ON DELETE SET NULL;
+
+CREATE TABLE IF NOT EXISTS roster_estadisticas (
+    roster_id INT UNSIGNED NOT NULL PRIMARY KEY,
+    partidos_jugados INT UNSIGNED NOT NULL DEFAULT 0,
+    goles INT UNSIGNED NOT NULL DEFAULT 0,
+    asistencias INT UNSIGNED NOT NULL DEFAULT 0,
+    motm INT UNSIGNED NOT NULL DEFAULT 0,
+    clean_sheets INT UNSIGNED NOT NULL DEFAULT 0,
+    FOREIGN KEY (roster_id) REFERENCES roster(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS roster_habilidades (
+    roster_id INT UNSIGNED NOT NULL PRIMARY KEY,
+    pace TINYINT UNSIGNED NOT NULL DEFAULT 5,
+    shooting TINYINT UNSIGNED NOT NULL DEFAULT 5,
+    passing TINYINT UNSIGNED NOT NULL DEFAULT 5,
+    dribbling TINYINT UNSIGNED NOT NULL DEFAULT 5,
+    defense TINYINT UNSIGNED NOT NULL DEFAULT 5,
+    physical TINYINT UNSIGNED NOT NULL DEFAULT 5,
+    FOREIGN KEY (roster_id) REFERENCES roster(id) ON DELETE CASCADE
+);

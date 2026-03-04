@@ -1,0 +1,10 @@
+# Copia este bloque en tu archivo de configuración SSH:
+#   Windows: C:\Users\TU_USUARIO\.ssh\config
+#   Mac/Linux: ~/.ssh/config
+#
+# Luego en Cursor: Ctrl+Shift+P → "Remote-SSH: Connect to Host" → elige "hostinger-vcf"
+
+Host hostinger-vcf
+    HostName 31.170.166.193
+    User u766140586
+    Port 65002
