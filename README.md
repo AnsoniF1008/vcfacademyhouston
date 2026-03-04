@@ -9,6 +9,15 @@ Responsive landing page for the VCF Academy Houston youth soccer academy, inspir
 - **Frontend:** HTML5, CSS3, Bootstrap 5, FontAwesome
 - **Fonts:** Oswald (headings), Montserrat (body) via Google Fonts
 
+## Clonar y configurar
+
+Si clonas el repositorio:
+
+1. **Clonar:** `git clone <URL_DEL_REPOSITORIO>` y entrar en la carpeta del proyecto.
+2. **Base de datos local:** Copiar `config/database.infinityfree.example.php` o `config/database.hostinger.example.php` a `config/database.local.php` y rellenar host, usuario, contraseña y nombre de base de datos. La aplicación usa `database.local.php` si existe; si no, usa los valores por defecto de `config/database.php`.
+3. **Deploy (opcional):** Si usas los scripts de despliegue, copiar `config/deploy-credentials.example.php` a `config/deploy-credentials.php` y completar credenciales (FTP/SSH, etc.).
+4. **Base de datos:** Crear la base de datos en MySQL e importar `sql/schema.sql` (y las migraciones en `sql/` que necesites según el estado del esquema).
+
 ## Setup (XAMPP)
 
 1. **Database**
