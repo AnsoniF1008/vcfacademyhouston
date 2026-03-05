@@ -1,16 +1,19 @@
 /**
  * VCF Academy Houston - Custom styles
- * Valencia CF palette: #1A1A1A, #FF6600, #FFFFFF
+ * Redesign: Clean, Sporty, High Contrast. Base #FFFFFF, contrast #000000, accent #FF6600
  */
 
 :root {
-    --vcf-black: #1A1A1A;
+    --vcf-black: #000000;
     --vcf-orange: #FF6600;
     --vcf-white: #FFFFFF;
-    --vcf-gray: #8a8a8a;
+    --vcf-gray-bg: #F2F2F2;
+    --vcf-gray: #6a6a6a;
+    --vcf-gray-text: #6a6a6a;
     --vcf-gray-dark: #2d2d2d;
-    --font-heading: 'Oswald', sans-serif;
-    --font-body: 'Montserrat', sans-serif;
+    --vcf-text: #1a1a1a;
+    --font-heading: 'Barlow', sans-serif;
+    --font-body: 'Inter', sans-serif;
 }
 
 * {
@@ -19,10 +22,14 @@
 
 body {
     font-family: var(--font-body);
-    background-color: var(--vcf-black);
-    color: var(--vcf-white);
+    background-color: var(--vcf-white);
+    color: var(--vcf-text);
     margin: 0;
     overflow-x: hidden;
+}
+
+body p {
+    line-height: 1.5;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -30,9 +37,9 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
 }
 
-/* Header / Navbar */
+/* Header / Navbar - black banner */
 .vcf-header {
-    background-color: var(--vcf-black);
+    background-color: #000000;
     border-bottom: 3px solid var(--vcf-orange);
     position: sticky;
     top: 0;
@@ -55,7 +62,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .vcf-academy-text {
-    color: var(--vcf-white);
+    color: #FFFFFF;
     font-size: 1.1rem;
     margin-left: 0.35rem;
 }
@@ -68,7 +75,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .vcf-header .nav-link {
-    color: var(--vcf-white) !important;
+    color: #FFFFFF !important;
     font-weight: 600;
     padding: 0.5rem 1rem !important;
     border-radius: 4px;
@@ -124,10 +131,10 @@ h1, h2, h3, h4, h5, h6 {
     flex: 0 0 auto;
     max-width: 480px;
     width: 100%;
-    border-radius: 12px;
+    border-radius: 0;
     overflow: hidden;
     border: 3px solid var(--vcf-orange);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
 }
 
 .vcf-hero-video {
@@ -157,22 +164,23 @@ h1, h2, h3, h4, h5, h6 {
 .vcf-btn-cta {
     display: inline-block;
     background-color: var(--vcf-orange);
-    color: var(--vcf-white) !important;
+    color: #FFFFFF !important;
     font-family: var(--font-heading);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding: 0.9rem 2rem;
-    border-radius: 8px;
-    border: none;
+    border-radius: 0;
+    border: 1px solid var(--vcf-orange);
     text-decoration: none;
     transition: background-color 0.2s, box-shadow 0.2s, transform 0.2s;
 }
 
 .vcf-btn-cta:hover {
     background-color: #ff8533;
-    color: var(--vcf-white) !important;
-    box-shadow: 0 4px 20px rgba(255, 102, 0, 0.4);
+    color: #FFFFFF !important;
+    border-color: #ff8533;
+    box-shadow: 0 4px 16px rgba(255, 102, 0, 0.3);
     transform: translateY(-2px);
 }
 
@@ -352,14 +360,17 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Sections common */
 .vcf-section {
-    padding: 4rem 0;
+    padding: 5rem 0;
 }
 
 .vcf-section-title {
     font-family: var(--font-heading);
     font-size: clamp(1.5rem, 4vw, 2.25rem);
-    color: var(--vcf-white);
-    margin-bottom: 1rem;
+    color: var(--vcf-text);
+    margin-bottom: 1.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    text-align: left;
 }
 
 .vcf-section-title .vcf-accent {
@@ -367,9 +378,10 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .vcf-section-desc {
-    color: var(--vcf-gray);
+    color: var(--vcf-gray-text);
     max-width: 700px;
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
 }
 
 .vcf-section-title-line {
@@ -384,9 +396,9 @@ h1, h2, h3, h4, h5, h6 {
     justify-content: center;
     padding: 2rem;
     border: 1px solid var(--vcf-orange);
-    border-radius: 8px;
+    border-radius: 0;
     background: rgba(255, 102, 0, 0.06);
-    color: var(--vcf-gray);
+    color: var(--vcf-gray-text);
     text-align: center;
 }
 
@@ -402,15 +414,15 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 1rem;
 }
 
-/* Methodology */
+/* Methodology - alternate background */
 #methodology {
-    background-color: var(--vcf-gray-dark);
+    background-color: var(--vcf-gray-bg);
 }
 
 .vcf-methodology-card {
-    background-color: var(--vcf-black);
-    border: 2px solid transparent;
-    border-radius: 12px;
+    background-color: var(--vcf-white);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 0;
     padding: 1.5rem;
     height: 100%;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -418,7 +430,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .vcf-methodology-card:hover {
     border-color: var(--vcf-orange);
-    box-shadow: 0 8px 24px rgba(255, 102, 0, 0.15);
+    box-shadow: 0 8px 24px rgba(255, 102, 0, 0.12);
 }
 
 .vcf-methodology-card i {
@@ -429,14 +441,43 @@ h1, h2, h3, h4, h5, h6 {
 
 .vcf-methodology-card h3 {
     font-size: 1.25rem;
-    color: var(--vcf-white);
+    color: var(--vcf-text);
     margin-bottom: 0.5rem;
 }
 
 .vcf-methodology-card p {
-    color: var(--vcf-gray);
+    color: var(--vcf-gray-text);
     font-size: 0.9rem;
     margin: 0;
+    line-height: 1.5;
+}
+
+/* Bento grid - mixed card sizes */
+.vcf-bento {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: minmax(140px, auto);
+    gap: 1.25rem;
+}
+
+@media (min-width: 768px) {
+    .vcf-bento {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+    }
+    .vcf-bento-item--large {
+        grid-column: span 2;
+        grid-row: span 1;
+    }
+    .vcf-bento-item--tall {
+        grid-row: span 2;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .vcf-bento-item--large {
+        grid-column: span 2;
+    }
 }
 
 /* Know Your Role - Campo interactivo 4-3-3 (11 posiciones) */
@@ -574,12 +615,12 @@ h1, h2, h3, h4, h5, h6 {
     max-width: 420px;
     margin: 0 auto;
     padding: 1.25rem;
-    background: rgba(26, 26, 26, 0.97);
+    background: var(--vcf-white);
     border: 2px solid var(--vcf-orange);
-    border-radius: 12px;
-    color: var(--vcf-white);
+    border-radius: 0;
+    color: var(--vcf-text);
     z-index: 10;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
 .vcf-position-popover[hidden] {
@@ -603,7 +644,7 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 0.95rem;
     line-height: 1.5;
     margin: 0 0 0.5rem;
-    color: rgba(255, 255, 255, 0.95);
+    color: var(--vcf-text);
 }
 
 .vcf-position-popover-pro {
@@ -613,24 +654,24 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .vcf-position-popover-jugada {
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--vcf-gray-text);
     font-size: 0.85rem;
     border-left: 3px solid var(--vcf-orange);
     padding-left: 0.5rem;
     margin-top: 0.5rem;
 }
 
-/* Sedes / Training Grounds - Accordion (ADN Valencia)
-   Encabezado: Negro #1A1A1A | Texto: Blanco | Detalle/borde: Naranja #FF6600 | Botón Open GPS: Naranja + blanco */
+/* Sedes / Training Grounds - Accordion */
 .vcf-sedes-title {
-    color: var(--vcf-white);
+    color: var(--vcf-text);
     border-color: var(--vcf-orange) !important;
 }
 
 #accordionSedes .accordion-item {
-    background-color: #1A1A1A !important;
-    border: 2px solid #FF6600 !important;
-    border-radius: 8px;
+    background-color: var(--vcf-gray-bg) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-left: 4px solid var(--vcf-orange) !important;
+    border-radius: 0;
     overflow: hidden;
 }
 
@@ -654,34 +695,34 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 #accordionSedes .accordion-item .accordion-button {
-    background-color: #1A1A1A !important;
-    color: #FFFFFF !important;
+    background-color: var(--vcf-gray-bg) !important;
+    color: var(--vcf-text) !important;
     border: none !important;
     padding: 1rem 1.25rem;
 }
 #accordionSedes .accordion-item .accordion-button:not(.collapsed) {
-    background-color: #2d2d2d !important;
-    color: #FFFFFF !important;
+    background-color: rgba(0, 0, 0, 0.04) !important;
+    color: var(--vcf-text) !important;
     box-shadow: none !important;
 }
 #accordionSedes .accordion-item .accordion-button::after {
-    filter: brightness(0) invert(1);
+    filter: none;
     background-size: 1.25rem;
 }
 #accordionSedes .accordion-item .accordion-button:focus {
-    box-shadow: 0 0 0 0.2rem rgba(255, 102, 0, 0.4) !important;
+    box-shadow: 0 0 0 0.2rem rgba(255, 102, 0, 0.25) !important;
 }
 
 #accordionSedes .accordion-collapse .accordion-body {
-    background-color: var(--vcf-gray-dark) !important;
-    color: var(--vcf-white) !important;
-    border-top: 1px solid rgba(255, 102, 0, 0.3);
+    background-color: var(--vcf-white) !important;
+    color: var(--vcf-text) !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
     padding: 1.25rem;
 }
 
 #accordionSedes .accordion-body .text-muted,
 #accordionSedes .accordion-body p.text-muted {
-    color: rgba(255, 255, 255, 0.85) !important;
+    color: var(--vcf-gray-text) !important;
 }
 
 .vcf-accordion-address {
@@ -694,9 +735,9 @@ h1, h2, h3, h4, h5, h6 {
     background: transparent;
 }
 .vcf-list-canchas .list-group-item {
-    background-color: rgba(26, 26, 26, 0.5);
-    border-color: rgba(255, 255, 255, 0.08);
-    color: var(--vcf-white);
+    background-color: var(--vcf-gray-bg);
+    border-color: rgba(0, 0, 0, 0.06);
+    color: var(--vcf-text);
 }
 .vcf-cancha-icon {
     color: var(--vcf-orange);
@@ -721,9 +762,9 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Sedes / Grounds */
 .vcf-sede-card {
-    background-color: var(--vcf-gray-dark);
-    border: 2px solid transparent;
-    border-radius: 12px;
+    background-color: var(--vcf-gray-bg);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 0;
     padding: 1.5rem;
     margin-bottom: 1rem;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -731,11 +772,11 @@ h1, h2, h3, h4, h5, h6 {
 
 .vcf-sede-card:hover {
     border-color: var(--vcf-orange);
-    box-shadow: 0 8px 24px rgba(255, 102, 0, 0.15);
+    box-shadow: 0 8px 24px rgba(255, 102, 0, 0.1);
 }
 
 .vcf-sede-card p.text-muted {
-    color: rgba(255, 255, 255, 0.9) !important;
+    color: var(--vcf-gray-text) !important;
     font-weight: 500;
 }
 
@@ -747,7 +788,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .vcf-sede-card .address {
-    color: var(--vcf-gray);
+    color: var(--vcf-gray-text);
     font-size: 0.95rem;
     margin-bottom: 1rem;
 }
@@ -757,7 +798,7 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--vcf-orange);
     border: 2px solid var(--vcf-orange);
     padding: 0.5rem 1.25rem;
-    border-radius: 8px;
+    border-radius: 9999px;
     text-decoration: none;
     font-weight: 600;
     font-size: 0.9rem;
@@ -766,42 +807,42 @@ h1, h2, h3, h4, h5, h6 {
 
 .vcf-btn-outline:hover {
     background-color: var(--vcf-orange);
-    color: var(--vcf-white);
+    color: #FFFFFF;
 }
 
 /* Tournaments table */
 .vcf-table-wrap {
     overflow-x: auto;
-    border-radius: 12px;
-    border: 1px solid var(--vcf-gray-dark);
+    border-radius: 0;
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .vcf-table {
     width: 100%;
-    color: var(--vcf-white);
+    color: var(--vcf-text);
     margin: 0;
 }
 
 .vcf-table th,
 .vcf-table td {
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--vcf-gray-dark);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .vcf-table th {
-    background-color: var(--vcf-gray-dark);
+    background-color: var(--vcf-gray-bg);
     font-family: var(--font-heading);
     font-weight: 600;
     color: var(--vcf-orange);
 }
 
 .vcf-table tbody tr:hover {
-    background-color: rgba(255, 102, 0, 0.08);
+    background-color: rgba(255, 102, 0, 0.06);
 }
 
 .vcf-badge-proximo {
     background-color: var(--vcf-orange);
-    color: var(--vcf-black);
+    color: #000000;
     padding: 0.25rem 0.6rem;
     border-radius: 6px;
     font-size: 0.8rem;
@@ -810,7 +851,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .vcf-badge-finalizado {
     background-color: var(--vcf-gray);
-    color: var(--vcf-black);
+    color: #000000;
     padding: 0.25rem 0.6rem;
     border-radius: 6px;
     font-size: 0.8rem;
@@ -818,7 +859,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .vcf-badge-live {
     background-color: var(--vcf-orange);
-    color: var(--vcf-black);
+    color: #000000;
     padding: 0.25rem 0.6rem;
     border-radius: 6px;
     font-size: 0.8rem;
@@ -842,27 +883,27 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .vcf-result-draw {
-    color: var(--vcf-white);
+    color: var(--vcf-text);
     font-weight: 500;
 }
 
 .vcf-badge-w {
     display: inline-block;
     padding: 0.2rem 0.5rem;
-    border-radius: 4px;
+    border-radius: 0;
     font-size: 0.8rem;
     font-weight: 700;
-    color: var(--vcf-black);
+    color: #000000;
     background-color: var(--vcf-orange);
 }
 
 .vcf-badge-d {
     display: inline-block;
     padding: 0.2rem 0.5rem;
-    border-radius: 4px;
+    border-radius: 0;
     font-size: 0.8rem;
     font-weight: 600;
-    color: var(--vcf-white);
+    color: var(--vcf-text);
     background-color: transparent;
     border: 1px solid var(--vcf-gray);
 }
@@ -870,11 +911,12 @@ h1, h2, h3, h4, h5, h6 {
 .vcf-badge-l {
     display: inline-block;
     padding: 0.2rem 0.5rem;
-    border-radius: 4px;
+    border-radius: 0;
     font-size: 0.8rem;
     font-weight: 600;
-    color: var(--vcf-gray);
-    background-color: var(--vcf-gray-dark);
+    color: var(--vcf-gray-text);
+    background-color: var(--vcf-gray-bg);
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 /* Team logos in results table */
@@ -912,31 +954,155 @@ h1, h2, h3, h4, h5, h6 {
 .vcf-btn-calendar {
     display: inline-block;
     font-size: 0.8rem;
-    padding: 0.35rem 0.6rem;
+    padding: 0.35rem 0.75rem;
     color: var(--vcf-orange);
     border: 1px solid var(--vcf-orange);
-    border-radius: 6px;
+    border-radius: 9999px;
     text-decoration: none;
     white-space: nowrap;
 }
 
 .vcf-btn-calendar:hover {
     background-color: var(--vcf-orange);
-    color: var(--vcf-black);
+    color: #000000;
 }
 
 .vcf-nextmatch-strip {
-    background-color: var(--vcf-black);
+    background-color: #000000;
     border-top: 2px solid var(--vcf-orange);
     border-bottom: 2px solid var(--vcf-orange);
-    padding: 1rem 0;
+    padding: 1.5rem 0;
+}
+
+.vcf-nextmatch-widget {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.vcf-nextmatch-widget--secondary {
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.vcf-nextmatch-label {
+    color: var(--vcf-orange);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0 0 1rem;
+    text-align: center;
+}
+
+.vcf-nextmatch-teams {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.vcf-nextmatch-team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 100px;
+}
+
+.vcf-nextmatch-logo {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    display: block;
+}
+
+.vcf-nextmatch-logo-placeholder {
+    width: 56px;
+    height: 56px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.5rem;
+}
+
+.vcf-nextmatch-team-name {
+    font-family: var(--font-heading);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    text-align: center;
+}
+
+.vcf-nextmatch-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 1rem;
+}
+
+.vcf-nextmatch-vs {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--vcf-orange);
+    letter-spacing: 0.05em;
+}
+
+.vcf-nextmatch-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+}
+
+.vcf-nextmatch-date {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.vcf-nextmatch-venue {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.vcf-nextmatch-strip .vcf-nextmatch-countdown {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: var(--vcf-orange);
+    padding: 0.5rem 0.75rem;
+}
+
+.vcf-nextmatch-strip .vcf-nextmatch-countdown .vcf-countdown {
+    gap: 0.5rem;
+}
+
+.vcf-nextmatch-strip .vcf-nextmatch-countdown .vcf-countdown-num {
+    font-size: 1.25rem;
+}
+
+.vcf-nextmatch-strip .vcf-nextmatch-countdown .vcf-countdown-unit {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.65rem;
+}
+
+.vcf-nextmatch-strip .vcf-countdown-wrap {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: var(--vcf-orange);
 }
 
 .vcf-countdown-wrap {
-    background-color: var(--vcf-gray-dark);
-    border: 1px solid var(--vcf-orange);
-    border-radius: 12px;
+    background-color: var(--vcf-gray-bg);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 0;
     padding: 1.25rem;
+}
+
+.vcf-nextmatch-strip .vcf-countdown-num,
+.vcf-nextmatch-strip .vcf-countdown-unit {
+    color: #FFFFFF;
 }
 
 .vcf-countdown-label {
@@ -947,9 +1113,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .vcf-countdown-title {
-    color: var(--vcf-white);
+    color: var(--vcf-text);
     font-family: var(--font-heading);
     font-size: 1.1rem;
+}
+
+.vcf-nextmatch-strip .vcf-countdown-title {
+    color: #FFFFFF;
 }
 
 .vcf-countdown {
@@ -976,7 +1146,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .vcf-countdown-unit {
     font-size: 0.7rem;
-    color: #fff;
+    color: var(--vcf-gray-text);
     text-transform: uppercase;
 }
 
@@ -989,17 +1159,17 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Season Stats */
 .stats-container {
-    background: linear-gradient(180deg, var(--vcf-black) 0%, #000 100%);
-    border: 1px solid #333;
-    border-radius: 12px;
-    padding: 20px;
+    background-color: var(--vcf-gray-bg);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 0;
+    padding: 24px;
 }
 
 .stats-title {
-    color: var(--vcf-white);
+    color: var(--vcf-text);
     text-transform: uppercase;
     border-left: 4px solid var(--vcf-orange);
-    padding-left: 10px;
+    padding-left: 12px;
     font-family: var(--font-heading);
     font-size: 1.25rem;
     margin-bottom: 1rem;
@@ -1040,7 +1210,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .stat-value {
-    color: var(--vcf-white);
+    color: var(--vcf-text);
     font-size: 24px;
     font-weight: 700;
     font-family: var(--font-heading);
@@ -1048,7 +1218,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .stat-item.highlight .stat-value {
     color: var(--vcf-orange);
-    text-shadow: 0 0 12px rgba(255, 102, 0, 0.5);
+    text-shadow: none;
 }
 
 @media (max-width: 600px) {
@@ -1065,9 +1235,9 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Roster / Plantilla */
 .roster-card {
-    background-color: var(--vcf-black);
-    border: 1px solid var(--vcf-orange);
-    border-radius: 12px;
+    background-color: var(--vcf-gray-bg);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 0;
     overflow: hidden;
     padding: 0;
     text-align: center;
@@ -1079,6 +1249,7 @@ h1, h2, h3, h4, h5, h6 {
     aspect-ratio: 1;
     background-color: var(--vcf-gray-dark);
     overflow: hidden;
+    border-radius: 0;
 }
 
 .roster-photo {
@@ -1115,7 +1286,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .roster-name {
-    color: var(--vcf-white);
+    color: var(--vcf-text);
     font-weight: 600;
     padding: 0.5rem 0.5rem 0.25rem;
     margin: 0;
@@ -1276,13 +1447,13 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Man of the Match */
 .motm-section {
-    background-color: var(--vcf-gray-dark);
+    background-color: var(--vcf-gray-bg);
 }
 
 .motm-card {
-    background-color: var(--vcf-black);
-    border: 1px solid var(--vcf-orange);
-    border-radius: 12px;
+    background-color: var(--vcf-white);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 0;
     overflow: hidden;
     text-align: center;
     padding-bottom: 1rem;
@@ -1293,20 +1464,22 @@ h1, h2, h3, h4, h5, h6 {
     aspect-ratio: 1;
     object-fit: cover;
     display: block;
+    border-radius: 0;
 }
 
 .motm-card-photo-placeholder {
     aspect-ratio: 1;
-    background-color: var(--vcf-gray-dark);
+    background-color: var(--vcf-gray-bg);
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--vcf-orange);
     font-size: 3rem;
+    border-radius: 0;
 }
 
 .motm-card-name {
-    color: var(--vcf-white);
+    color: var(--vcf-text);
     font-weight: 600;
     padding: 0.75rem 0.5rem 0.5rem;
     margin: 0;
@@ -1328,9 +1501,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .motm-winner-card {
-    background: linear-gradient(180deg, var(--vcf-black) 0%, #0d0d0d 100%);
+    background-color: var(--vcf-white);
     border: 2px solid var(--vcf-orange);
-    border-radius: 16px;
+    border-radius: 0;
     overflow: hidden;
     max-width: 400px;
     margin: 0 auto;
@@ -1371,48 +1544,49 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .motm-winner-name {
-    color: var(--vcf-white);
+    color: var(--vcf-text);
     font-size: 1.5rem;
     font-weight: 700;
     margin: 0 0 0.5rem;
 }
 
 .motm-winner-pct {
-    color: var(--vcf-gray);
+    color: var(--vcf-gray-text);
     font-size: 0.95rem;
     margin: 0;
 }
 
 /* Jugador del Mes */
 #star {
-    background-color: var(--vcf-gray-dark);
+    background-color: var(--vcf-gray-bg);
 }
 
 .vcf-star-card {
-    background-color: var(--vcf-black);
+    background-color: var(--vcf-white);
     border: 2px solid var(--vcf-orange);
-    border-radius: 16px;
+    border-radius: 0;
     overflow: hidden;
     max-width: 400px;
     margin: 0 auto;
-    box-shadow: 0 12px 40px rgba(255, 102, 0, 0.2);
+    box-shadow: 0 8px 24px rgba(255, 102, 0, 0.12);
 }
 
 .vcf-star-card .photo-wrap {
     position: relative;
     aspect-ratio: 1;
-    background: var(--vcf-gray-dark);
+    background: var(--vcf-gray-bg);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     padding: 12px;
+    border-radius: 0;
 }
 .vcf-star-card .photo-wrap::before {
     content: '';
     position: absolute;
     inset: 0;
-    border-radius: 14px;
+    border-radius: 0;
     padding: 3px;
     background: linear-gradient(135deg, var(--vcf-orange), #ff8833, var(--vcf-orange));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -1426,7 +1600,7 @@ h1, h2, h3, h4, h5, h6 {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 12px;
+    border-radius: 0;
 }
 .vcf-star-card .photo-wrap .star-dorsal {
     position: absolute;
@@ -1434,7 +1608,7 @@ h1, h2, h3, h4, h5, h6 {
     right: 16px;
     font-size: 3.5rem;
     font-weight: 800;
-    color: rgba(255, 255, 255, 0.22);
+    color: rgba(0, 0, 0, 0.12);
     line-height: 1;
     font-family: var(--font-heading);
 }
@@ -1461,31 +1635,31 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .vcf-star-card .categoria {
-    color: var(--vcf-gray);
+    color: var(--vcf-gray-text);
     font-size: 0.9rem;
     margin-bottom: 0.75rem;
 }
 
 .vcf-star-card .descripcion {
-    color: var(--vcf-white);
+    color: var(--vcf-text);
     font-size: 0.95rem;
     line-height: 1.5;
 }
 
 .vcf-star-placeholder {
-    background-color: var(--vcf-black);
+    background-color: var(--vcf-gray-bg);
     border: 2px dashed var(--vcf-gray);
-    border-radius: 16px;
+    border-radius: 0;
     padding: 3rem 2rem;
     text-align: center;
-    color: var(--vcf-gray);
+    color: var(--vcf-gray-text);
 }
 
-/* Footer */
+/* Footer - black banner, white/gray text */
 .vcf-footer {
-    background-color: var(--vcf-black);
+    background-color: #000000;
     border-top: 3px solid var(--vcf-orange);
-    color: var(--vcf-gray);
+    color: rgba(255, 255, 255, 0.85);
     font-size: 0.9rem;
 }
 
@@ -1502,7 +1676,7 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.05em;
-    color: var(--vcf-gray);
+    color: rgba(255, 255, 255, 0.7);
     text-transform: uppercase;
     margin-bottom: 0.75rem;
 }
@@ -1518,11 +1692,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .vcf-footer-list .footer-link {
-    color: var(--vcf-gray);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .vcf-footer-follow-text {
-    color: var(--vcf-gray);
+    color: rgba(255, 255, 255, 0.85);
     font-size: 0.9rem;
     margin: 0;
 }
@@ -1538,7 +1712,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .vcf-footer-copy {
-    color: var(--vcf-gray);
+    color: rgba(255, 255, 255, 0.8);
     font-weight: 400;
 }
 
@@ -1555,10 +1729,10 @@ h1, h2, h3, h4, h5, h6 {
     padding: 0.4rem 0.9rem;
     background: transparent;
     border: 1px solid var(--vcf-orange);
-    border-radius: 6px;
+    border-radius: 9999px;
     font-size: 0.75rem;
     font-weight: 700;
-    color: var(--vcf-gray);
+    color: rgba(255, 255, 255, 0.9);
     text-transform: uppercase;
     letter-spacing: 0.04em;
     text-decoration: none;
@@ -1566,18 +1740,37 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .vcf-footer-btn-methodology:hover {
-    background: rgba(255, 102, 0, 0.12);
-    color: var(--vcf-white);
+    background: rgba(255, 102, 0, 0.2);
+    color: #FFFFFF;
     border-color: var(--vcf-orange);
 }
 
 .footer-link {
-    color: var(--vcf-gray);
+    color: rgba(255, 255, 255, 0.85);
     text-decoration: none;
 }
 
 .footer-link:hover {
     color: var(--vcf-orange);
+}
+
+/* Footer sponsors - monocrome logos */
+.vcf-footer-sponsors-logos {
+    min-height: 40px;
+}
+
+.vcf-footer-sponsor-logo {
+    height: 36px;
+    width: auto;
+    max-width: 120px;
+    object-fit: contain;
+    opacity: 0.85;
+    filter: brightness(0) invert(1);
+    transition: opacity 0.2s;
+}
+
+.vcf-footer-sponsor-logo:hover {
+    opacity: 1;
 }
 
 @media (max-width: 767.98px) {

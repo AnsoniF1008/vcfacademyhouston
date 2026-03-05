@@ -43,28 +43,33 @@ $r = Invoke-SSHCommand -SessionId $session.SessionId -Command "ls -la ~ 2>/dev/n
 $remotePath = "public_html"
 if ($r.Output -match "vcfacademyhouston") { $remotePath = "domains/vcfacademyhouston.com/public_html" }
 
+# Una sola sesión SFTP (más estable que SCP con muchas conexiones)
+Write-Host "Abriendo sesión SFTP..." -ForegroundColor Cyan
+try {
+    $sftp = New-SFTPSession -ComputerName $hostName -Port $port -Credential $cred -Force -AcceptKey
+} catch {
+    Write-Host "Error SFTP: $_" -ForegroundColor Red
+    Remove-SSHSession -SessionId $session.SessionId | Out-Null
+    exit 1
+}
+
 Write-Host "Subiendo archivos a ~/$remotePath ..." -ForegroundColor Cyan
 $toUpload = @(
     "admin", "assets", "config", "includes", "api", "sql",
     "index.php", "join.php", "contact.php", "calendar.php", "privacy.php", "deploy.php", "scripts"
 )
-$commonParams = @{
-    ComputerName = $hostName
-    Port         = $port
-    Credential   = $cred
-    Force        = $true
-    AcceptKey    = $true
-}
 foreach ($item in $toUpload) {
     $local = Join-Path $root $item
     if (-not (Test-Path $local)) { continue }
     Write-Host "  $item -> servidor"
-    if (Test-Path $local -PathType Container) {
-        Set-SCPFolder @commonParams -Path $local -Destination $remotePath
-    } else {
-        Set-SCPFile @commonParams -Path $local -Destination "$remotePath/$item"
+    try {
+        Set-SFTPItem -SessionId $sftp.SessionId -Path $local -Destination $remotePath -Force
+    } catch {
+        Write-Host "  Error subiendo $item : $_" -ForegroundColor Red
     }
+    Start-Sleep -Milliseconds 800
 }
+Remove-SFTPSession -SessionId $sftp.SessionId | Out-Null
 
 Invoke-SSHCommand -SessionId $session.SessionId -Command "chmod -R 755 $remotePath/assets/uploads 2>/dev/null; echo OK" | Out-Null
 Remove-SSHSession -SessionId $session.SessionId | Out-Null

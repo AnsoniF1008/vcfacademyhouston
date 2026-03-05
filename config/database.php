@@ -10,11 +10,11 @@ declare(strict_types=1);
 
 date_default_timezone_set('America/Chicago');
 
-// Local: use XAMPP defaults so database.local.php (production) is not used
+// Si existe database.local.php, usarlo siempre (remoto o servidor). Si no, usar XAMPP/local por defecto.
 $host = $_SERVER['HTTP_HOST'] ?? '';
 $isLocal = (php_sapi_name() !== 'cli') && in_array($host, ['localhost', '127.0.0.1'], true);
 
-if (!$isLocal && file_exists(__DIR__ . '/database.local.php')) {
+if (file_exists(__DIR__ . '/database.local.php')) {
     require __DIR__ . '/database.local.php';
 } else {
     $DB_HOST = $_ENV['DB_HOST'] ?? 'localhost';
@@ -23,6 +23,7 @@ if (!$isLocal && file_exists(__DIR__ . '/database.local.php')) {
     $DB_PASS = $_ENV['DB_PASS'] ?? '';
 }
 
+$usingRemote = !in_array($DB_HOST ?? '', ['localhost', '127.0.0.1'], true);
 $dsn = "mysql:host={$DB_HOST};dbname={$DB_NAME};charset=utf8mb4";
 
 $options = [
@@ -60,7 +61,10 @@ try {
         <?php endif; ?>
         <p>This site cannot connect to MySQL. Check the following:</p>
         <ul>
-            <?php if ($isLocal): ?>
+            <?php if ($usingRemote): ?>
+            <li><strong>Panel del hosting:</strong> En «Bases de datos MySQL» o «MySQL Databases», asegúrate de que el usuario <code><?php echo htmlspecialchars($DB_USER ?? ''); ?></code> esté <strong>asignado a la base de datos</strong> <code><?php echo htmlspecialchars($DB_NAME ?? ''); ?></code> con todos los privilegios.</li>
+            <li><strong>Credenciales:</strong> Revisa en <code>config/database.local.php</code> que el host, nombre de BD, usuario y contraseña coincidan con el panel.</li>
+            <?php elseif ($isLocal): ?>
             <li><strong>XAMPP:</strong> Start <strong>MySQL</strong> in the XAMPP Control Panel.</li>
             <li><strong>Create the database:</strong> In phpMyAdmin, create a database named <code>if0_41281527_valenciacf</code>, then import <code>sql/schema.sql</code>.</li>
             <li><strong>Credentials:</strong> Local uses defaults in <code>config/database.php</code> (user <code>root</code>, no password).</li>

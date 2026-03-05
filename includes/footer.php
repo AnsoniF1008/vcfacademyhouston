@@ -33,6 +33,12 @@
                     <a href="https://www.valenciacf.com" target="_blank" rel="noopener noreferrer" class="footer-link d-inline-flex align-items-center gap-1"><i class="fas fa-external-link-alt small me-1" aria-hidden="true"></i> valenciacf.com</a>
                 </div>
             </div>
+            <div class="vcf-footer-sponsors mt-4 pt-4">
+                <h4 class="vcf-footer-heading text-center mb-3">Partners</h4>
+                <div class="vcf-footer-sponsors-logos d-flex flex-wrap align-items-center justify-content-center gap-4">
+                    <!-- Add sponsor logo <img> here, e.g. <img src="..." alt="Partner" class="vcf-footer-sponsor-logo"> -->
+                </div>
+            </div>
             <hr class="vcf-footer-sep my-4">
             <div class="vcf-footer-bottom d-flex flex-wrap align-items-center justify-content-between gap-3">
                 <div class="vcf-footer-copy">

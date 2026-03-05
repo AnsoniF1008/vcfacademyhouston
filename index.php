@@ -51,7 +51,7 @@ try {
     $today = $nowHouston->format('Y-m-d');
     $timeNow = $nowHouston->format('H:i:s');
     $stmt = $pdo->prepare("
-        SELECT j.id, j.fecha, j.hora, j.rival, j.cancha, j.sede_id, t.nombre_torneo, t.temporada, s.nombre AS sede_nombre
+        SELECT j.id, j.fecha, j.hora, j.rival, j.rival_logo_url, j.cancha, j.sede_id, t.nombre_torneo, t.temporada, s.nombre AS sede_nombre
         FROM juegos j
         JOIN torneos_info t ON t.id = j.torneo_id
         LEFT JOIN sedes s ON s.id = j.sede_id
@@ -339,31 +339,59 @@ require __DIR__ . '/includes/header.php';
 <?php endif; ?>
 
 <?php if (count($proximosJuegos) > 0): ?>
-<section class="vcf-nextmatch-strip" aria-label="Upcoming matches countdown">
+<section class="vcf-nextmatch-strip" aria-label="Upcoming matches">
     <div class="container">
-        <div class="vcf-nextmatch-grid<?= count($proximosJuegos) === 1 ? ' vcf-nextmatch-grid--single' : '' ?>" style="display: flex; flex-direction: row; flex-wrap: nowrap; width: 100%; gap: 1rem;">
-            <?php foreach ($proximosJuegos as $idx => $juego): ?>
-            <?php $gameTs = strtotime($juego['fecha'] . ' ' . ($juego['hora'] ?? '12:00:00')); ?>
-            <div class="vcf-nextmatch-item" style="flex: 1 1 0%; min-width: 0;">
-                <p class="vcf-nextmatch-label"><?= $idx === 0 ? 'NEXT MATCH' : 'UPCOMING' ?>: <?= !empty($juego['rival']) ? htmlspecialchars($juego['rival']) : 'TBD' ?> — Starts in:</p>
-                <div class="vcf-countdown-wrap" data-countdown-iso="<?= date('c', $gameTs) ?>" data-countdown-unix="<?= $gameTs ?>" data-countdown-target="<?= date('M j, Y g:i A', $gameTs) ?> CST">
-                    <div class="vcf-countdown" aria-live="polite">
-                        <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-days>0</span> <span class="vcf-countdown-unit">Days</span></span>
-                        <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-hours>0</span> <span class="vcf-countdown-unit">Hours</span></span>
-                        <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-minutes>0</span> <span class="vcf-countdown-unit">Min</span></span>
-                        <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-seconds>0</span> <span class="vcf-countdown-unit">Sec</span></span>
+        <?php foreach ($proximosJuegos as $idx => $juego): ?>
+        <?php
+        $gameTs = strtotime($juego['fecha'] . ' ' . ($juego['hora'] ?? '12:00:00'));
+        $rivalName = !empty($juego['rival']) ? htmlspecialchars($juego['rival']) : 'TBD';
+        $rivalLogoUrl = !empty($juego['rival_logo_url']) ? $juego['rival_logo_url'] : null;
+        ?>
+        <div class="vcf-nextmatch-widget<?= $idx > 0 ? ' vcf-nextmatch-widget--secondary mt-4' : '' ?>">
+            <p class="vcf-nextmatch-label"><?= $idx === 0 ? 'NEXT MATCH' : 'UPCOMING' ?></p>
+            <div class="vcf-nextmatch-teams">
+                <div class="vcf-nextmatch-team vcf-nextmatch-team--home">
+                    <?php if ($vcf_crest_file ?? null): ?>
+                        <img src="<?= $base ?? '' ?>/assets/img/<?= $vcf_crest_file ?>" alt="" class="vcf-nextmatch-logo" width="64" height="64">
+                    <?php else: ?>
+                        <span class="vcf-nextmatch-logo vcf-nextmatch-logo-placeholder" aria-hidden="true"><i class="fas fa-shield-alt"></i></span>
+                    <?php endif; ?>
+                    <span class="vcf-nextmatch-team-name">VCF Houston</span>
+                </div>
+                <div class="vcf-nextmatch-center">
+                    <span class="vcf-nextmatch-vs">VS</span>
+                    <div class="vcf-nextmatch-meta">
+                        <span class="vcf-nextmatch-date"><?= date('M j, g:i A', $gameTs) ?></span>
+                        <span class="vcf-nextmatch-venue"><?= htmlspecialchars($juego['sede_nombre'] ?? $juego['cancha'] ?? '') ?></span>
+                    </div>
+                    <div class="vcf-countdown-wrap vcf-nextmatch-countdown" data-countdown-iso="<?= date('c', $gameTs) ?>" data-countdown-unix="<?= $gameTs ?>" data-countdown-target="<?= date('M j, Y g:i A', $gameTs) ?> CST">
+                        <div class="vcf-countdown" aria-live="polite">
+                            <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-days>0</span> <span class="vcf-countdown-unit">D</span></span>
+                            <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-hours>0</span> <span class="vcf-countdown-unit">H</span></span>
+                            <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-minutes>0</span> <span class="vcf-countdown-unit">M</span></span>
+                            <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-seconds>0</span> <span class="vcf-countdown-unit">S</span></span>
+                        </div>
                     </div>
                 </div>
+                <div class="vcf-nextmatch-team vcf-nextmatch-team--away">
+                    <?php if ($rivalLogoUrl): ?>
+                        <img src="<?= htmlspecialchars($rivalLogoUrl) ?>" alt="" class="vcf-nextmatch-logo" width="64" height="64" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">
+                        <span class="vcf-nextmatch-logo vcf-nextmatch-logo-placeholder" style="display:none;" aria-hidden="true"><i class="fas fa-shield-alt"></i></span>
+                    <?php else: ?>
+                        <span class="vcf-nextmatch-logo vcf-nextmatch-logo-placeholder" aria-hidden="true"><i class="fas fa-shield-alt"></i></span>
+                    <?php endif; ?>
+                    <span class="vcf-nextmatch-team-name"><?= $rivalName ?></span>
+                </div>
             </div>
-            <?php endforeach; ?>
         </div>
+        <?php endforeach; ?>
     </div>
 </section>
 <?php else: ?>
 <section class="vcf-nextmatch-strip" aria-label="Next match placeholder">
     <div class="container d-flex flex-wrap align-items-center justify-content-center gap-3 py-3">
         <i class="fas fa-futbol me-2" style="color: var(--vcf-orange); font-size: 1.5rem;" aria-hidden="true"></i>
-        <p class="mb-0 text-center" style="color: var(--vcf-white); font-weight: 600; font-size: 1.1rem;">Next Match Coming Soon</p>
+        <p class="mb-0 text-center" style="color: #FFFFFF; font-weight: 600; font-size: 1.1rem;">Next Match Coming Soon</p>
     </div>
 </section>
 <?php endif; ?>
@@ -376,7 +404,7 @@ require __DIR__ . '/includes/header.php';
             $motmEndTs = strtotime($motmOpen['ends_at']);
             $motmEndIso = date('c', $motmEndTs);
             ?>
-            <h2 class="vcf-section-title">Man of the Match</h2>
+            <h2 class="vcf-section-title vcf-section-title-line">Man of the Match</h2>
             <p class="vcf-section-desc">Vote for the player of the match. Voting closes when the timer below reaches zero. One vote per person.</p>
             <div class="vcf-countdown-wrap motm-countdown-wrap mb-3" data-countdown-iso="<?= $motmEndIso ?>" data-countdown-unix="<?= $motmEndTs ?>">
                 <div class="vcf-countdown" aria-live="polite">
@@ -403,7 +431,7 @@ require __DIR__ . '/includes/header.php';
             </div>
             <p class="text-muted small mt-2 mb-0">One vote per device. Results will be shown when voting ends.</p>
         <?php elseif ($motmWinner): ?>
-            <h2 class="vcf-section-title">Man of the Match</h2>
+            <h2 class="vcf-section-title vcf-section-title-line">Man of the Match</h2>
             <div class="motm-winner-card">
                 <?php if (!empty($motmWinner['winner_foto'])): ?>
                     <img src="<?= htmlspecialchars($base ?? '') ?>/<?= htmlspecialchars($motmWinner['winner_foto']) ?>" alt="" class="motm-winner-photo">
@@ -423,24 +451,24 @@ require __DIR__ . '/includes/header.php';
 
 <section id="methodology" class="vcf-section">
     <div class="container">
-        <h2 class="vcf-section-title">Our Methodology: <span class="vcf-accent">"Educating People, Training Footballers"</span></h2>
+        <h2 class="vcf-section-title vcf-section-title-line">Our Methodology: <span class="vcf-accent">"Educating People, Training Footballers"</span></h2>
         <p class="vcf-section-desc">In Houston, we don't just play soccer; we live it. Our program follows the official VCF Academy pillars: Identity, Effort, and Intelligence. We focus on technical excellence and tactical awareness, ensuring every child understands the game while developing the values of teamwork and respect that define the Valencia CF spirit.</p>
-        <div class="row g-4">
-            <div class="col-md-4">
+        <div class="vcf-bento">
+            <div class="vcf-bento-item vcf-bento-item--large">
                 <div class="vcf-methodology-card">
                     <i class="fas fa-fingerprint"></i>
                     <h3>Identity</h3>
                     <p>Building the Valencia CF identity in every young player.</p>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="vcf-bento-item">
                 <div class="vcf-methodology-card">
                     <i class="fas fa-dumbbell"></i>
                     <h3>Effort</h3>
                     <p>Hard work and dedication in every training session.</p>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="vcf-bento-item">
                 <div class="vcf-methodology-card">
                     <i class="fas fa-brain"></i>
                     <h3>Intelligence</h3>
@@ -567,7 +595,7 @@ require __DIR__ . '/includes/header.php';
 <?php if (count($rosterPorCategoria) > 0): ?>
 <section id="roster" class="vcf-section" data-base-url="<?= htmlspecialchars($base ?? '') ?>" data-player-api="<?= htmlspecialchars(($base ?? '') . '/api/roster-player.php') ?>" data-crest-url="<?= htmlspecialchars(($base ?? '') . '/assets/img/' . ($vcf_crest_file ?? 'vcf-crest.svg')) ?>">
     <div class="container">
-        <h2 class="vcf-section-title">Roster / Plantilla</h2>
+        <h2 class="vcf-section-title vcf-section-title-line">Roster / Plantilla</h2>
         <p class="vcf-section-desc">Click on a player to see their stats. Our players by category. VCF Academy Houston.</p>
         <?php foreach ($rosterPorCategoria as $catId => $catData): ?>
         <h3 class="vcf-torneo-title mt-4 mb-3"><?= htmlspecialchars($catData['nombre']) ?></h3>
@@ -667,7 +695,7 @@ require __DIR__ . '/includes/header.php';
 
 <section id="tournaments" class="vcf-section">
     <div class="container">
-        <h2 class="vcf-section-title">Upcoming Tournaments & Matchday</h2>
+        <h2 class="vcf-section-title vcf-section-title-line">Upcoming Tournaments & Matchday</h2>
         <p class="vcf-section-desc">Track our teams' progress as they compete in Houston's premier youth leagues. Check schedules, field locations, and results here.</p>
 
         <?php if (count($juegosPorTorneo) > 0): ?>
@@ -777,7 +805,7 @@ require __DIR__ . '/includes/header.php';
         <div class="mt-4 mb-4">
             <h3 class="stats-title">Top Scorers <span class="vcf-accent">(Pichichi)</span></h3>
             <div class="vcf-table-wrap">
-                <table class="vcf-table table table-dark">
+                <table class="vcf-table">
                     <thead>
                         <tr>
                             <th>#</th>
@@ -904,7 +932,7 @@ require __DIR__ . '/includes/header.php';
 
 <section id="star" class="vcf-section">
     <div class="container">
-        <h2 class="vcf-section-title">VCF Star of the Month</h2>
+        <h2 class="vcf-section-title vcf-section-title-line">VCF Star of the Month</h2>
         <p class="vcf-section-desc">Recognizing hard work, discipline, and the VCF spirit.</p>
         <?php if ($jugadorMes): ?>
             <div class="vcf-star-card">

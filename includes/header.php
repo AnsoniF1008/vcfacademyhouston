@@ -41,14 +41,14 @@ $use_local_fontawesome = file_exists($vendor_root . '/fontawesome/css/all.min.cs
     <?php endif; ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <?php if (isset($hero_mobile_path) && !empty($hero_mobile_path) && isset($preload_image_path) && $preload_image_path !== ''): ?>
     <link rel="preload" as="image" href="<?= $base ?>/<?= htmlspecialchars($hero_mobile_path) ?>" media="(max-width: 768px)" fetchpriority="high">
     <link rel="preload" as="image" href="<?= $base ?>/<?= htmlspecialchars($preload_image_path) ?>" media="(min-width: 769px)" fetchpriority="high">
     <?php elseif (isset($preload_image_path) && !empty($preload_image_path)): ?>
     <link rel="preload" as="image" href="<?= $base ?>/<?= htmlspecialchars($preload_image_path) ?>" fetchpriority="high">
     <?php endif; ?>
-    <link rel="stylesheet" href="<?= $base ?>/assets/css/style.css?v=11">
+    <link rel="stylesheet" href="<?= $base ?>/assets/css/style.css?v=12">
 </head>
 <body>
     <header class="vcf-header">
