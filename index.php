@@ -4,6 +4,7 @@ require __DIR__ . '/config/database.php';
 $sedes = [];
 $juegosPorTorneo = [];
 $proximoJuego = null;
+$proximosJuegos = [];
 $jugadorMes = null;
 $categorias = [];
 
@@ -56,16 +57,18 @@ try {
         LEFT JOIN sedes s ON s.id = j.sede_id
         WHERE (j.fecha > ?) OR (j.fecha = ? AND (j.hora IS NULL OR j.hora > ?))
         ORDER BY j.fecha ASC, j.hora ASC
-        LIMIT 1
+        LIMIT 2
     ");
     $stmt->execute([$today, $today, $timeNow]);
-    $proximoJuego = $stmt->fetch(PDO::FETCH_ASSOC);
-    if ($proximoJuego) {
-        $nextTs = strtotime($proximoJuego['fecha'] . ' ' . ($proximoJuego['hora'] ?? '12:00:00'));
-        if ($nextTs <= time()) {
-            $proximoJuego = null;
+    $proximosJuegos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($proximosJuegos as $i => $j) {
+        $ts = strtotime($j['fecha'] . ' ' . ($j['hora'] ?? '12:00:00'));
+        if ($ts <= time()) {
+            unset($proximosJuegos[$i]);
         }
     }
+    $proximosJuegos = array_values($proximosJuegos);
+    $proximoJuego = $proximosJuegos[0] ?? null;
 } catch (PDOException $e) {
     error_log('Proximo juego query: ' . $e->getMessage());
 } catch (Exception $e) {
@@ -274,6 +277,17 @@ if (file_exists(__DIR__ . '/assets/img/vcf-crest.svg')) {
     $vcf_crest_file = 'vfc-crest.svg';
 }
 
+$preload_image_path = null;
+$hero_mobile_path = null;
+if (count($heroSlides) > 0 && !empty($heroSlides[0]['image_url'])) {
+    $preload_image_path = $heroSlides[0]['image_url'];
+} elseif (file_exists(__DIR__ . '/assets/img/hero.jpg')) {
+    $preload_image_path = 'assets/img/hero.jpg';
+    if (file_exists(__DIR__ . '/assets/img/hero-mobile.jpg')) {
+        $hero_mobile_path = 'assets/img/hero-mobile.jpg';
+    }
+}
+
 $page_title = 'VCF Academy Houston';
 require __DIR__ . '/includes/header.php';
 ?>
@@ -303,6 +317,9 @@ require __DIR__ . '/includes/header.php';
 </section>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <?php else: ?>
+<?php if (!empty($hero_mobile_path)): ?>
+<style>@media (max-width: 768px) { .vcf-hero { background-image: url('<?= $base ?? '' ?>/<?= htmlspecialchars($hero_mobile_path) ?>'), linear-gradient(rgba(13, 13, 13, 0.75), rgba(13, 13, 13, 0.88)); } }</style>
+<?php endif; ?>
 <section id="hero" class="vcf-hero">
     <div class="container vcf-hero-inner">
         <div class="vcf-hero-content">
@@ -321,22 +338,24 @@ require __DIR__ . '/includes/header.php';
 </section>
 <?php endif; ?>
 
-<?php if ($proximoJuego): ?>
-<?php
-$nextTs = strtotime($proximoJuego['fecha'] . ' ' . ($proximoJuego['hora'] ?? '12:00:00'));
-?>
-<section class="vcf-nextmatch-strip" aria-label="Next match countdown">
-    <div class="container d-flex flex-wrap align-items-center justify-content-center justify-content-md-between gap-3 py-2">
-        <p class="mb-0 text-center text-md-start" style="color: var(--vcf-white); font-weight: 600; font-size: 1rem;">
-            NEXT MATCH: <?= !empty($proximoJuego['rival']) ? htmlspecialchars($proximoJuego['rival']) : 'TBD' ?> — Starts in:
-        </p>
-        <div class="vcf-countdown-wrap d-inline-block" data-countdown-iso="<?= date('c', $nextTs) ?>" data-countdown-unix="<?= $nextTs ?>" data-countdown-target="<?= date('M j, Y g:i A', $nextTs) ?> CST">
-            <div class="vcf-countdown" aria-live="polite">
-                <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-days>0</span> <span class="vcf-countdown-unit">Days</span></span>
-                <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-hours>0</span> <span class="vcf-countdown-unit">Hours</span></span>
-                <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-minutes>0</span> <span class="vcf-countdown-unit">Min</span></span>
-                <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-seconds>0</span> <span class="vcf-countdown-unit">Sec</span></span>
+<?php if (count($proximosJuegos) > 0): ?>
+<section class="vcf-nextmatch-strip" aria-label="Upcoming matches countdown">
+    <div class="container">
+        <div class="vcf-nextmatch-grid<?= count($proximosJuegos) === 1 ? ' vcf-nextmatch-grid--single' : '' ?>" style="display: flex; flex-direction: row; flex-wrap: nowrap; width: 100%; gap: 1rem;">
+            <?php foreach ($proximosJuegos as $idx => $juego): ?>
+            <?php $gameTs = strtotime($juego['fecha'] . ' ' . ($juego['hora'] ?? '12:00:00')); ?>
+            <div class="vcf-nextmatch-item" style="flex: 1 1 0%; min-width: 0;">
+                <p class="vcf-nextmatch-label"><?= $idx === 0 ? 'NEXT MATCH' : 'UPCOMING' ?>: <?= !empty($juego['rival']) ? htmlspecialchars($juego['rival']) : 'TBD' ?> — Starts in:</p>
+                <div class="vcf-countdown-wrap" data-countdown-iso="<?= date('c', $gameTs) ?>" data-countdown-unix="<?= $gameTs ?>" data-countdown-target="<?= date('M j, Y g:i A', $gameTs) ?> CST">
+                    <div class="vcf-countdown" aria-live="polite">
+                        <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-days>0</span> <span class="vcf-countdown-unit">Days</span></span>
+                        <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-hours>0</span> <span class="vcf-countdown-unit">Hours</span></span>
+                        <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-minutes>0</span> <span class="vcf-countdown-unit">Min</span></span>
+                        <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-seconds>0</span> <span class="vcf-countdown-unit">Sec</span></span>
+                    </div>
+                </div>
             </div>
+            <?php endforeach; ?>
         </div>
     </div>
 </section>
@@ -480,7 +499,7 @@ $nextTs = strtotime($proximoJuego['fecha'] . ' ' . ($proximoJuego['hora'] ?? '12
 
 <section id="grounds" class="vcf-section">
     <div class="container my-5">
-        <h2 class="text-uppercase fw-bold border-start border-5 ps-3 mb-4 vcf-sedes-title">Training Grounds</h2>
+        <h2 class="vcf-section-title vcf-section-title-line">Training Grounds</h2>
         <p class="vcf-section-desc">We bring the Mestalla experience to your neighborhood. Find our official training locations across the Houston area, equipped with top-tier facilities for our youth categories.</p>
         <p class="vcf-section-desc mb-4">Houston is big, but we make it easy to find us. Check the specific field number for your kid's category below.</p>
         <?php if (count($sedes) > 0): ?>
@@ -537,8 +556,9 @@ $nextTs = strtotime($proximoJuego['fecha'] . ' ' . ($proximoJuego['hora'] ?? '12
             <?php endforeach; ?>
         </div>
         <?php else: ?>
-        <div class="vcf-sede-card">
-            <p class="text-muted mb-0">Training locations will be listed here soon.</p>
+        <div class="vcf-empty-state">
+            <i class="fas fa-map-marker-alt vcf-empty-state-icon" aria-hidden="true"></i>
+            <p>Training locations will be listed here soon.</p>
         </div>
         <?php endif; ?>
     </div>
@@ -874,7 +894,10 @@ $nextTs = strtotime($proximoJuego['fecha'] . ' ' . ($proximoJuego['hora'] ?? '12
         <?php endif; ?>
 
         <?php if (count($juegosPorTorneo) === 0): ?>
-            <p class="text-muted">No matches scheduled yet.</p>
+            <div class="vcf-empty-state">
+                <i class="fas fa-futbol vcf-empty-state-icon" aria-hidden="true"></i>
+                <p>No matches scheduled yet.</p>
+            </div>
         <?php endif; ?>
     </div>
 </section>
@@ -902,9 +925,9 @@ $nextTs = strtotime($proximoJuego['fecha'] . ' ' . ($proximoJuego['hora'] ?? '12
                 </div>
             </div>
         <?php else: ?>
-            <div class="vcf-star-placeholder">
-                <i class="fas fa-trophy fa-3x mb-3" style="color: var(--vcf-orange); opacity: 0.6;"></i>
-                <p class="mb-0">Star of the Month coming soon.</p>
+            <div class="vcf-empty-state">
+                <i class="fas fa-trophy vcf-empty-state-icon" aria-hidden="true"></i>
+                <p>Star of the Month coming soon.</p>
             </div>
         <?php endif; ?>
     </div>

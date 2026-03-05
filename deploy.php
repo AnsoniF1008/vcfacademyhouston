@@ -72,7 +72,7 @@ function uploadDir($ftp, string $localDir, string $remoteDir, array $skipNames):
 }
 
 echo "Subiendo archivos...\n";
-$rootFiles = ['index.php', 'contact.php', 'privacy.php', 'join.php', 'calendar.php'];
+$rootFiles = ['index.php', 'contact.php', 'privacy.php', 'join.php', 'calendar.php', '.htaccess'];
 foreach ($rootFiles as $f) {
     $local = $baseDir . DIRECTORY_SEPARATOR . $f;
     if (is_file($local)) {
@@ -84,6 +84,7 @@ uploadDir($ftp, $baseDir . DIRECTORY_SEPARATOR . 'admin', $htdocs . '/admin', $s
 uploadDir($ftp, $baseDir . DIRECTORY_SEPARATOR . 'assets', $htdocs . '/assets', $skipNames);
 uploadDir($ftp, $baseDir . DIRECTORY_SEPARATOR . 'config', $htdocs . '/config', array_merge($skipNames, ['deploy-credentials.php']));
 uploadDir($ftp, $baseDir . DIRECTORY_SEPARATOR . 'includes', $htdocs . '/includes', $skipNames);
+uploadDir($ftp, $baseDir . DIRECTORY_SEPARATOR . 'api', $htdocs . '/api', $skipNames);
 uploadDir($ftp, $baseDir . DIRECTORY_SEPARATOR . 'sql', $htdocs . '/sql', $skipNames);
 
 $dbPass = $creds['db_pass'] ?? '';

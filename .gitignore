@@ -6,6 +6,9 @@ assets/uploads/*
 export/
 valencia-website.zip
 
+# Backup from production (Hostinger)
+backup/
+
 # Config con credenciales (no subir a git)
 config/database.local.php
 config/deploy-credentials.php
