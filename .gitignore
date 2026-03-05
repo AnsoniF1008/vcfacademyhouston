@@ -12,6 +12,7 @@ backup/
 # Config con credenciales (no subir a git)
 config/database.local.php
 config/deploy-credentials.php
+config/deploy-ftp.txt
 
 # OS
 .DS_Store

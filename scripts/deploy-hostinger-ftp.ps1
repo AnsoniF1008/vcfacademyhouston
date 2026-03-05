@@ -1,11 +1,28 @@
 # Despliega el sitio a Hostinger por FTP (puerto 21).
 # Uso: .\scripts\deploy-hostinger-ftp.ps1 -Password 'TU_CONTRASEÑA_FTP'
+#   o: .\scripts\deploy-hostinger-ftp.ps1 -PasswordFile 'config\deploy-ftp.txt'  (primera línea = contraseña; archivo en .gitignore)
 # No guardes la contraseña en el proyecto.
 
 param(
-    [Parameter(Mandatory=$true)]
-    [string]$Password
+    [Parameter(Mandatory=$false)]
+    [string]$Password,
+    [Parameter(Mandatory=$false)]
+    [string]$PasswordFile
 )
+
+$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+if (-not (Test-Path (Join-Path $root "index.php"))) { $root = "c:\xampp\htdocs\valencia" }
+
+if (-not $Password -and $PasswordFile) {
+    $credPath = Join-Path $root $PasswordFile
+    if (Test-Path $credPath) {
+        $Password = (Get-Content $credPath -TotalCount 1).Trim()
+    }
+}
+if (-not $Password) {
+    Write-Host "Indica la contraseña FTP: -Password 'TU_CONTRASEÑA' o -PasswordFile 'config\deploy-ftp.txt'" -ForegroundColor Red
+    exit 1
+}
 
 $ErrorActionPreference = "Stop"
 $ftpHost = "31.170.166.193"
@@ -13,9 +30,6 @@ $ftpPort = 21
 $ftpUser = "u766140586"
 # Subir a TODAS las rutas posibles: raíz FTP (por si ya estás en public_html), public_html y dominio
 $remoteBases = @("", "public_html", "domains/vcfacademyhouston.com/public_html")
-$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-if (-not (Test-Path (Join-Path $root "index.php"))) { $root = "c:\xampp\htdocs\valencia" }
-
 function Ensure-FtpDirectory {
     param([string]$dirPath)
     if ([string]::IsNullOrWhiteSpace($dirPath)) { return }
