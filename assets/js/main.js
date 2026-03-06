@@ -219,8 +219,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     var angle = (i * 60 - 90) * Math.PI / 180;
                     points.push((cx + r * Math.cos(angle)).toFixed(2) + ',' + (cy + r * Math.sin(angle)).toFixed(2));
                 }
-                radarPoly.setAttribute('points', points.join(' '));
-                radarWrap.classList.remove('d-none');
+                if (typeof vcfAnimateRadar === 'function') {
+                    vcfAnimateRadar(radarWrap, radarPoly, points.join(' '));
+                } else {
+                    radarPoly.setAttribute('points', points.join(' '));
+                    radarWrap.classList.remove('d-none');
+                }
             } else if (radarWrap) {
                 radarWrap.classList.add('d-none');
             }
@@ -347,4 +351,84 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    // --- Champions League animations: GSAP ScrollTrigger + Parallax + Radar ---
+    if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+        gsap.registerPlugin(ScrollTrigger);
+
+        // 1) Section reveal on scroll (slide up + blur clear)
+        gsap.utils.toArray('.vcf-section, .vcf-cards-strip').forEach(function (section) {
+            gsap.from(section, {
+                scrollTrigger: { trigger: section, start: 'top 88%', toggleActions: 'play none none none' },
+                y: 36,
+                opacity: 0,
+                duration: 0.6,
+                ease: 'power2.out'
+            });
+        });
+
+        // 2) Roster cards: stagger effect (0.1s between each)
+        var rosterCards = document.querySelectorAll('#roster .roster-card');
+        if (rosterCards.length) {
+            gsap.from(rosterCards, {
+                scrollTrigger: { trigger: '#roster', start: 'top 85%', toggleActions: 'play none none none' },
+                y: 28,
+                opacity: 0,
+                stagger: 0.1,
+                duration: 0.45,
+                ease: 'power2.out'
+            });
+        }
+
+        // 3) Hero parallax (mouse move): move active slide bg and content
+        var heroSwiper = document.querySelector('.vcf-hero-swiper');
+        if (heroSwiper) {
+            function onHeroMove(e) {
+                var active = heroSwiper.querySelector('.swiper-slide-active');
+                if (!active) return;
+                var heroBg = active.querySelector('.vcf-hero-slide-bg, .vcf-hero-slide-lcp');
+                var heroContent = active.querySelector('.vcf-hero-slide-content');
+                var rect = heroSwiper.getBoundingClientRect();
+                var x = (e.clientX - rect.left) / rect.width - 0.5;
+                var y = (e.clientY - rect.top) / rect.height - 0.5;
+                var move = 10;
+                if (heroBg) gsap.to(heroBg, { x: x * move, y: y * move, duration: 0.5, ease: 'power2.out' });
+                if (heroContent) gsap.to(heroContent, { x: -x * (move * 0.4), y: -y * (move * 0.4), duration: 0.5, ease: 'power2.out' });
+            }
+            function onHeroLeave() {
+                heroSwiper.querySelectorAll('.vcf-hero-slide-bg, .vcf-hero-slide-lcp, .vcf-hero-slide-content').forEach(function (el) {
+                    gsap.to(el, { x: 0, y: 0, duration: 0.7, ease: 'power2.out' });
+                });
+            }
+            heroSwiper.addEventListener('mousemove', onHeroMove);
+            heroSwiper.addEventListener('mouseleave', onHeroLeave);
+        }
+    }
 });
+
+// Radar chart: draw animation + label hover (called from fillPlayerModal when GSAP available)
+function vcfAnimateRadar(radarWrap, radarPoly, pointsStr) {
+    if (!radarWrap || !radarPoly) return;
+    var centerPoints = '50,50 50,50 50,50 50,50 50,50 50,50';
+    radarPoly.setAttribute('points', centerPoints);
+    radarWrap.classList.remove('d-none');
+    if (typeof gsap !== 'undefined') {
+        gsap.to(radarPoly, {
+            attr: { points: pointsStr },
+            duration: 0.9,
+            ease: 'back.out(1.4)'
+        });
+    } else {
+        radarPoly.setAttribute('points', pointsStr);
+    }
+    radarWrap.removeAttribute('data-hover-axis');
+    radarWrap.querySelectorAll('.player-radar-label').forEach(function (label) {
+        label.removeEventListener('mouseenter', label._vcfRadarEnter);
+        label.removeEventListener('mouseleave', label._vcfRadarLeave);
+        var axis = label.getAttribute('data-axis');
+        label._vcfRadarEnter = function () { radarWrap.setAttribute('data-hover-axis', axis); };
+        label._vcfRadarLeave = function () { radarWrap.removeAttribute('data-hover-axis'); };
+        label.addEventListener('mouseenter', label._vcfRadarEnter);
+        label.addEventListener('mouseleave', label._vcfRadarLeave);
+    });
+}

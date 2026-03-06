@@ -167,7 +167,6 @@ require __DIR__ . '/../includes/header.php';
     <?php if (isset($_GET['scorers_saved'])): ?>
         <div class="alert alert-success py-2">Scorers saved. Stats and Top Scorers update automatically on the homepage.</div>
     <?php endif; ?>
-
     <div class="row">
         <div class="col-lg-5 mb-4">
             <div class="card bg-dark border border-secondary rounded-3">
