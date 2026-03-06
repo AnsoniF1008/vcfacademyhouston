@@ -10,7 +10,8 @@ param(
     [string]$PasswordFile
 )
 
-$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+# Raíz del proyecto (carpeta que contiene index.php)
+$root = Split-Path -Parent $PSScriptRoot
 if (-not (Test-Path (Join-Path $root "index.php"))) { $root = "c:\xampp\htdocs\valencia" }
 
 if (-not $Password -and $PasswordFile) {
@@ -19,17 +20,28 @@ if (-not $Password -and $PasswordFile) {
         $Password = (Get-Content $credPath -TotalCount 1).Trim()
     }
 }
+# Opcional: leer hostinger_ftp_pass desde config/deploy-credentials.php
+if (-not $Password) {
+    $phpCred = Join-Path $root "config\deploy-credentials.php"
+    if (Test-Path $phpCred) {
+        $content = Get-Content $phpCred -Raw
+        if ($content -match "'hostinger_ftp_pass'\s*=>\s*'([^']+)'") {
+            $Password = $Matches[1].Trim()
+        }
+    }
+}
 if (-not $Password) {
     Write-Host "Indica la contraseña FTP: -Password 'TU_CONTRASEÑA' o -PasswordFile 'config\deploy-ftp.txt'" -ForegroundColor Red
+    Write-Host "O añade en config/deploy-credentials.php: 'hostinger_ftp_pass' => 'tu_contraseña_hostinger_ftp'" -ForegroundColor Yellow
     exit 1
 }
 
 $ErrorActionPreference = "Stop"
-$ftpHost = "31.170.166.193"
+$ftpHost = "ftp.vcfacademyhouston.com"
 $ftpPort = 21
-$ftpUser = "u766140586"
-# Subir a TODAS las rutas posibles: raíz FTP (por si ya estás en public_html), public_html y dominio
-$remoteBases = @("", "public_html", "domains/vcfacademyhouston.com/public_html")
+$ftpUser = "u766140586.ansonif"
+# Cuenta FTP con directorio: /home/u766140586/domains/vcfacademyhouston.com/public_html (raíz del usuario)
+$remoteBases = @("")
 function Ensure-FtpDirectory {
     param([string]$dirPath)
     if ([string]::IsNullOrWhiteSpace($dirPath)) { return }
@@ -80,6 +92,7 @@ function Send-FtpFile {
 
 function Push-FtpItem {
     param([string]$localFull, [string]$relativePath)
+    $relativePath = $relativePath -replace '\\', '/'
     if (Test-Path $localFull -PathType Container) {
         $children = Get-ChildItem -Path $localFull -Force
         foreach ($c in $children) {
@@ -87,31 +100,39 @@ function Push-FtpItem {
             Push-FtpItem -localFull $c.FullName -relativePath $rel
         }
     } else {
-        $parent = Split-Path -Parent $relativePath
+        $parent = (Split-Path -Parent $relativePath) -replace '\\', '/'
         if ($parent -and $parent -ne ".") {
             $remoteDir = if ($remoteBase -eq "") { $parent } else { "$remoteBase/$parent" }
-            New-FtpDirectoryRecursive $remoteDir
+            try {
+                New-FtpDirectoryRecursive $remoteDir
+            } catch {
+                Write-Host "  Error creando dir $remoteDir : $_" -ForegroundColor Red
+            }
         }
         $remoteFile = if ($remoteBase -eq "") { $relativePath } else { "$remoteBase/$relativePath" }
-        Write-Host "  $relativePath -> servidor"
+        $script:uploadCount += 1
+        Write-Host "  [$script:uploadCount] $relativePath"
         try {
             Send-FtpFile -localPath $localFull -remotePath $remoteFile
         } catch {
             Write-Host "  Error: $_" -ForegroundColor Red
         }
-        Start-Sleep -Milliseconds 300
+        Start-Sleep -Milliseconds 200
     }
 }
 
 Write-Host "Conectando por FTP a ${ftpHost}:${ftpPort} ..." -ForegroundColor Cyan
+# Primero archivos sueltos, luego carpetas (para verificar conexión)
 $toUpload = @(
-    "admin", "assets", "config", "includes", "api", "sql",
-    "index.php", "join.php", "contact.php", "calendar.php", "privacy.php", "deploy.php"
+    "index.php", "join.php", "contact.php", "calendar.php", "privacy.php", "deploy.php",
+    "admin", "assets", "config", "includes", "api", "sql", "docs"
 )
 if (Test-Path (Join-Path $root "scripts")) {
     $toUpload += "scripts"
 }
 
+$script:uploadCount = 0
+Write-Host "Items a subir: $($toUpload.Count)" -ForegroundColor Gray
 foreach ($remoteBase in $remoteBases) {
     $label = if ($remoteBase -eq "") { "(raíz FTP)" } else { "~/$remoteBase" }
     Write-Host "Subiendo a $label ..." -ForegroundColor Cyan
@@ -120,10 +141,15 @@ foreach ($remoteBase in $remoteBases) {
     }
     foreach ($item in $toUpload) {
         $local = Join-Path $root $item
-        if (-not (Test-Path $local)) { continue }
-        Push-FtpItem -localFull $local -relativePath $item
+        if (-not (Test-Path $local)) { Write-Host "  (omitido: $item no existe)" -ForegroundColor Yellow; continue }
+        try {
+            Push-FtpItem -localFull $local -relativePath $item
+        } catch {
+            Write-Host "  Error en $item : $_" -ForegroundColor Red
+        }
     }
 }
+Write-Host "Total subidos: $script:uploadCount archivos" -ForegroundColor Cyan
 
 Write-Host "Listo. Comprueba https://vcfacademyhouston.com" -ForegroundColor Green
 Write-Host "Asegura config/database.local.php en el servidor con los datos de MySQL de Hostinger." -ForegroundColor Yellow

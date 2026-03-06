@@ -53,12 +53,13 @@ if (isset($_GET['edit'])) {
     }
 }
 
+require_once __DIR__ . '/includes/breadcrumb.php';
 $page_title = 'Manage Categories - VCF Academy Houston';
 require __DIR__ . '/../includes/header.php';
 ?>
 <div class="container py-5">
-    <h1 class="mb-4" style="color: #FF6600;">Categories / Training Schedules</h1>
-    <p><a href="dashboard.php" class="text-decoration-none" style="color: #FF6600;">&larr; Dashboard</a></p>
+    <?= admin_breadcrumb([['label' => 'Categories']]) ?>
+    <h1 class="mb-4 admin-page-title">Categories / Training Schedules</h1>
 
     <?php if ($message): ?>
         <div class="alert alert-<?= $messageType ?> py-2"><?= htmlspecialchars($message) ?></div>

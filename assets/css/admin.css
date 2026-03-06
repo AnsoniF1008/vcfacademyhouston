@@ -1,0 +1,175 @@
+/* Admin panel – VCF Academy Houston */
+:root {
+    --admin-accent: #FF6600;
+    --admin-accent-hover: #e65c00;
+    --admin-card-bg: var(--bs-dark, #212529);
+    --admin-card-border: var(--bs-secondary, #6c757d);
+}
+
+.admin-page-title,
+h1.admin-page-title {
+    color: var(--admin-accent) !important;
+}
+
+.admin-link-back {
+    color: var(--admin-accent) !important;
+}
+.admin-link-back:hover {
+    color: var(--admin-accent-hover) !important;
+}
+
+/* Dashboard cards */
+.admin-card.hover-orange:hover,
+.hover-orange:hover {
+    border-color: var(--admin-accent) !important;
+}
+
+.admin-card-icon,
+.admin-card .card-body i.fa-2x {
+    color: var(--admin-accent) !important;
+}
+
+/* Buttons */
+.btn-admin-primary {
+    background: var(--admin-accent) !important;
+    border: none !important;
+    color: #fff !important;
+}
+.btn-admin-primary:hover {
+    background: var(--admin-accent-hover) !important;
+    color: #fff !important;
+}
+
+/* Breadcrumb */
+.admin-breadcrumb {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+.admin-breadcrumb a {
+    color: var(--admin-accent);
+    text-decoration: none;
+}
+.admin-breadcrumb a:hover {
+    text-decoration: underline;
+}
+.admin-breadcrumb .separator {
+    color: var(--admin-card-border);
+    margin: 0 0.35rem;
+}
+
+/* Nav active state (Bootstrap augments .nav-link.active) */
+.navbar .nav-link.active {
+    color: var(--admin-accent) !important;
+    font-weight: 600;
+}
+
+/* Torneos / list pages: balanced columns, list doesn't overstretch */
+.admin-torneos-row .admin-card-list {
+    max-width: 100%;
+}
+.admin-torneos-row .admin-table-wrap {
+    min-width: 0; /* allow table to shrink inside flex */
+}
+.admin-torneos-row .table {
+    width: 100%;
+}
+
+/* ========== Admin header/navbar responsive ========== */
+.vcf-header-admin .navbar .container {
+    flex-wrap: wrap;
+}
+.vcf-header-admin .navbar-brand {
+    max-width: calc(100% - 56px); /* leave room for toggler */
+    min-width: 0;
+}
+.vcf-header-admin .vcf-navbar-crest {
+    width: 40px;
+    height: 40px;
+}
+.vcf-header-admin .vcf-logo-text {
+    font-size: 1.25rem;
+}
+.vcf-header-admin .vcf-academy-text {
+    font-size: 0.95rem;
+}
+
+/* Admin nav: collapse below xxl (1400px) so many items never wrap */
+@media (max-width: 1399.98px) {
+    .vcf-header-admin .navbar {
+        padding: 0.5rem 0.75rem;
+    }
+    .vcf-header-admin .navbar-toggler {
+        padding: 0.5rem 0.6rem;
+        font-size: 1rem;
+    }
+    .vcf-header-admin .navbar-brand {
+        max-width: calc(100% - 52px);
+    }
+    .vcf-header-admin .vcf-navbar-crest {
+        width: 36px;
+        height: 36px;
+    }
+    .vcf-header-admin .vcf-logo-text {
+        font-size: 1.1rem;
+    }
+    .vcf-header-admin .vcf-academy-text {
+        font-size: 0.85rem;
+    }
+    /* Collapsed menu: full width, scrollable, clear tap targets */
+    .vcf-header-admin .navbar-collapse {
+        background: rgba(13, 13, 13, 0.98);
+        margin: 0.5rem -0.75rem -0.5rem -0.75rem;
+        padding: 0.75rem 1rem 1rem;
+        border-top: 1px solid rgba(255, 102, 0, 0.35);
+        max-height: min(70vh, 400px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .vcf-header-admin .navbar-nav {
+        flex-direction: column;
+        gap: 0;
+        width: 100%;
+    }
+    .vcf-header-admin .navbar-nav .nav-item {
+        width: 100%;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .vcf-header-admin .navbar-nav .nav-item:last-child {
+        border-bottom: none;
+    }
+    .vcf-header-admin .nav-link {
+        display: block;
+        padding: 0.75rem 0.5rem !important;
+        font-size: 0.85rem !important;
+        width: 100%;
+    }
+    .vcf-header-admin .navbar-nav.ms-auto {
+        margin-left: 0 !important;
+    }
+    /* Dropdown "Gestionar" en menú colapsado */
+    .vcf-header-admin .dropdown-menu {
+        background: rgba(30, 30, 30, 0.98);
+        border: 1px solid rgba(255, 102, 0, 0.3);
+        margin-top: 0.25rem;
+    }
+    .vcf-header-admin .dropdown-item {
+        padding: 0.6rem 0.75rem;
+    }
+    .vcf-header-admin .dropdown-item:hover,
+    .vcf-header-admin .dropdown-item.active {
+        background: rgba(255, 102, 0, 0.2);
+        color: var(--admin-accent);
+    }
+}
+
+@media (max-width: 575.98px) {
+    .vcf-header-admin .navbar-brand {
+        max-width: calc(100% - 48px);
+    }
+    .vcf-header-admin .vcf-academy-text {
+        display: none; /* "Academy Houston" hidden on very small screens to free space */
+    }
+    .vcf-header-admin .vcf-logo-text {
+        font-size: 1.25rem;
+    }
+}

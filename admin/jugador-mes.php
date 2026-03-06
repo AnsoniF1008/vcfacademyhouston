@@ -52,16 +52,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message = 'Image too large. Max 5MB.';
                 $messageType = 'danger';
             } else {
+                $clientName = basename($_FILES['foto']['name'] ?? '');
+                if (strpos($clientName, '..') !== false || preg_match('/\.(php|phtml|php3|php4|php5|phar|htaccess)(\.|$)/i', $clientName)) {
+                    $message = 'Invalid file name.';
+                    $messageType = 'danger';
+                } else {
                 $ext = match($mime) {
                     'image/jpeg' => 'jpg',
                     'image/png' => 'png',
                     'image/webp' => 'webp',
                     default => 'jpg',
                 };
+                $ext = in_array($ext, ['jpg', 'png', 'webp'], true) ? $ext : 'jpg';
                 $filename = 'star-' . uniqid() . '.' . $ext;
+                if (strpos($filename, '..') !== false || strpbrk($filename, '/\\') !== false) {
+                    $message = 'Invalid file name.';
+                    $messageType = 'danger';
+                } else {
                 $path = $uploadDir . $filename;
                 if (move_uploaded_file($_FILES['foto']['tmp_name'], $path)) {
                     $foto_url = 'assets/uploads/' . $filename;
+                }
+                }
                 }
             }
         }
@@ -120,12 +132,13 @@ $rosterForStar = $pdo->query("
     ORDER BY c.nombre ASC, r.apellido ASC, r.nombre ASC
 ")->fetchAll(PDO::FETCH_ASSOC);
 
+require_once __DIR__ . '/includes/breadcrumb.php';
 $page_title = 'Jugador del Mes - VCF Academy Houston';
 require __DIR__ . '/../includes/header.php';
 ?>
 <div class="container py-5">
-    <h1 class="mb-4" style="color: #FF6600;">VCF Star of the Month</h1>
-    <p><a href="dashboard.php" class="text-decoration-none" style="color: #FF6600;">&larr; Dashboard</a></p>
+    <?= admin_breadcrumb([['label' => 'Jugador del Mes']]) ?>
+    <h1 class="mb-4 admin-page-title">VCF Star of the Month</h1>
 
     <?php if ($message): ?>
         <div class="alert alert-<?= $messageType ?> py-2"><?= htmlspecialchars($message) ?></div>

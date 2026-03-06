@@ -153,12 +153,13 @@ if (isset($_GET['edit'])) {
     }
 }
 
+require_once __DIR__ . '/includes/breadcrumb.php';
 $page_title = 'Games - ' . htmlspecialchars($torneo['nombre_torneo']);
 require __DIR__ . '/../includes/header.php';
 ?>
 <div class="container py-5">
-    <h1 class="mb-4" style="color: #FF6600;"><?= htmlspecialchars($torneo['nombre_torneo']) ?><?= $torneo['temporada'] ? ' — ' . htmlspecialchars($torneo['temporada']) : '' ?></h1>
-    <p><a href="torneos.php" class="text-decoration-none" style="color: #FF6600;">&larr; Tournaments</a></p>
+    <?= admin_breadcrumb([['label' => 'Torneos', 'url' => 'torneos.php'], ['label' => 'Juegos']]) ?>
+    <h1 class="mb-4 admin-page-title"><?= htmlspecialchars($torneo['nombre_torneo']) ?><?= $torneo['temporada'] ? ' — ' . htmlspecialchars($torneo['temporada']) : '' ?></h1>
 
     <?php if ($message): ?>
         <div class="alert alert-<?= $messageType ?> py-2"><?= htmlspecialchars($message) ?></div>

@@ -109,12 +109,13 @@ $rosterOptions = $pdo->query("
     ORDER BY c.nombre, r.dorsal, r.apellido
 ")->fetchAll(PDO::FETCH_ASSOC);
 
+require_once __DIR__ . '/includes/breadcrumb.php';
 $page_title = 'Man of the Match - VCF Academy Houston';
 require __DIR__ . '/../includes/header.php';
 ?>
 <div class="container py-5">
-    <h1 class="mb-4" style="color: #FF6600;">Man of the Match</h1>
-    <p><a href="dashboard.php" class="text-decoration-none" style="color: #FF6600;">&larr; Dashboard</a></p>
+    <?= admin_breadcrumb([['label' => 'MOTM']]) ?>
+    <h1 class="mb-4 admin-page-title">Man of the Match</h1>
 
     <?php if ($message): ?>
         <div class="alert alert-<?= $messageType ?> py-2"><?= htmlspecialchars($message) ?></div>

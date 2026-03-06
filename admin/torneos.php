@@ -53,20 +53,21 @@ if (isset($_GET['edit'])) {
     }
 }
 
+require_once __DIR__ . '/includes/breadcrumb.php';
 $page_title = 'Manage Tournaments - VCF Academy Houston';
 require __DIR__ . '/../includes/header.php';
 ?>
 <div class="container py-5">
-    <h1 class="mb-4" style="color: #FF6600;">Tournaments (Torneos)</h1>
-    <p><a href="dashboard.php" class="text-decoration-none" style="color: #FF6600;">&larr; Dashboard</a></p>
+    <?= admin_breadcrumb([['label' => 'Torneos']]) ?>
+    <h1 class="mb-4 admin-page-title">Tournaments (Torneos)</h1>
 
     <?php if ($message): ?>
         <div class="alert alert-<?= $messageType ?> py-2"><?= htmlspecialchars($message) ?></div>
     <?php endif; ?>
 
-    <div class="row">
-        <div class="col-lg-5 mb-4">
-            <div class="card bg-dark border border-secondary rounded-3">
+    <div class="row admin-torneos-row">
+        <div class="col-md-6 col-lg-6 mb-4">
+            <div class="card bg-dark border border-secondary rounded-3 h-100">
                 <div class="card-body">
                     <h5 class="card-title text-white"><?= $editing ? 'Edit tournament' : 'Add tournament' ?></h5>
                     <form method="post" action="">
@@ -82,7 +83,7 @@ require __DIR__ . '/../includes/header.php';
                             <label class="form-label text-white small">Season (optional)</label>
                             <input type="text" class="form-control bg-dark text-white border-secondary" name="temporada" placeholder="e.g. Spring 2026" value="<?= htmlspecialchars($editing['temporada'] ?? '') ?>">
                         </div>
-                        <button type="submit" class="btn btn-primary" style="background:#FF6600;border:none;"><?= $editing ? 'Update' : 'Add' ?></button>
+                        <button type="submit" class="btn btn-primary btn-admin-primary"><?= $editing ? 'Update' : 'Add' ?></button>
                         <?php if ($editing): ?>
                             <a href="torneos.php" class="btn btn-secondary">Cancel</a>
                         <?php endif; ?>
@@ -90,14 +91,14 @@ require __DIR__ . '/../includes/header.php';
                 </div>
             </div>
         </div>
-        <div class="col-lg-7">
-            <div class="card bg-dark border border-secondary rounded-3">
+        <div class="col-md-6 col-lg-6">
+            <div class="card bg-dark border border-secondary rounded-3 admin-card-list h-100">
                 <div class="card-body">
                     <h5 class="card-title text-white">Tournaments</h5>
                     <?php if (count($torneos) === 0): ?>
                         <p class="text-muted mb-0">No tournaments yet. Add one, then manage its games.</p>
                     <?php else: ?>
-                        <div class="table-responsive">
+                        <div class="table-responsive admin-table-wrap">
                             <table class="table table-dark table-sm">
                                 <thead>
                                     <tr>
@@ -112,7 +113,7 @@ require __DIR__ . '/../includes/header.php';
                                             <td><?= htmlspecialchars($t['nombre_torneo']) ?></td>
                                             <td><?= $t['temporada'] !== null ? htmlspecialchars($t['temporada']) : '—' ?></td>
                                             <td>
-                                                <a href="juegos.php?torneo_id=<?= (int) $t['id'] ?>" class="btn btn-sm btn-primary" style="background:#FF6600;border:none;">Manage games</a>
+                                                <a href="juegos.php?torneo_id=<?= (int) $t['id'] ?>" class="btn btn-sm btn-admin-primary">Manage games</a>
                                                 <a href="torneos.php?edit=<?= (int) $t['id'] ?>" class="btn btn-sm btn-outline-secondary">Edit</a>
                                                 <form method="post" class="d-inline" onsubmit="return confirm('Delete this tournament and all its games?');">
                                                     <?= csrf_field() ?>

@@ -17,40 +17,51 @@ if (!$table_exists) {
     exit;
 }
 
-$limit = min(500, max(50, (int) ($_GET['limit'] ?? 100)));
+$limit = in_array((int) ($_GET['limit'] ?? 100), [50, 100, 200], true) ? (int) $_GET['limit'] : 100;
 $page = max(1, (int) ($_GET['page'] ?? 1));
 $offset = ($page - 1) * $limit;
 
 $filter_user = isset($_GET['user']) ? trim($_GET['user']) : '';
 $count_sql = "SELECT COUNT(*) FROM admin_activity_log";
-$list_sql = "SELECT id, user_id, username, action, details, created_at FROM admin_activity_log";
+$list_base_sql = "SELECT id, user_id, username, action, details, created_at FROM admin_activity_log";
 $params = [];
 if ($filter_user !== '') {
     $count_sql .= " WHERE username = ?";
-    $list_sql .= " WHERE username = ?";
+    $list_base_sql .= " WHERE username = ?";
     $params[] = $filter_user;
 }
-$list_sql .= " ORDER BY created_at DESC LIMIT " . (int) $limit . " OFFSET " . (int) $offset;
+$list_base_sql .= " ORDER BY created_at DESC";
 
 $st = $pdo->prepare($count_sql);
 $st->execute($params);
 $total = (int) $st->fetchColumn();
+$total_pages = $total > 0 ? (int) ceil($total / $limit) : 1;
+$page = min(max(1, $page), $total_pages);
+$offset = ($page - 1) * $limit;
 
+$list_sql = $list_base_sql . " LIMIT " . (int) $limit . " OFFSET " . (int) $offset;
 $stmt = $pdo->prepare($list_sql);
 $stmt->execute($params);
 $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+require_once __DIR__ . '/includes/breadcrumb.php';
 $page_title = 'Activity Log - VCF Academy Houston';
 require __DIR__ . '/../includes/header.php';
 ?>
 <div class="container py-5">
-    <h1 class="mb-4" style="color: #FF6600;">Activity Log</h1>
-    <p><a href="dashboard.php" class="text-decoration-none" style="color: #FF6600;">&larr; Dashboard</a></p>
+    <?= admin_breadcrumb([['label' => 'Activity log']]) ?>
+    <h1 class="mb-4 admin-page-title">Activity Log</h1>
 
     <form method="get" class="mb-3 d-flex flex-wrap gap-2 align-items-center">
         <label class="text-white small">Filter by user</label>
         <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" name="user" value="<?= htmlspecialchars($filter_user) ?>" placeholder="username">
-        <input type="hidden" name="limit" value="<?= (int) $limit ?>">
+        <label class="text-white small ms-2">Limit</label>
+        <select name="limit" class="form-select form-select-sm bg-dark text-white border-secondary" style="width: auto;">
+            <option value="50" <?= $limit === 50 ? 'selected' : '' ?>>50</option>
+            <option value="100" <?= $limit === 100 ? 'selected' : '' ?>>100</option>
+            <option value="200" <?= $limit === 200 ? 'selected' : '' ?>>200</option>
+        </select>
+        <input type="hidden" name="page" value="1">
         <button type="submit" class="btn btn-sm btn-outline-secondary">Filter</button>
         <a href="activity-log.php" class="btn btn-sm btn-outline-secondary">Clear</a>
     </form>
@@ -83,9 +94,19 @@ require __DIR__ . '/../includes/header.php';
                     </tbody>
                 </table>
             </div>
-            <?php if ($total > $limit): ?>
-            <p class="text-muted small mt-2">Showing <?= count($entries) ?> of <?= $total ?> total.</p>
-            <?php endif; ?>
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3">
+                <p class="text-muted small mb-0">Page <?= (int) $page ?> of <?= (int) $total_pages ?><?= $total_pages > 0 ? ' &middot; ' . (int) $total . ' total entries' : '' ?></p>
+                <nav aria-label="Activity log pagination">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+                            <a class="page-link bg-dark border-secondary text-white" href="?page=<?= $page - 1 ?>&limit=<?= (int) $limit ?><?= $filter_user !== '' ? '&user=' . urlencode($filter_user) : '' ?>">Previous</a>
+                        </li>
+                        <li class="page-item <?= $page >= $total_pages ? 'disabled' : '' ?>">
+                            <a class="page-link bg-dark border-secondary text-white" href="?page=<?= $page + 1 ?>&limit=<?= (int) $limit ?><?= $filter_user !== '' ? '&user=' . urlencode($filter_user) : '' ?>">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
         </div>
     </div>
 </div>

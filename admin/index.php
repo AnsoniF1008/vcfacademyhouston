@@ -10,9 +10,20 @@ require __DIR__ . '/includes/csrf.php';
 
 $error = '';
 
+// Rate limit: 5 attempts per 15 minutes per session (IP effectively, same browser)
+$window_sec = 900;
+if (isset($_SESSION['login_attempts_time']) && (time() - $_SESSION['login_attempts_time']) > $window_sec) {
+    $_SESSION['login_attempts_time'] = null;
+    $_SESSION['login_attempts_count'] = 0;
+}
+$attempts = (int) ($_SESSION['login_attempts_count'] ?? 0);
+$max_attempts = 5;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify()) {
         $error = 'Invalid request. Please try again.';
+    } elseif ($attempts >= $max_attempts) {
+        $error = 'Too many login attempts. Try again in 15 minutes.';
     } else {
     $user = trim($_POST['username'] ?? '');
     $pass = $_POST['password'] ?? '';
@@ -20,16 +31,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($user === '' || $pass === '') {
         $error = 'Please enter username and password.';
     } else {
-        $stmt = $pdo->prepare("SELECT id, password_hash FROM admin_users WHERE username = ?");
+        $stmt = $pdo->prepare("SELECT id, password_hash, username FROM admin_users WHERE username = ?");
         $stmt->execute([$user]);
-        $row = $stmt->fetch();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($row && password_verify($pass, $row['password_hash'])) {
+            $_SESSION['login_attempts_count'] = 0;
+            $_SESSION['login_attempts_time'] = null;
+            try {
+                $log = $pdo->prepare("INSERT INTO admin_activity_log (user_id, username, action, details) VALUES (?, ?, 'auth.login_ok', ?)");
+                $log->execute([$row['id'], $row['username'] ?? $user, $_SERVER['REMOTE_ADDR'] ?? '']);
+            } catch (PDOException $e) {
+                error_log('admin login log: ' . $e->getMessage());
+            }
             session_regenerate_id(true);
             $_SESSION['admin_logged'] = true;
             $_SESSION['admin_user_id'] = $row['id'];
             header('Location: dashboard.php');
             exit;
+        }
+        $_SESSION['login_attempts_count'] = $attempts + 1;
+        $_SESSION['login_attempts_time'] = $_SESSION['login_attempts_time'] ?? time();
+        try {
+            $log = $pdo->prepare("INSERT INTO admin_activity_log (user_id, username, action, details) VALUES (NULL, ?, 'auth.login_fail', ?)");
+            $log->execute([$user, $_SERVER['REMOTE_ADDR'] ?? '']);
+        } catch (PDOException $e) {
+            error_log('admin login log: ' . $e->getMessage());
         }
         $error = 'Invalid username or password.';
     }

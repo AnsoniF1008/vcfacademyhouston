@@ -7,6 +7,8 @@ return [
     'ftp_host'     => 'ftpupload.net',
     'ftp_user'     => 'if0_41281527',
     'ftp_pass'     => 'TU_CONTRASEÑA_FTP',
+    // FTP Hostinger (deploy-hostinger-ftp.ps1): usuario en script, contraseña aquí
+    'hostinger_ftp_pass' => 'TU_CONTRASEÑA_FTP_HOSTINGER',
     'ftp_port'     => 21,
     'ftp_htdocs'   => 'htdocs',
     'db_host'      => 'sql101.infinityfree.com',

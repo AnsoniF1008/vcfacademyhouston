@@ -14,9 +14,8 @@
                     </ul>
                 </div>
                 <div class="col-6 col-md-3 mb-4 mb-md-0">
-                    <h4 class="vcf-footer-heading">Join</h4>
+                    <h4 class="vcf-footer-heading">More</h4>
                     <ul class="vcf-footer-list">
-                        <li><a href="<?= isset($base) ? $base : '' ?>/join.php" class="footer-link">Join the Academy</a></li>
                         <li><a href="<?= isset($base) ? $base : '' ?>/calendar.php" class="footer-link">Calendar</a></li>
                         <li><a href="<?= isset($base) ? $base : '' ?>/contact.php" class="footer-link">Contact</a></li>
                     </ul>
@@ -33,7 +32,7 @@
                     <a href="https://www.valenciacf.com" target="_blank" rel="noopener noreferrer" class="footer-link d-inline-flex align-items-center gap-1"><i class="fas fa-external-link-alt small me-1" aria-hidden="true"></i> valenciacf.com</a>
                 </div>
             </div>
-            <div class="vcf-footer-sponsors mt-4 pt-4">
+            <div id="partners" class="vcf-footer-sponsors mt-4 pt-4">
                 <h4 class="vcf-footer-heading text-center mb-3">Partners</h4>
                 <div class="vcf-footer-sponsors-logos d-flex flex-wrap align-items-center justify-content-center gap-4">
                     <!-- Add sponsor logo <img> here, e.g. <img src="..." alt="Partner" class="vcf-footer-sponsor-logo"> -->
@@ -53,10 +52,12 @@
     $use_local_bootstrap_js = file_exists($footer_vendor_root . '/bootstrap/js/bootstrap.bundle.min.js');
     ?>
     <?php if ($use_local_bootstrap_js): ?>
-    <script src="<?= isset($base) ? $base : '' ?>/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="<?= isset($base) ? $base : '' ?>/assets/vendor/bootstrap/js/bootstrap.bundle.min.js" defer></script>
     <?php else: ?>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
     <?php endif; ?>
-    <script src="<?= isset($base) ? $base : '' ?>/assets/js/main.js?v=6"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+    <script src="<?= isset($base) ? $base : '' ?>/assets/js/main.js?v=8" defer></script>
 </body>
 </html>

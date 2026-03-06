@@ -296,8 +296,11 @@ require __DIR__ . '/includes/header.php';
 <section id="hero" class="vcf-hero-slider-section" aria-label="Hero slider">
     <div class="swiper vcf-hero-swiper">
         <div class="swiper-wrapper">
-            <?php foreach ($heroSlides as $slide): ?>
+            <?php foreach ($heroSlides as $idx => $slide): ?>
             <div class="swiper-slide vcf-hero-slide">
+                <?php if ($idx === 0): ?>
+                <img class="vcf-hero-slide-lcp" src="<?= htmlspecialchars($base ?? '') ?>/<?= htmlspecialchars($slide['image_url']) ?>" alt="" width="1920" height="1080" fetchpriority="high" decoding="async">
+                <?php endif; ?>
                 <div class="vcf-hero-slide-bg" style="background-image: url('<?= htmlspecialchars($base ?? '') ?>/<?= htmlspecialchars($slide['image_url']) ?>');"></div>
                 <div class="vcf-hero-slide-overlay"></div>
                 <div class="vcf-hero-slide-content">
@@ -315,7 +318,6 @@ require __DIR__ . '/includes/header.php';
         <div class="vcf-hero-progress" aria-hidden="true"><span class="vcf-hero-progress-bar"></span></div>
     </div>
 </section>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <?php else: ?>
 <?php if (!empty($hero_mobile_path)): ?>
 <style>@media (max-width: 768px) { .vcf-hero { background-image: url('<?= $base ?? '' ?>/<?= htmlspecialchars($hero_mobile_path) ?>'), linear-gradient(rgba(13, 13, 13, 0.75), rgba(13, 13, 13, 0.88)); } }</style>
@@ -325,7 +327,6 @@ require __DIR__ . '/includes/header.php';
         <div class="vcf-hero-content">
             <h1>The Sentiment Arrives in Houston.</h1>
             <p class="lead">Training the next generation of soccer stars under the world-renowned Valencia CF Methodology.</p>
-            <a href="<?= $base ?? '' ?>/join.php" class="vcf-btn-cta">Join the Academy</a>
         </div>
         <?php if ($hero_video_exists): ?>
         <div class="vcf-hero-video-wrap">
@@ -338,63 +339,64 @@ require __DIR__ . '/includes/header.php';
 </section>
 <?php endif; ?>
 
-<?php if (count($proximosJuegos) > 0): ?>
-<section class="vcf-nextmatch-strip" aria-label="Upcoming matches">
+<section class="vcf-cards-strip" aria-label="Upcoming matches and partners">
     <div class="container">
-        <?php foreach ($proximosJuegos as $idx => $juego): ?>
-        <?php
-        $gameTs = strtotime($juego['fecha'] . ' ' . ($juego['hora'] ?? '12:00:00'));
-        $rivalName = !empty($juego['rival']) ? htmlspecialchars($juego['rival']) : 'TBD';
-        $rivalLogoUrl = !empty($juego['rival_logo_url']) ? $juego['rival_logo_url'] : null;
-        ?>
-        <div class="vcf-nextmatch-widget<?= $idx > 0 ? ' vcf-nextmatch-widget--secondary mt-4' : '' ?>">
-            <p class="vcf-nextmatch-label"><?= $idx === 0 ? 'NEXT MATCH' : 'UPCOMING' ?></p>
-            <div class="vcf-nextmatch-teams">
-                <div class="vcf-nextmatch-team vcf-nextmatch-team--home">
-                    <?php if ($vcf_crest_file ?? null): ?>
-                        <img src="<?= $base ?? '' ?>/assets/img/<?= $vcf_crest_file ?>" alt="" class="vcf-nextmatch-logo" width="64" height="64">
-                    <?php else: ?>
-                        <span class="vcf-nextmatch-logo vcf-nextmatch-logo-placeholder" aria-hidden="true"><i class="fas fa-shield-alt"></i></span>
-                    <?php endif; ?>
-                    <span class="vcf-nextmatch-team-name">VCF Houston</span>
+        <div class="vcf-cards-row">
+            <?php
+            $showMatches = array_slice($proximosJuegos, 0, 2);
+            foreach ($showMatches as $idx => $juego):
+                $gameTs = strtotime($juego['fecha'] . ' ' . ($juego['hora'] ?? '12:00:00'));
+                $rivalName = !empty($juego['rival']) ? htmlspecialchars($juego['rival']) : 'TBD';
+                $rivalLogoUrl = !empty($juego['rival_logo_url']) ? $juego['rival_logo_url'] : null;
+                $venue = htmlspecialchars($juego['sede_nombre'] ?? $juego['cancha'] ?? '');
+            ?>
+            <article class="vcf-match-card">
+                <div class="vcf-match-card-header">
+                    <div class="vcf-match-card-date"><?= strtoupper(date('D M j', $gameTs)) ?> / <?= strtoupper($juego['nombre_torneo'] ?? 'MATCH') ?></div>
+                    <div class="vcf-match-card-time"><?= date('g:i', $gameTs) ?> <?= date('A', $gameTs) ?></div>
                 </div>
-                <div class="vcf-nextmatch-center">
-                    <span class="vcf-nextmatch-vs">VS</span>
-                    <div class="vcf-nextmatch-meta">
-                        <span class="vcf-nextmatch-date"><?= date('M j, g:i A', $gameTs) ?></span>
-                        <span class="vcf-nextmatch-venue"><?= htmlspecialchars($juego['sede_nombre'] ?? $juego['cancha'] ?? '') ?></span>
+                <div class="vcf-match-card-teams">
+                    <div class="vcf-match-card-team">
+                        <?php if ($vcf_crest_file ?? null): ?>
+                            <img src="<?= $base ?? '' ?>/assets/img/<?= $vcf_crest_file ?>" alt="" class="vcf-match-card-crest" width="48" height="48" loading="lazy">
+                        <?php else: ?>
+                            <span class="vcf-match-card-crest vcf-match-card-crest--placeholder" aria-hidden="true"><i class="fas fa-shield-alt"></i></span>
+                        <?php endif; ?>
+                        <span class="vcf-match-card-team-name vcf-match-card-team-name--home">VCF Houston</span>
                     </div>
-                    <div class="vcf-countdown-wrap vcf-nextmatch-countdown" data-countdown-iso="<?= date('c', $gameTs) ?>" data-countdown-unix="<?= $gameTs ?>" data-countdown-target="<?= date('M j, Y g:i A', $gameTs) ?> CST">
-                        <div class="vcf-countdown" aria-live="polite">
-                            <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-days>0</span> <span class="vcf-countdown-unit">D</span></span>
-                            <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-hours>0</span> <span class="vcf-countdown-unit">H</span></span>
-                            <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-minutes>0</span> <span class="vcf-countdown-unit">M</span></span>
-                            <span class="vcf-countdown-item"><span class="vcf-countdown-num" data-seconds>0</span> <span class="vcf-countdown-unit">S</span></span>
-                        </div>
+                    <div class="vcf-match-card-team">
+                        <?php if ($rivalLogoUrl): ?>
+                            <img src="<?= htmlspecialchars($rivalLogoUrl) ?>" alt="" class="vcf-match-card-crest" width="48" height="48" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">
+                            <span class="vcf-match-card-crest vcf-match-card-crest--placeholder" style="display:none;" aria-hidden="true"><i class="fas fa-shield-alt"></i></span>
+                        <?php else: ?>
+                            <span class="vcf-match-card-crest vcf-match-card-crest--placeholder" aria-hidden="true"><i class="fas fa-shield-alt"></i></span>
+                        <?php endif; ?>
+                        <span class="vcf-match-card-team-name"><?= $rivalName ?></span>
                     </div>
                 </div>
-                <div class="vcf-nextmatch-team vcf-nextmatch-team--away">
-                    <?php if ($rivalLogoUrl): ?>
-                        <img src="<?= htmlspecialchars($rivalLogoUrl) ?>" alt="" class="vcf-nextmatch-logo" width="64" height="64" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">
-                        <span class="vcf-nextmatch-logo vcf-nextmatch-logo-placeholder" style="display:none;" aria-hidden="true"><i class="fas fa-shield-alt"></i></span>
-                    <?php else: ?>
-                        <span class="vcf-nextmatch-logo vcf-nextmatch-logo-placeholder" aria-hidden="true"><i class="fas fa-shield-alt"></i></span>
-                    <?php endif; ?>
-                    <span class="vcf-nextmatch-team-name"><?= $rivalName ?></span>
+                <div class="vcf-match-card-countdown-wrap vcf-countdown-wrap" data-countdown-iso="<?= date('c', $gameTs) ?>" data-countdown-unix="<?= $gameTs ?>" data-countdown-target="<?= date('M j, Y g:i A', $gameTs) ?> CST">
+                    <div class="vcf-match-card-countdown" aria-live="polite">
+                        <span class="vcf-match-card-countdown-item"><span class="vcf-match-card-countdown-num" data-days>0</span><span class="vcf-match-card-countdown-unit">D</span></span>
+                        <span class="vcf-match-card-countdown-item"><span class="vcf-match-card-countdown-num" data-hours>0</span><span class="vcf-match-card-countdown-unit">H</span></span>
+                        <span class="vcf-match-card-countdown-item"><span class="vcf-match-card-countdown-num" data-minutes>0</span><span class="vcf-match-card-countdown-unit">M</span></span>
+                        <span class="vcf-match-card-countdown-item"><span class="vcf-match-card-countdown-num" data-seconds>0</span><span class="vcf-match-card-countdown-unit">S</span></span>
+                    </div>
+                    <div class="vcf-match-card-countdown-labels">
+                        <span>Días</span><span>Horas</span><span>Min</span><span>Seg</span>
+                    </div>
                 </div>
-            </div>
+                <div class="vcf-match-card-footer">
+                    <span class="vcf-match-card-venue"><?= $venue ?></span>
+                    <div class="vcf-match-card-actions">
+                        <a href="<?= $base ?? '' ?>/#tournaments" class="vcf-btn-pill vcf-btn-pill--outline">INFO</a>
+                        <a href="<?= $base ?? '' ?>/#tournaments" class="vcf-btn-pill vcf-btn-pill--fill">DETALLES</a>
+                    </div>
+                </div>
+            </article>
+            <?php endforeach; ?>
         </div>
-        <?php endforeach; ?>
     </div>
 </section>
-<?php else: ?>
-<section class="vcf-nextmatch-strip" aria-label="Next match placeholder">
-    <div class="container d-flex flex-wrap align-items-center justify-content-center gap-3 py-3">
-        <i class="fas fa-futbol me-2" style="color: var(--vcf-orange); font-size: 1.5rem;" aria-hidden="true"></i>
-        <p class="mb-0 text-center" style="color: #FFFFFF; font-weight: 600; font-size: 1.1rem;">Next Match Coming Soon</p>
-    </div>
-</section>
-<?php endif; ?>
 
 <?php if ($motmOpen || $motmWinner): ?>
 <section id="motm" class="vcf-section motm-section">
@@ -419,7 +421,7 @@ require __DIR__ . '/includes/header.php';
                 <div class="col-md-4">
                     <div class="motm-card">
                         <?php if (!empty($nom['foto_url'])): ?>
-                            <img src="<?= htmlspecialchars($base ?? '') ?>/<?= htmlspecialchars($nom['foto_url']) ?>" alt="" class="motm-card-photo">
+                            <img src="<?= htmlspecialchars($base ?? '') ?>/<?= htmlspecialchars($nom['foto_url']) ?>" alt="" class="motm-card-photo" loading="lazy">
                         <?php else: ?>
                             <div class="motm-card-photo motm-card-photo-placeholder"><i class="fas fa-user" aria-hidden="true"></i></div>
                         <?php endif; ?>
@@ -434,7 +436,7 @@ require __DIR__ . '/includes/header.php';
             <h2 class="vcf-section-title vcf-section-title-line">Man of the Match</h2>
             <div class="motm-winner-card">
                 <?php if (!empty($motmWinner['winner_foto'])): ?>
-                    <img src="<?= htmlspecialchars($base ?? '') ?>/<?= htmlspecialchars($motmWinner['winner_foto']) ?>" alt="" class="motm-winner-photo">
+                    <img src="<?= htmlspecialchars($base ?? '') ?>/<?= htmlspecialchars($motmWinner['winner_foto']) ?>" alt="" class="motm-winner-photo" loading="lazy">
                 <?php else: ?>
                     <div class="motm-winner-photo motm-winner-photo-placeholder"><i class="fas fa-trophy" aria-hidden="true"></i></div>
                 <?php endif; ?>
@@ -605,7 +607,7 @@ require __DIR__ . '/includes/header.php';
                 <div class="roster-card roster-card-clickable" role="button" tabindex="0" data-roster-id="<?= (int) $j['id'] ?>" aria-label="View <?= htmlspecialchars($j['nombre'] . ' ' . $j['apellido']) ?> stats">
                     <div class="roster-photo-wrap">
                         <?php if (!empty($j['foto_url'])): ?>
-                            <img src="<?= htmlspecialchars($base ?? '') ?>/<?= htmlspecialchars($j['foto_url']) ?>" alt="" class="roster-photo">
+                            <img src="<?= htmlspecialchars($base ?? '') ?>/<?= htmlspecialchars($j['foto_url']) ?>" alt="" class="roster-photo" loading="lazy">
                         <?php else: ?>
                             <div class="roster-photo roster-photo-placeholder"><span class="roster-initials"><?= mb_substr($j['nombre'], 0, 1) ?><?= mb_substr($j['apellido'], 0, 1) ?></span></div>
                         <?php endif; ?>
@@ -674,12 +676,12 @@ require __DIR__ . '/includes/header.php';
                                 <line x1="50" y1="50" x2="23" y2="27.5" stroke="rgba(255,255,255,0.2)" stroke-width="0.3"/>
                                 <line x1="50" y1="50" x2="50" y2="90" stroke="rgba(255,255,255,0.2)" stroke-width="0.3"/>
                                 <polygon id="playerRadarPolygon" fill="rgba(255,102,0,0.35)" stroke="rgba(255,102,0,0.9)" stroke-width="1" points=""/>
-                                <text x="50" y="8" text-anchor="middle" class="player-radar-label" fill="rgba(255,255,255,0.7)" font-size="5">Pace</text>
-                                <text x="80" y="28" text-anchor="middle" class="player-radar-label" fill="rgba(255,255,255,0.7)" font-size="5">Shoot</text>
-                                <text x="80" y="74" text-anchor="middle" class="player-radar-label" fill="rgba(255,255,255,0.7)" font-size="5">Drib</text>
-                                <text x="50" y="93" text-anchor="middle" class="player-radar-label" fill="rgba(255,255,255,0.7)" font-size="5">Def</text>
-                                <text x="20" y="74" text-anchor="middle" class="player-radar-label" fill="rgba(255,255,255,0.7)" font-size="5">Phys</text>
-                                <text x="20" y="28" text-anchor="middle" class="player-radar-label" fill="rgba(255,255,255,0.7)" font-size="5">Pass</text>
+                                <text x="50" y="8" text-anchor="middle" class="player-radar-label" data-axis="0" fill="rgba(255,255,255,0.7)" font-size="5">Pace</text>
+                                <text x="80" y="28" text-anchor="middle" class="player-radar-label" data-axis="1" fill="rgba(255,255,255,0.7)" font-size="5">Shoot</text>
+                                <text x="80" y="74" text-anchor="middle" class="player-radar-label" data-axis="2" fill="rgba(255,255,255,0.7)" font-size="5">Drib</text>
+                                <text x="50" y="93" text-anchor="middle" class="player-radar-label" data-axis="3" fill="rgba(255,255,255,0.7)" font-size="5">Def</text>
+                                <text x="20" y="74" text-anchor="middle" class="player-radar-label" data-axis="4" fill="rgba(255,255,255,0.7)" font-size="5">Phys</text>
+                                <text x="20" y="28" text-anchor="middle" class="player-radar-label" data-axis="5" fill="rgba(255,255,255,0.7)" font-size="5">Pass</text>
                             </svg>
                         </div>
                         <div class="mt-3">
@@ -878,7 +880,7 @@ require __DIR__ . '/includes/header.php';
                                 <td>
                                     <span class="vcf-result-team">
                                         <?php if ($vcf_crest_file): ?>
-                                            <img src="<?= $base ?? '' ?>/assets/img/<?= $vcf_crest_file ?>" alt="" class="vcf-team-logo" width="28" height="28">
+                                            <img src="<?= $base ?? '' ?>/assets/img/<?= $vcf_crest_file ?>" alt="" class="vcf-team-logo" width="28" height="28" loading="lazy">
                                         <?php else: ?>
                                             <span class="vcf-team-logo vcf-team-logo-placeholder" aria-hidden="true"><i class="fas fa-shield"></i></span>
                                         <?php endif; ?>
@@ -938,9 +940,9 @@ require __DIR__ . '/includes/header.php';
             <div class="vcf-star-card">
                 <div class="photo-wrap">
                     <?php if (!empty($jugadorMes['foto_url'])): ?>
-                        <img src="<?= htmlspecialchars(($base ?? '') ? rtrim($base, '/') . '/' . $jugadorMes['foto_url'] : $jugadorMes['foto_url']) ?>" alt="<?= htmlspecialchars($jugadorMes['nombre']) ?>">
+                        <img src="<?= htmlspecialchars(($base ?? '') ? rtrim($base, '/') . '/' . $jugadorMes['foto_url'] : $jugadorMes['foto_url']) ?>" alt="<?= htmlspecialchars($jugadorMes['nombre']) ?>" loading="lazy">
                     <?php else: ?>
-                        <img src="<?= $base ?? '' ?>/assets/img/star-default.svg" alt="VCF Star" class="star-default-img">
+                        <img src="<?= $base ?? '' ?>/assets/img/star-default.svg" alt="VCF Star" class="star-default-img" loading="lazy">
                     <?php endif; ?>
                     <?php if (!empty($jugadorMes['dorsal'])): ?>
                         <span class="star-dorsal" aria-hidden="true"><?= (int) $jugadorMes['dorsal'] ?></span>
@@ -962,8 +964,9 @@ require __DIR__ . '/includes/header.php';
 </section>
 
 <?php if (count($heroSlides) > 0): ?>
-<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" defer></script>
 <script>
+window.addEventListener('DOMContentLoaded', function() {
 (function() {
     var el = document.querySelector('.vcf-hero-swiper');
     if (!el) return;
@@ -1020,6 +1023,7 @@ require __DIR__ . '/includes/header.php';
         }, 50);
     }
 })();
+});
 </script>
 <?php endif; ?>
 

@@ -18,8 +18,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($current === '' || $new === '' || $confirm === '') {
             $message = 'All fields are required.';
             $messageType = 'danger';
-        } elseif (strlen($new) < 6) {
-            $message = 'New password must be at least 6 characters.';
+        } elseif (strlen($new) < 8) {
+            $message = 'New password must be at least 8 characters.';
+            $messageType = 'danger';
+        } elseif (!preg_match('/[a-zA-Z]/', $new) || !preg_match('/[0-9]/', $new)) {
+            $message = 'New password must contain at least one letter and one number.';
             $messageType = 'danger';
         } elseif ($new !== $confirm) {
             $message = 'New password and confirmation do not match.';
@@ -44,12 +47,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+require_once __DIR__ . '/includes/breadcrumb.php';
 $page_title = 'Change Password - VCF Academy Houston';
 require __DIR__ . '/../includes/header.php';
 ?>
 <div class="container py-5">
-    <h1 class="mb-4" style="color: #FF6600;">Change Password</h1>
-    <p><a href="dashboard.php" class="text-decoration-none" style="color: #FF6600;">&larr; Dashboard</a></p>
+    <?= admin_breadcrumb([['label' => 'Change password']]) ?>
+    <h1 class="mb-4 admin-page-title">Change Password</h1>
 
     <?php if ($message): ?>
         <div class="alert alert-<?= $messageType ?> py-2"><?= htmlspecialchars($message) ?></div>
@@ -67,13 +71,13 @@ require __DIR__ . '/../includes/header.php';
                         </div>
                         <div class="mb-3">
                             <label class="form-label text-white small">New password</label>
-                            <input type="password" class="form-control bg-dark text-white border-secondary" name="new_password" required minlength="6" autocomplete="new-password">
+                            <input type="password" class="form-control bg-dark text-white border-secondary" name="new_password" required minlength="8" autocomplete="new-password" title="At least 8 characters, one letter and one number">
                         </div>
                         <div class="mb-4">
                             <label class="form-label text-white small">Confirm new password</label>
-                            <input type="password" class="form-control bg-dark text-white border-secondary" name="confirm_password" required minlength="6" autocomplete="new-password">
+                            <input type="password" class="form-control bg-dark text-white border-secondary" name="confirm_password" required minlength="8" autocomplete="new-password">
                         </div>
-                        <button type="submit" class="btn btn-primary" style="background:#FF6600;border:none;">Change Password</button>
+                        <button type="submit" class="btn btn-primary btn-admin-primary">Change Password</button>
                     </form>
                 </div>
             </div>

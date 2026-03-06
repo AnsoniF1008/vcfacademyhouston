@@ -11,6 +11,57 @@ if (!is_dir($uploadDir)) {
 
 $allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 $maxSize = 5 * 1024 * 1024; // 5MB
+$heroMaxWidth = 1920;
+$heroJpegQuality = 82;
+
+/**
+ * Redimensiona y comprime imagen del hero para mejorar LCP (max 1920px ancho, calidad 82).
+ */
+function optimize_hero_image(string $path, int $maxWidth = 1920, int $jpegQuality = 82): bool {
+    if (!function_exists('imagecreatefromjpeg')) {
+        return true;
+    }
+    $info = @getimagesize($path);
+    if (!$info || !in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP], true)) {
+        return true;
+    }
+    $w = (int) $info[0];
+    $h = (int) $info[1];
+    if ($w <= $maxWidth && $info[2] === IMAGETYPE_JPEG && filesize($path) < 350 * 1024) {
+        return true;
+    }
+    $src = null;
+    if ($info[2] === IMAGETYPE_JPEG) {
+        $src = @imagecreatefromjpeg($path);
+    } elseif ($info[2] === IMAGETYPE_PNG) {
+        $src = @imagecreatefrompng($path);
+    } elseif ($info[2] === IMAGETYPE_WEBP && function_exists('imagecreatefromwebp')) {
+        $src = @imagecreatefromwebp($path);
+    }
+    if (!$src) {
+        return true;
+    }
+    $newW = min($w, $maxWidth);
+    $newH = (int) round($h * ($newW / $w));
+    $dst = imagecreatetruecolor($newW, $newH);
+    if (!$dst) {
+        imagedestroy($src);
+        return true;
+    }
+    imagecopyresampled($dst, $src, 0, 0, 0, 0, $newW, $newH, $w, $h);
+    imagedestroy($src);
+    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+    $ok = false;
+    if ($ext === 'png') {
+        $ok = imagepng($dst, $path, 8);
+    } elseif ($ext === 'webp' && function_exists('imagewebp')) {
+        $ok = imagewebp($dst, $path, 82);
+    } else {
+        $ok = imagejpeg($dst, $path, $jpegQuality);
+    }
+    imagedestroy($dst);
+    return $ok;
+}
 
 $message = '';
 $messageType = '';
@@ -51,15 +102,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $message = 'Image too large. Max 5MB.';
                     $messageType = 'danger';
                 } else {
+                    $clientName = basename($_FILES['image']['name'] ?? '');
+                    if (strpos($clientName, '..') !== false || preg_match('/\.(php|phtml|php3|php4|php5|phar|htaccess)(\.|$)/i', $clientName)) {
+                        $message = 'Invalid file name.';
+                        $messageType = 'danger';
+                    } else {
                     $ext = match ($mime) {
                         'image/jpeg' => 'jpg',
                         'image/png' => 'png',
                         'image/webp' => 'webp',
                         default => 'jpg',
                     };
+                    $ext = in_array($ext, ['jpg', 'png', 'webp'], true) ? $ext : 'jpg';
                     $filename = 'hero-' . uniqid() . '.' . $ext;
-                    if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadDir . $filename)) {
+                    if (strpos($filename, '..') !== false || strpbrk($filename, '/\\') !== false) {
+                        $message = 'Invalid file name.';
+                        $messageType = 'danger';
+                    } else {
+                    $fullPath = $uploadDir . $filename;
+                    if (move_uploaded_file($_FILES['image']['tmp_name'], $fullPath)) {
+                        optimize_hero_image($fullPath, $heroMaxWidth, $heroJpegQuality);
                         $image_url = 'assets/uploads/' . $filename;
+                    }
+                    }
                     }
                 }
             }
@@ -102,12 +167,13 @@ if (isset($_GET['edit'])) {
     }
 }
 
+require_once __DIR__ . '/includes/breadcrumb.php';
 $page_title = 'Hero Slider - VCF Academy Houston';
 require __DIR__ . '/../includes/header.php';
 ?>
 <div class="container py-5">
-    <h1 class="mb-4" style="color: #FF6600;">Hero Slider</h1>
-    <p><a href="dashboard.php" class="text-decoration-none" style="color: #FF6600;">&larr; Dashboard</a></p>
+    <?= admin_breadcrumb([['label' => 'Hero Slider']]) ?>
+    <h1 class="mb-4 admin-page-title">Hero Slider</h1>
     <p class="text-muted small">Banners full-width bajo el header. Recomendado: imágenes 1920×1080px. Título y botón se superponen sobre la imagen.</p>
 
     <?php if ($message): ?>

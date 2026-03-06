@@ -42,8 +42,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = trim($_POST['email'] ?? '') ?: null;
         $password = $_POST['password'] ?? '';
         $role = in_array($_POST['role'] ?? '', ['super_admin', 'editor_coach', 'staff_campo'], true) ? $_POST['role'] : 'staff_campo';
-        if ($username === '' || strlen($password) < 6) {
-            $message = 'Username required and password at least 6 characters.';
+        if ($username === '') {
+            $message = 'Username is required.';
+            $messageType = 'danger';
+        } elseif (strlen($password) < 8) {
+            $message = 'Password must be at least 8 characters.';
+            $messageType = 'danger';
+        } elseif (!preg_match('/[a-zA-Z]/', $password) || !preg_match('/[0-9]/', $password)) {
+            $message = 'Password must contain at least one letter and one number.';
             $messageType = 'danger';
         } else {
             $stmt = $pdo->prepare("SELECT id FROM admin_users WHERE username = ?");
@@ -76,12 +82,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $users = $pdo->query("SELECT id, username, email, role, created_at FROM admin_users ORDER BY role = 'super_admin' DESC, username ASC")->fetchAll(PDO::FETCH_ASSOC);
 
+require_once __DIR__ . '/includes/breadcrumb.php';
 $page_title = 'Users & Roles - VCF Academy Houston';
 require __DIR__ . '/../includes/header.php';
 ?>
 <div class="container py-5">
-    <h1 class="mb-4" style="color: #FF6600;">Users &amp; Roles</h1>
-    <p><a href="dashboard.php" class="text-decoration-none" style="color: #FF6600;">&larr; Dashboard</a></p>
+    <?= admin_breadcrumb([['label' => 'Users & Roles']]) ?>
+    <h1 class="mb-4 admin-page-title">Users &amp; Roles</h1>
 
     <?php if ($message): ?>
         <div class="alert alert-<?= $messageType ?> py-2"><?= htmlspecialchars($message) ?></div>
@@ -105,8 +112,8 @@ require __DIR__ . '/../includes/header.php';
                             <input type="email" class="form-control bg-dark text-white border-secondary" name="email" placeholder="juan@academy.com">
                         </div>
                         <div class="mb-2">
-                            <label class="form-label text-white small">Password (min 6 characters)</label>
-                            <input type="password" class="form-control bg-dark text-white border-secondary" name="password" required minlength="6">
+                            <label class="form-label text-white small">Password (min 8 characters, one letter and one number)</label>
+                            <input type="password" class="form-control bg-dark text-white border-secondary" name="password" required minlength="8" title="At least 8 characters, one letter and one number">
                         </div>
                         <div class="mb-3">
                             <label class="form-label text-white small">Role</label>

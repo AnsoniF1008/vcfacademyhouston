@@ -90,11 +90,13 @@ if (isset($_GET['edit'])) {
     }
 }
 
+require_once __DIR__ . '/includes/breadcrumb.php';
 $page_title = 'Manage Sedes & Fields - VCF Academy Houston';
 require __DIR__ . '/../includes/header.php';
 ?>
 <div class="container py-5">
-    <h1 class="mb-4" style="color: #FF6600;">Sedes / Training Grounds</h1>
+    <?= admin_breadcrumb([['label' => 'Sedes']]) ?>
+    <h1 class="mb-4 admin-page-title">Sedes / Training Grounds</h1>
     <p><a href="dashboard.php" class="text-decoration-none" style="color: #FF6600;">&larr; Dashboard</a></p>
 
     <?php if ($message): ?>
