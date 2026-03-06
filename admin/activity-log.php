@@ -10,14 +10,16 @@ try {
 } catch (PDOException $e) {}
 
 if (!$table_exists) {
+    require_once __DIR__ . '/includes/breadcrumb.php';
     $page_title = 'Activity Log - VCF Academy Houston';
     require __DIR__ . '/../includes/header.php';
-    echo '<div class="container py-5"><div class="alert alert-warning">Run the RBAC migration first: <code>sql/migrate_rbac.sql</code> to create the activity log table.</div><p><a href="dashboard.php">&larr; Dashboard</a></p></div>';
+    echo '<div class="container py-5">' . admin_breadcrumb([['label' => 'Activity log']]) . '<div class="alert alert-warning">Run the RBAC migration first: <code>sql/migrate_rbac.sql</code> to create the activity log table.</div><p><a href="dashboard.php">&larr; Dashboard</a></p></div>';
     require __DIR__ . '/../includes/footer.php';
     exit;
 }
 
-$limit = in_array((int) ($_GET['limit'] ?? 100), [50, 100, 200], true) ? (int) $_GET['limit'] : 100;
+$limit_raw = isset($_GET['limit']) ? (int) $_GET['limit'] : 100;
+$limit = in_array($limit_raw, [50, 100, 200], true) ? $limit_raw : 100;
 $page = max(1, (int) ($_GET['page'] ?? 1));
 $offset = ($page - 1) * $limit;
 
@@ -35,7 +37,7 @@ $list_base_sql .= " ORDER BY created_at DESC";
 $st = $pdo->prepare($count_sql);
 $st->execute($params);
 $total = (int) $st->fetchColumn();
-$total_pages = $total > 0 ? (int) ceil($total / $limit) : 1;
+$total_pages = ($total > 0 && $limit > 0) ? (int) ceil($total / $limit) : 1;
 $page = min(max(1, $page), $total_pages);
 $offset = ($page - 1) * $limit;
 
@@ -82,10 +84,10 @@ require __DIR__ . '/../includes/header.php';
                     <tbody>
                         <?php foreach ($entries as $e): ?>
                         <tr>
-                            <td class="text-nowrap small"><?= htmlspecialchars($e['created_at']) ?></td>
-                            <td><?= htmlspecialchars($e['username']) ?></td>
-                            <td><code class="small"><?= htmlspecialchars($e['action']) ?></code></td>
-                            <td class="small"><?= htmlspecialchars($e['details']) ?></td>
+                            <td class="text-nowrap small"><?= htmlspecialchars($e['created_at'] ?? '') ?></td>
+                            <td><?= htmlspecialchars($e['username'] ?? '') ?></td>
+                            <td><code class="small"><?= htmlspecialchars($e['action'] ?? '') ?></code></td>
+                            <td class="small"><?= htmlspecialchars($e['details'] ?? '') ?></td>
                         </tr>
                         <?php endforeach; ?>
                         <?php if (empty($entries)): ?>
