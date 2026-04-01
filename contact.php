@@ -6,6 +6,12 @@ $messageType = '';
 $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Honeypot: bots fill this hidden field, humans leave it empty
+    if (!empty($_POST['website'])) {
+        $success = true; // Silently discard — bot thinks it succeeded
+        $message = 'Thank you for your message. We will get back to you soon.';
+        $messageType = 'success';
+    } else {
     $name = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $subject = trim($_POST['subject'] ?? '');
@@ -30,6 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $messageType = 'danger';
         }
     }
+    } // end honeypot check
 }
 
 $page_title = 'Contact - VCF Academy Houston';
@@ -88,6 +95,11 @@ $hasDirect = $pubEmail !== '' || $pubPhone !== '' || $ig !== '' || $fb !== '' ||
                 <div class="vcf-sede-card p-4 vcf-page-card">
                     <h2 class="h6 mb-3" style="color:var(--vcf-orange);font-family:var(--font-display);text-transform:uppercase;letter-spacing:0.08em;">Send a message</h2>
                     <form method="post" action="">
+                        <!-- Honeypot anti-spam: hidden from humans, filled by bots -->
+                        <div style="display:none" aria-hidden="true">
+                            <label for="hp_website">Website</label>
+                            <input type="text" id="hp_website" name="website" tabindex="-1" autocomplete="off" value="">
+                        </div>
                         <div class="mb-3">
                             <label class="form-label vcf-form-label">Name</label>
                             <input type="text" class="form-control vcf-form-control" name="name" required value="<?= htmlspecialchars($_POST['name'] ?? '') ?>">

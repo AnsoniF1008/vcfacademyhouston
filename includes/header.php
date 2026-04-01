@@ -1,5 +1,12 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => '/',
+        'secure'   => true,
+        'httponly' => true,
+        'samesite' => 'Strict',
+    ]);
     session_start();
 }
 require_once __DIR__ . '/../config/site_loader.php';
@@ -227,13 +234,7 @@ $use_local_swiper_css = file_exists($vendor_root . '/swiper/swiper-bundle.min.cs
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
     <?php endif; ?>
-    <?php if (isset($heroSlides) && count($heroSlides) > 0): ?>
-    <?php if ($use_local_swiper_css): ?>
-    <link rel="stylesheet" href="<?= $base ?>/assets/vendor/swiper/swiper-bundle.min.css" media="print" onload="this.media='all'">
-    <?php else: ?>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" media="print" onload="this.media='all'">
-    <?php endif; ?>
-    <?php endif; ?>
+    <?php /* Swiper CSS removed — hero uses custom slideshow, not Swiper library */ ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">

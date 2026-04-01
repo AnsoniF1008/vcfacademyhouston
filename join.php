@@ -46,6 +46,12 @@ $messageType = '';
 $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Honeypot: bots fill this hidden field, humans leave it empty
+    if (!empty($_POST['website'])) {
+        $success = true; // Silently discard — bot thinks it succeeded
+        $message = 'Thank you for your interest! We have received your registration and will contact you soon.';
+        $messageType = 'success';
+    } else {
     $parent_name = trim($_POST['parent_name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
@@ -72,6 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $messageType = 'danger';
         }
     }
+    } // end honeypot check
 }
 
 $page_title = 'Join the Academy - VCF Academy Houston';
@@ -95,6 +102,11 @@ require __DIR__ . '/includes/header.php';
             <div class="col-lg-8">
                 <div class="vcf-sede-card p-4 vcf-page-card">
                     <form method="post" action="">
+                        <!-- Honeypot anti-spam: hidden from humans, filled by bots -->
+                        <div style="display:none" aria-hidden="true">
+                            <label for="hp_website">Website</label>
+                            <input type="text" id="hp_website" name="website" tabindex="-1" autocomplete="off" value="">
+                        </div>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label vcf-form-label">Parent / Guardian Name</label>
