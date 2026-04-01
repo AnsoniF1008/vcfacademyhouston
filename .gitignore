@@ -15,6 +15,10 @@ config/deploy-credentials.php
 config/deploy-ftp.txt
 config/site.php
 
+# Reference/import working folders (not part of the live site)
+_import_*/
+_redesign_*/
+
 # OS
 .DS_Store
 Thumbs.db

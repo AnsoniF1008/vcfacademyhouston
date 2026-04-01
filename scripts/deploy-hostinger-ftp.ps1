@@ -119,7 +119,7 @@ function Push-FtpItem {
         } catch {
             Write-Host "  Error: $_" -ForegroundColor Red
         }
-        Start-Sleep -Milliseconds 200
+        Start-Sleep -Milliseconds 50
     }
 }
 
@@ -128,11 +128,9 @@ Write-Host "Conectando por FTP a ${ftpHost}:${ftpPort} ..." -ForegroundColor Cya
 $toUpload = @(
     "index.php", "join.php", "contact.php", "calendar.php", "privacy.php", "recaudaciones.php", "deploy.php",
     "robots.txt", "sitemap.xml", "sitemap.php",
-    "admin", "assets", "config", "includes", "api", "sql", "docs"
+    "admin", "assets", "config", "includes", "api"
 )
-if (Test-Path (Join-Path $root "scripts")) {
-    $toUpload += "scripts"
-}
+# sql/, docs/, scripts/ excluidos: no son necesarios en producción
 
 $script:uploadCount = 0
 Write-Host "Items a subir: $($toUpload.Count)" -ForegroundColor Gray
