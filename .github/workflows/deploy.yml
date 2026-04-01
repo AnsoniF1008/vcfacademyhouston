@@ -5,16 +5,23 @@ on:
     branches:
       - main
 
+concurrency:
+  group: deploy-hostinger-main
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     name: Deploy via FTP
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy to Hostinger via FTP
+      - name: Deploy to Hostinger via FTP (attempt 1)
+        id: deploy_1
+        continue-on-error: true
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -27,7 +34,82 @@ jobs:
             **/.git*/**
             **/node_modules/**
             **/.github/**
+            **/.cursor/**
+            **/docs/**
+            **/scripts/**
+            **/sql/**
+            **/backup/**
+            **/export/**
+            **/_import_*/**
+            **/_redesign_*/**
             **/README.md
+            **/*.zip
             **/.env
             **/.DS_Store
           dangerous-clean-slate: false
+
+      - name: Deploy to Hostinger via FTP (attempt 2)
+        id: deploy_2
+        if: steps.deploy_1.outcome == 'failure'
+        continue-on-error: true
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./
+          server-dir: /public_html/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.github/**
+            **/.cursor/**
+            **/docs/**
+            **/scripts/**
+            **/sql/**
+            **/backup/**
+            **/export/**
+            **/_import_*/**
+            **/_redesign_*/**
+            **/README.md
+            **/*.zip
+            **/.env
+            **/.DS_Store
+          dangerous-clean-slate: false
+
+      - name: Deploy to Hostinger via FTP (attempt 3)
+        id: deploy_3
+        if: steps.deploy_1.outcome == 'failure' && steps.deploy_2.outcome == 'failure'
+        continue-on-error: true
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./
+          server-dir: /public_html/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.github/**
+            **/.cursor/**
+            **/docs/**
+            **/scripts/**
+            **/sql/**
+            **/backup/**
+            **/export/**
+            **/_import_*/**
+            **/_redesign_*/**
+            **/README.md
+            **/*.zip
+            **/.env
+            **/.DS_Store
+          dangerous-clean-slate: false
+
+      - name: Fail workflow if all retries fail
+        if: steps.deploy_1.outcome == 'failure' && steps.deploy_2.outcome == 'failure' && steps.deploy_3.outcome == 'failure'
+        run: |
+          echo "All FTP deploy attempts failed."
+          exit 1
