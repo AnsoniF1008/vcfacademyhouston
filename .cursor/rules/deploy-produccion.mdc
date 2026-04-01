@@ -1,0 +1,25 @@
+---
+description: Cómo subir a producción (Hostinger por FTP). La conexión FTP está guardada en config.
+alwaysApply: true
+---
+
+# Deploy a producción (VCF Academy Houston)
+
+- **Producción:** https://vcfacademyhouston.com
+- **Método:** FTP (Hostinger). No usar SSH para subir archivos salvo que se pida explícitamente.
+
+## Comando para subir
+
+Desde la raíz del proyecto (PowerShell):
+
+```powershell
+.\scripts\deploy-hostinger-ftp.ps1
+```
+
+**No pedir contraseña al usuario:** la conexión FTP está guardada en `config/deploy-credentials.php` (clave `hostinger_ftp_pass`). El script la lee automáticamente.
+
+- Host: ftp.vcfacademyhouston.com
+- Usuario: u766140586.ansonif (en el script)
+- Contraseña: en deploy-credentials.php
+
+Si el usuario pide "subir a producción", "guardar en producción", "deploy" o similar: ejecutar este script. Opcionalmente hacer antes un backup en `backup/` (zip con la fecha).

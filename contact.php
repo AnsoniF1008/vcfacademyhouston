@@ -33,41 +33,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page_title = 'Contact - VCF Academy Houston';
+$page_description = 'Contact VCF Academy Houston: programs, schedules, training locations, and general questions.';
 require __DIR__ . '/includes/header.php';
+
+$pubEmail = trim((string) ($vcf_site['public_email'] ?? ''));
+$pubPhone = trim((string) ($vcf_site['phone'] ?? ''));
+$ig = trim((string) ($vcf_site['instagram_url'] ?? ''));
+$fb = trim((string) ($vcf_site['facebook_url'] ?? ''));
+$yt = trim((string) ($vcf_site['youtube_url'] ?? ''));
+$xurl = trim((string) ($vcf_site['x_url'] ?? ''));
+$hasDirect = $pubEmail !== '' || $pubPhone !== '' || $ig !== '' || $fb !== '' || $yt !== '' || $xurl !== '';
 ?>
 
-<section class="vcf-section">
-    <div class="container">
-        <h1 class="vcf-section-title">Contact Us</h1>
-        <p class="vcf-section-desc">Have questions about our programs, training schedules, or how to join? Get in touch with the VCF Academy Houston team.</p>
+<section class="vcf-section--dark vcf-page-sub vcf-redesign-legacy">
+    <div class="vcf-section__inner">
+    <div class="container py-5">
+        <h1 class="vcf-section__title">Contact <em>Us</em></h1>
+        <p class="vcf-section-desc mb-4">Have questions about our programs, training schedules, or training locations? Get in touch with the VCF Academy Houston team.</p>
 
         <?php if ($message): ?>
-            <div class="alert alert-<?= $messageType ?> mb-4"><?= htmlspecialchars($message) ?></div>
+            <div class="alert alert-<?= $messageType ?> mb-4 vcf-alert"><?= htmlspecialchars($message) ?></div>
         <?php endif; ?>
 
         <?php if (!$success): ?>
-        <div class="row justify-content-center">
+        <div class="row justify-content-center g-4">
+            <?php if ($hasDirect): ?>
+            <div class="col-lg-4">
+                <div class="vcf-sede-card p-4 h-100 vcf-page-card">
+                    <h2 class="h6 mb-3" style="color:var(--vcf-orange);font-family:var(--font-display);text-transform:uppercase;letter-spacing:0.08em;">Direct contact</h2>
+                    <ul class="list-unstyled mb-0 small">
+                        <?php if ($pubEmail !== ''): ?>
+                        <li class="mb-2"><a href="mailto:<?= htmlspecialchars($pubEmail) ?>" class="footer-link"><?= htmlspecialchars($pubEmail) ?></a></li>
+                        <?php endif; ?>
+                        <?php if ($pubPhone !== ''): ?>
+                        <li class="mb-2"><a href="tel:<?= htmlspecialchars(preg_replace('/\s+/', '', $pubPhone)) ?>" class="footer-link"><?= htmlspecialchars($pubPhone) ?></a></li>
+                        <?php endif; ?>
+                        <?php if ($ig !== ''): ?>
+                        <li class="mb-2"><a href="<?= htmlspecialchars($ig) ?>" class="footer-link d-inline-flex align-items-center gap-2" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram" aria-hidden="true"></i> Instagram</a></li>
+                        <?php endif; ?>
+                        <?php if ($fb !== ''): ?>
+                        <li class="mb-2"><a href="<?= htmlspecialchars($fb) ?>" class="footer-link d-inline-flex align-items-center gap-2" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook-f" aria-hidden="true"></i> Facebook</a></li>
+                        <?php endif; ?>
+                        <?php if ($yt !== ''): ?>
+                        <li class="mb-2"><a href="<?= htmlspecialchars($yt) ?>" class="footer-link d-inline-flex align-items-center gap-2" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube" aria-hidden="true"></i> YouTube</a></li>
+                        <?php endif; ?>
+                        <?php if ($xurl !== ''): ?>
+                        <li class="mb-2"><a href="<?= htmlspecialchars($xurl) ?>" class="footer-link d-inline-flex align-items-center gap-2" target="_blank" rel="noopener noreferrer"><i class="fab fa-twitter" aria-hidden="true"></i> X</a></li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+            </div>
+            <?php endif; ?>
             <div class="col-lg-8">
-                <div class="vcf-sede-card p-4">
+                <div class="vcf-sede-card p-4 vcf-page-card">
+                    <h2 class="h6 mb-3" style="color:var(--vcf-orange);font-family:var(--font-display);text-transform:uppercase;letter-spacing:0.08em;">Send a message</h2>
                     <form method="post" action="">
                         <div class="mb-3">
-                            <label class="form-label text-white">Name</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary" name="name" required value="<?= htmlspecialchars($_POST['name'] ?? '') ?>">
+                            <label class="form-label vcf-form-label">Name</label>
+                            <input type="text" class="form-control vcf-form-control" name="name" required value="<?= htmlspecialchars($_POST['name'] ?? '') ?>">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label text-white">Email</label>
-                            <input type="email" class="form-control bg-dark text-white border-secondary" name="email" required value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+                            <label class="form-label vcf-form-label">Email</label>
+                            <input type="email" class="form-control vcf-form-control" name="email" required value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label text-white">Subject</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary" name="subject" required value="<?= htmlspecialchars($_POST['subject'] ?? '') ?>">
+                            <label class="form-label vcf-form-label">Subject</label>
+                            <input type="text" class="form-control vcf-form-control" name="subject" required value="<?= htmlspecialchars($_POST['subject'] ?? '') ?>">
                         </div>
                         <div class="mb-4">
-                            <label class="form-label text-white">Message</label>
-                            <textarea class="form-control bg-dark text-white border-secondary" name="message" rows="5" required><?= htmlspecialchars($_POST['message'] ?? '') ?></textarea>
+                            <label class="form-label vcf-form-label">Message</label>
+                            <textarea class="form-control vcf-form-control" name="message" rows="5" required><?= htmlspecialchars($_POST['message'] ?? '') ?></textarea>
                         </div>
                         <button type="submit" class="vcf-btn-cta">Send Message</button>
-                        <a href="<?= $base ?? '' ?>/index.php" class="btn btn-outline-secondary ms-2">Back to Home</a>
+                        <a href="<?= $base ?? '' ?>/index.php" class="btn btn-outline-light ms-2">Back to Home</a>
                     </form>
                 </div>
             </div>
@@ -77,6 +115,7 @@ require __DIR__ . '/includes/header.php';
             <a href="<?= $base ?? '' ?>/index.php" class="vcf-btn-cta">Back to Home</a>
         </div>
         <?php endif; ?>
+    </div>
     </div>
 </section>
 

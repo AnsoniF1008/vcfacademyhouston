@@ -13,6 +13,7 @@ backup/
 config/database.local.php
 config/deploy-credentials.php
 config/deploy-ftp.txt
+config/site.php
 
 # OS
 .DS_Store

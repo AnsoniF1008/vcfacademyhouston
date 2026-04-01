@@ -15,6 +15,13 @@ $maxSize = 5 * 1024 * 1024; // 5MB
 $message = '';
 $messageType = '';
 
+$hasStarVotingTable = false;
+try {
+    $pdo->query("SELECT 1 FROM star_votaciones LIMIT 1");
+    $hasStarVotingTable = true;
+} catch (PDOException $e) {
+}
+
 $hasDorsal = false;
 try {
     $st = $pdo->query("SHOW COLUMNS FROM jugador_mes LIKE 'dorsal'");
@@ -26,6 +33,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify()) {
         $message = 'Invalid request. Please try again.';
         $messageType = 'danger';
+    } elseif (isset($_POST['clear_jugador_mes'])) {
+        $pdo->exec("DELETE FROM jugador_mes ORDER BY created_at DESC LIMIT 1");
+        if (function_exists('admin_log')) {
+            admin_log('jugador_mes.clear', 'Cleared current Jugador del Mes');
+        }
+        $message = 'Jugador del Mes borrado. La web mostrará "coming soon" hasta que asignes uno al final del mes.';
+        $messageType = 'success';
+    } elseif ($hasStarVotingTable && isset($_POST['close_star_id'])) {
+        $vid = (int) $_POST['close_star_id'];
+        $stmt = $pdo->prepare("SELECT id, status FROM star_votaciones WHERE id = ?");
+        $stmt->execute([$vid]);
+        $v = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($v && $v['status'] === 'open') {
+            $top = $pdo->prepare("SELECT nominee_id FROM star_votes WHERE votacion_id = ? GROUP BY nominee_id ORDER BY COUNT(*) DESC, nominee_id ASC LIMIT 1");
+            $top->execute([$vid]);
+            $winnerId = $top->fetchColumn();
+            if ($winnerId) {
+                $pdo->prepare("UPDATE star_votaciones SET status = 'closed', winner_nominee_id = ? WHERE id = ?")->execute([$winnerId, $vid]);
+                $nom = $pdo->prepare("SELECT nombre, categoria, foto_url, descripcion_logro FROM star_nominees WHERE id = ?");
+                $nom->execute([$winnerId]);
+                $winner = $nom->fetch(PDO::FETCH_ASSOC);
+                $vot = $pdo->prepare("SELECT mes FROM star_votaciones WHERE id = ?");
+                $vot->execute([$vid]);
+                $mesLabel = $vot->fetchColumn() ?: date('Y-m');
+                if ($winner && !empty($_POST['copy_to_jugador_mes'])) {
+                    $pdo->prepare("INSERT INTO jugador_mes (nombre, categoria, foto_url, descripcion_logro, mes) VALUES (?, ?, ?, ?, ?)")->execute([
+                        $winner['nombre'], $winner['categoria'] ?? '', $winner['foto_url'] ?? null, $winner['descripcion_logro'] ?? '', $mesLabel
+                    ]);
+                }
+                $message = 'Votación cerrada. Ganador: ' . $winner['nombre'] . '.';
+            } else {
+                $pdo->prepare("UPDATE star_votaciones SET status = 'closed' WHERE id = ?")->execute([$vid]);
+                $message = 'Votación cerrada sin votos.';
+            }
+            $messageType = 'success';
+        }
+    } elseif ($hasStarVotingTable && isset($_POST['start_star_voting']) && isset($_POST['star_mes']) && isset($_POST['star_starts']) && isset($_POST['star_ends'])) {
+        $mes = trim($_POST['star_mes']);
+        $starts = trim($_POST['star_starts']);
+        $ends = trim($_POST['star_ends']);
+        $r1 = (int) ($_POST['star_roster_1'] ?? 0);
+        $r2 = (int) ($_POST['star_roster_2'] ?? 0);
+        $r3 = (int) ($_POST['star_roster_3'] ?? 0);
+        if ($mes !== '' && $starts !== '' && $ends !== '' && $r1 > 0 && $r2 > 0 && $r3 > 0 && $r1 !== $r2 && $r2 !== $r3 && $r1 !== $r3) {
+            $rosterStmt = $pdo->prepare("SELECT r.id, r.nombre, r.apellido, r.foto_url, c.nombre AS categoria_nombre FROM roster r JOIN categorias c ON c.id = r.categoria_id WHERE r.id = ? AND r.activo = 1");
+            $nominees = [];
+            foreach ([$r1, $r2, $r3] as $rid) {
+                $rosterStmt->execute([$rid]);
+                $row = $rosterStmt->fetch(PDO::FETCH_ASSOC);
+                if (!$row) break;
+                $nominees[] = ['nombre' => trim($row['nombre'] . ' ' . $row['apellido']), 'categoria' => $row['categoria_nombre'], 'foto_url' => $row['foto_url'] ?? '', 'descripcion_logro' => '', 'roster_id' => $rid];
+            }
+            if (count($nominees) === 3) {
+                $pdo->beginTransaction();
+                try {
+                    $pdo->prepare("INSERT INTO star_votaciones (mes, starts_at, ends_at, status) VALUES (?, ?, ?, 'open')")->execute([$mes, $starts, $ends]);
+                    $votacionId = (int) $pdo->lastInsertId();
+                    $ins = $pdo->prepare("INSERT INTO star_nominees (votacion_id, nombre, categoria, foto_url, descripcion_logro, orden, roster_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                    foreach ($nominees as $i => $n) {
+                        $ins->execute([$votacionId, $n['nombre'], $n['categoria'], $n['foto_url'], $n['descripcion_logro'], $i + 1, $n['roster_id']]);
+                    }
+                    $pdo->commit();
+                    $message = 'Votación iniciada. Los padres pueden votar en la web.';
+                    $messageType = 'success';
+                } catch (Exception $e) {
+                    $pdo->rollBack();
+                    $message = 'No se pudo crear la votación.';
+                    $messageType = 'danger';
+                }
+            } else {
+                $message = 'Selecciona 3 jugadores distintos del roster.';
+                $messageType = 'danger';
+            }
+        } else {
+            $message = 'Completa mes, fechas y 3 jugadores distintos.';
+            $messageType = 'danger';
+        }
     } else {
     $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
     $nombre = trim($_POST['nombre'] ?? '');
@@ -117,6 +201,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+$starVotaciones = [];
+if ($hasStarVotingTable) {
+    $starVotaciones = $pdo->query("
+        SELECT v.id, v.mes, v.starts_at, v.ends_at, v.status, v.winner_nominee_id,
+               n.nombre AS winner_nombre
+        FROM star_votaciones v
+        LEFT JOIN star_nominees n ON n.id = v.winner_nominee_id
+        ORDER BY v.created_at DESC
+    ")->fetchAll(PDO::FETCH_ASSOC);
+}
+
 $jugadorMesCols = 'id, nombre, categoria, foto_url, descripcion_logro, mes';
 if ($hasDorsal) $jugadorMesCols = 'id, nombre, categoria, dorsal, foto_url, descripcion_logro, mes';
 $stmt = $pdo->query("SELECT $jugadorMesCols FROM jugador_mes ORDER BY created_at DESC");
@@ -204,6 +299,16 @@ require __DIR__ . '/../includes/header.php';
                             <?php endif; ?>
                         </div>
                         <button type="submit" class="btn btn-primary" style="background:#FF6600;border:none;"><?= $current ? 'Update' : 'Save' ?></button>
+                        <?php if ($current): ?>
+                        <div class="mt-3 pt-3 border-top border-secondary">
+                            <p class="small text-muted mb-2">Reiniciar: quitar el Jugador del Mes actual. La web mostrará "coming soon" hasta que lo decidas al final del mes.</p>
+                            <form method="post" class="d-inline" onsubmit="return confirm('¿Borrar el Jugador del Mes actual? La sección quedará vacía hasta que asignes uno de nuevo.');">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="clear_jugador_mes" value="1">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Borrar Jugador del Mes actual</button>
+                            </form>
+                        </div>
+                        <?php endif; ?>
                     </form>
                 </div>
             </div>
@@ -236,6 +341,92 @@ require __DIR__ . '/../includes/header.php';
             </div>
         </div>
     </div>
+
+    <?php if ($hasStarVotingTable): ?>
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-dark border border-secondary rounded-3">
+                <div class="card-body">
+                    <h5 class="card-title text-white">Votación comunitaria (Star of the Month)</h5>
+                    <p class="text-muted small">Crea una votación con 3 nominados del roster. Los padres votan en la web. Al cerrar, el más votado gana; opcionalmente se copia a Jugador del Mes.</p>
+                    <form method="post" class="row g-3 mb-4">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="start_star_voting" value="1">
+                        <div class="col-md-2">
+                            <label class="form-label text-white small">Mes (ej. 2026-03)</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" name="star_mes" placeholder="2026-03" value="<?= date('Y-m') ?>">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label text-white small">Inicio</label>
+                            <input type="datetime-local" class="form-control bg-dark text-white border-secondary" name="star_starts" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label text-white small">Fin</label>
+                            <input type="datetime-local" class="form-control bg-dark text-white border-secondary" name="star_ends" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label text-white small">Nominado 1</label>
+                            <select class="form-select bg-dark text-white border-secondary" name="star_roster_1" required>
+                                <option value="">—</option>
+                                <?php foreach ($rosterForStar as $r): ?><option value="<?= (int) $r['id'] ?>"><?= htmlspecialchars($r['nombre'] . ' ' . $r['apellido']) ?></option><?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label text-white small">Nominado 2</label>
+                            <select class="form-select bg-dark text-white border-secondary" name="star_roster_2" required>
+                                <option value="">—</option>
+                                <?php foreach ($rosterForStar as $r): ?><option value="<?= (int) $r['id'] ?>"><?= htmlspecialchars($r['nombre'] . ' ' . $r['apellido']) ?></option><?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label text-white small">Nominado 3</label>
+                            <select class="form-select bg-dark text-white border-secondary" name="star_roster_3" required>
+                                <option value="">—</option>
+                                <?php foreach ($rosterForStar as $r): ?><option value="<?= (int) $r['id'] ?>"><?= htmlspecialchars($r['nombre'] . ' ' . $r['apellido']) ?></option><?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary" style="background:#FF6600;border:none;">Iniciar votación</button>
+                        </div>
+                    </form>
+                    <h6 class="text-white mb-2">Votaciones</h6>
+                    <?php if (count($starVotaciones) === 0): ?>
+                        <p class="text-muted small mb-0">No hay votaciones. Crea una arriba.</p>
+                    <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-sm">
+                                <thead>
+                                    <tr><th>Mes</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>Ganador</th><th></th></tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($starVotaciones as $sv): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($sv['mes']) ?></td>
+                                        <td><?= date('M j, g:i A', strtotime($sv['starts_at'])) ?></td>
+                                        <td><?= date('M j, g:i A', strtotime($sv['ends_at'])) ?></td>
+                                        <td><span class="badge <?= $sv['status'] === 'open' ? 'bg-success' : 'bg-secondary' ?>"><?= $sv['status'] ?></span></td>
+                                        <td><?= $sv['winner_nombre'] ? htmlspecialchars($sv['winner_nombre']) : '—' ?></td>
+                                        <td>
+                                            <?php if ($sv['status'] === 'open'): ?>
+                                            <form method="post" class="d-inline">
+                                                <?= csrf_field() ?>
+                                                <input type="hidden" name="close_star_id" value="<?= (int) $sv['id'] ?>">
+                                                <label class="small text-white-50 me-2"><input type="checkbox" name="copy_to_jugador_mes" value="1"> Copiar ganador a Jugador del Mes</label>
+                                                <button type="submit" class="btn btn-sm btn-warning">Cerrar votación</button>
+                                            </form>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 <script>
 (function() {

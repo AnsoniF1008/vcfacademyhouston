@@ -14,6 +14,7 @@ if ($id <= 0) {
 }
 
 require __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/roster_i18n.php';
 
 $hasSubPosicion = false;
 try {
@@ -48,17 +49,24 @@ try {
     if (!$stats) {
         $stats = ['partidos_jugados' => 0, 'goles' => 0, 'asistencias' => 0, 'motm' => 0, 'clean_sheets' => 0];
     }
-    // Override goles/asistencias from aggregate (juego_goles)
-    $stmt = $pdo->prepare("SELECT COALESCE(SUM(goles), 0), COALESCE(SUM(asistencias), 0) FROM juego_goles WHERE roster_id = ?");
+    // If the player appears in match scorers (juego_goles), use those aggregates on the public card.
+    // Otherwise keep manual values from roster_estadisticas (admin Roster form).
+    $stmt = $pdo->prepare("SELECT COALESCE(SUM(goles), 0), COALESCE(SUM(asistencias), 0), COUNT(*) FROM juego_goles WHERE roster_id = ?");
     $stmt->execute([$id]);
-    $row = $stmt->fetch(PDO::FETCH_NUM);
-    $stats['goles'] = (int) ($row[0] ?? 0);
-    $stats['asistencias'] = (int) ($row[1] ?? 0);
-    $stmt = $pdo->prepare("SELECT COUNT(DISTINCT juego_id) FROM juego_goles WHERE roster_id = ?");
-    $stmt->execute([$id]);
-    $partidosFromScorers = (int) $stmt->fetchColumn();
-    if ($partidosFromScorers > (int) $stats['partidos_jugados']) {
-        $stats['partidos_jugados'] = $partidosFromScorers;
+    $jgRow = $stmt->fetch(PDO::FETCH_NUM);
+    $jgCount = (int) ($jgRow[2] ?? 0);
+    if ($jgCount > 0) {
+        $stats['goles'] = (int) ($jgRow[0] ?? 0);
+        $stats['asistencias'] = (int) ($jgRow[1] ?? 0);
+        $stmt = $pdo->prepare("SELECT COUNT(DISTINCT juego_id) FROM juego_goles WHERE roster_id = ?");
+        $stmt->execute([$id]);
+        $partidosFromScorers = (int) $stmt->fetchColumn();
+        if ($partidosFromScorers > (int) $stats['partidos_jugados']) {
+            $stats['partidos_jugados'] = $partidosFromScorers;
+        }
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM juego_goles jg JOIN juegos j ON j.id = jg.juego_id WHERE jg.roster_id = ? AND COALESCE(j.goles_rival, 0) = 0");
+        $stmt->execute([$id]);
+        $stats['clean_sheets'] = (int) $stmt->fetchColumn();
     }
 
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM motm_votaciones v JOIN motm_nominees n ON n.id = v.winner_nominee_id WHERE n.roster_id = ?");
@@ -72,6 +80,8 @@ try {
     if (!$skills) {
         $skills = ['pace' => 5, 'shooting' => 5, 'passing' => 5, 'dribbling' => 5, 'defense' => 5, 'physical' => 5];
     }
+
+    $player['posicion_display'] = vcf_roster_position_en($player['posicion'] ?? null, $hasSubPosicion ? ($player['sub_posicion'] ?? null) : null);
 
     echo json_encode([
         'player' => $player,

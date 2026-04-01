@@ -14,6 +14,10 @@ $maxSize = 5 * 1024 * 1024; // 5MB
 
 $message = '';
 $messageType = '';
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' && isset($_GET['stats_saved']) && (string) $_GET['stats_saved'] === '1') {
+    $message = 'Estadísticas y habilidades guardadas correctamente.';
+    $messageType = 'success';
+}
 
 $hasSubPosicion = false;
 try {
@@ -52,9 +56,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare("INSERT INTO roster_estadisticas (roster_id, partidos_jugados, goles, asistencias, motm, clean_sheets) VALUES (?, ?, ?, ?, 0, ?) ON DUPLICATE KEY UPDATE partidos_jugados = VALUES(partidos_jugados), goles = VALUES(goles), asistencias = VALUES(asistencias), clean_sheets = VALUES(clean_sheets)")->execute([$rid, $partidos, $goles, $asistencias, $clean_sheets]);
             $pdo->prepare("INSERT INTO roster_habilidades (roster_id, pace, shooting, passing, dribbling, defense, physical) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE pace = VALUES(pace), shooting = VALUES(shooting), passing = VALUES(passing), dribbling = VALUES(dribbling), defense = VALUES(defense), physical = VALUES(physical)")->execute([$rid, $pace, $shooting, $passing, $dribbling, $defense, $physical]);
             admin_log('roster.stats', 'Updated stats/skills for roster id ' . $rid);
-            $message = 'Stats and skills saved. MOTM is updated automatically from votes.';
-            $messageType = 'success';
+            $redirectQ = ['edit' => $rid, 'stats_saved' => '1'];
+            if (!empty($_GET['categoria_id']) && (int) $_GET['categoria_id'] > 0) {
+                $redirectQ['categoria_id'] = (int) $_GET['categoria_id'];
+            }
+            header('Location: roster.php?' . http_build_query($redirectQ));
+            exit;
         }
+        $message = 'No se encontró ese jugador en la plantilla.';
+        $messageType = 'danger';
     } else {
         $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
         $nombre = trim($_POST['nombre'] ?? '');
@@ -325,19 +335,27 @@ require __DIR__ . '/../includes/header.php';
             <?php if ($editing && $editingStats !== null): ?>
             <div class="card bg-dark border border-secondary rounded-3 mt-3">
                 <div class="card-body">
-                    <h5 class="card-title text-white">Stats &amp; Skills (Player Card)</h5>
-                    <p class="small text-muted">MOTM is updated automatically from Man of the Match votes.</p>
-                    <form method="post" action="">
+                    <h5 class="card-title text-white">Estadísticas y radar (ficha pública)</h5>
+                    <p class="small text-muted mb-2">MOTM en la ficha se calcula con los votos de Jugador del partido.</p>
+                    <p class="small text-white-50 mb-3">Si este jugador tiene datos en <strong>Juegos</strong> (goles/asistencias por partido), en la web se mostrarán esos totales y no los números que escribas aquí. Si no usáis el registro por partido, estos valores son los que verá el público.</p>
+                    <?php
+                    $statsFormQuery = ['edit' => (int) $editing['id']];
+                    if ($filterCat > 0) {
+                        $statsFormQuery['categoria_id'] = $filterCat;
+                    }
+                    $statsFormAction = 'roster.php?' . http_build_query($statsFormQuery);
+                    ?>
+                    <form method="post" action="<?= htmlspecialchars($statsFormAction) ?>">
                         <?= csrf_field() ?>
                         <input type="hidden" name="save_stats" value="1">
                         <input type="hidden" name="roster_id" value="<?= (int) $editing['id'] ?>">
                         <div class="row g-2 mb-2">
-                            <div class="col-6 col-md"><label class="form-label text-white small">Apps</label><input type="number" class="form-control bg-dark text-white border-secondary" name="partidos_jugados" min="0" value="<?= (int) $editingStats['partidos_jugados'] ?>"></div>
-                            <div class="col-6 col-md"><label class="form-label text-white small">Goals</label><input type="number" class="form-control bg-dark text-white border-secondary" name="goles" min="0" value="<?= (int) $editingStats['goles'] ?>"></div>
-                            <div class="col-6 col-md"><label class="form-label text-white small">Assists</label><input type="number" class="form-control bg-dark text-white border-secondary" name="asistencias" min="0" value="<?= (int) $editingStats['asistencias'] ?>"></div>
-                            <div class="col-6 col-md"><label class="form-label text-white small">Clean Sheets</label><input type="number" class="form-control bg-dark text-white border-secondary" name="clean_sheets" min="0" value="<?= (int) $editingStats['clean_sheets'] ?>"></div>
+                            <div class="col-6 col-md"><label class="form-label text-white small" title="Partidos jugados (appearances)">Partidos (Apps)</label><input type="number" class="form-control bg-dark text-white border-secondary" name="partidos_jugados" min="0" step="1" value="<?= (int) $editingStats['partidos_jugados'] ?>"></div>
+                            <div class="col-6 col-md"><label class="form-label text-white small">Goles</label><input type="number" class="form-control bg-dark text-white border-secondary" name="goles" min="0" step="1" value="<?= (int) $editingStats['goles'] ?>"></div>
+                            <div class="col-6 col-md"><label class="form-label text-white small">Asistencias</label><input type="number" class="form-control bg-dark text-white border-secondary" name="asistencias" min="0" step="1" value="<?= (int) $editingStats['asistencias'] ?>"></div>
+                            <div class="col-6 col-md"><label class="form-label text-white small" title="Partidos sin encajar gol (portero/defensa)">Porterías a 0</label><input type="number" class="form-control bg-dark text-white border-secondary" name="clean_sheets" min="0" step="1" value="<?= (int) $editingStats['clean_sheets'] ?>"></div>
                         </div>
-                        <p class="text-white small mb-1 mt-2">Radar (1–10): Pace, Shooting, Passing, Dribbling, Defense, Physical</p>
+                        <p class="text-white small mb-1 mt-2">Radar (1–10): ritmo, tiro, pase, regate, defensa, físico</p>
                         <div class="row g-2 mb-2">
                             <div class="col-4 col-md-2"><label class="form-label text-white small">Pace</label><input type="number" class="form-control bg-dark text-white border-secondary" name="pace" min="1" max="10" value="<?= (int) $editingSkills['pace'] ?>"></div>
                             <div class="col-4 col-md-2"><label class="form-label text-white small">Shooting</label><input type="number" class="form-control bg-dark text-white border-secondary" name="shooting" min="1" max="10" value="<?= (int) $editingSkills['shooting'] ?>"></div>
@@ -346,7 +364,7 @@ require __DIR__ . '/../includes/header.php';
                             <div class="col-4 col-md-2"><label class="form-label text-white small">Defense</label><input type="number" class="form-control bg-dark text-white border-secondary" name="defense" min="1" max="10" value="<?= (int) $editingSkills['defense'] ?>"></div>
                             <div class="col-4 col-md-2"><label class="form-label text-white small">Physical</label><input type="number" class="form-control bg-dark text-white border-secondary" name="physical" min="1" max="10" value="<?= (int) $editingSkills['physical'] ?>"></div>
                         </div>
-                        <button type="submit" class="btn btn-sm btn-outline-warning">Save Stats &amp; Skills</button>
+                        <button type="submit" class="btn btn-sm btn-outline-warning">Guardar estadísticas y radar</button>
                     </form>
                 </div>
             </div>
@@ -360,8 +378,12 @@ require __DIR__ . '/../includes/header.php';
                     <a href="roster.php?categoria_id=<?= (int) $c['id'] ?>" class="btn btn-sm <?= $filterCat === (int) $c['id'] ? 'btn-warning' : 'btn-outline-secondary' ?>"><?= htmlspecialchars($c['nombre']) ?></a>
                 <?php endforeach; ?>
             </div>
+            <div class="mb-3">
+                <label class="form-label text-white small mb-1" for="rosterPlayerSearch">Buscar jugador</label>
+                <input type="search" id="rosterPlayerSearch" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Nombre o apellido…" autocomplete="off">
+            </div>
             <div class="table-responsive">
-                <table class="table table-dark table-striped table-bordered">
+                <table id="rosterPlayersTable" class="table table-dark table-striped table-bordered">
                     <thead>
                         <tr>
                             <th>Photo</th>
@@ -375,7 +397,7 @@ require __DIR__ . '/../includes/header.php';
                     </thead>
                     <tbody>
                         <?php foreach ($roster as $r): ?>
-                            <tr>
+                            <tr data-player-name="<?= htmlspecialchars($r['nombre'] . ' ' . $r['apellido'], ENT_QUOTES, 'UTF-8') ?>">
                                 <td>
                                     <?php if (!empty($r['foto_url'])): ?>
                                         <img src="../<?= htmlspecialchars($r['foto_url']) ?>" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:4px;">
@@ -395,7 +417,7 @@ require __DIR__ . '/../includes/header.php';
                                 <td><?= htmlspecialchars($r['categoria_nombre']) ?></td>
                                 <td><?= (int) $r['activo'] === 1 ? 'Yes' : 'No' ?></td>
                                 <td>
-                                    <a href="roster.php?edit=<?= (int) $r['id'] ?>" class="btn btn-sm btn-outline-light">Edit</a>
+                                    <a href="roster.php?edit=<?= (int) $r['id'] ?><?= $filterCat > 0 ? '&amp;categoria_id=' . (int) $filterCat : '' ?>" class="btn btn-sm btn-outline-light">Edit</a>
                                     <?php if (admin_can('roster_delete')): ?>
                                     <form method="post" class="d-inline" onsubmit="return confirm('Remove this player from roster?');">
                                         <?= csrf_field() ?>
@@ -412,6 +434,19 @@ require __DIR__ . '/../includes/header.php';
             <?php if (count($roster) === 0): ?>
                 <p class="text-muted">No players in roster yet. Add players with the form.</p>
             <?php endif; ?>
+            <script>
+            (function () {
+                var inp = document.getElementById('rosterPlayerSearch');
+                if (!inp) return;
+                inp.addEventListener('input', function () {
+                    var q = (inp.value || '').trim().toLowerCase();
+                    document.querySelectorAll('#rosterPlayersTable tbody tr[data-player-name]').forEach(function (tr) {
+                        var n = (tr.getAttribute('data-player-name') || '').toLowerCase();
+                        tr.style.display = !q || n.indexOf(q) !== -1 ? '' : 'none';
+                    });
+                });
+            })();
+            </script>
         </div>
     </div>
 </div>

@@ -23,5 +23,15 @@ function csrf_field(): string
 function csrf_verify(): bool
 {
     $token = $_POST['csrf_token'] ?? '';
-    return !empty($token) && hash_equals($_SESSION['csrf_token'] ?? '', $token);
+    $ok = !empty($token) && hash_equals($_SESSION['csrf_token'] ?? '', $token);
+    if (!$ok) {
+        csrf_regenerate();
+    }
+    return $ok;
+}
+
+/** Regenerate token (e.g. after failed verify so next form load gets a valid token). */
+function csrf_regenerate(): void
+{
+    unset($_SESSION['csrf_token']);
 }

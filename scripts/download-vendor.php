@@ -15,6 +15,10 @@ $urls = [
     'bootstrap/css/bootstrap.min.css' => 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css',
     'bootstrap/js/bootstrap.bundle.min.js' => 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js',
     'fontawesome/css/all.min.css' => 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
+    'swiper/swiper-bundle.min.css' => 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css',
+    'swiper/swiper-bundle.min.js' => 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js',
+    'gsap/gsap.min.js' => 'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js',
+    'gsap/ScrollTrigger.min.js' => 'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js',
 ];
 
 $webfonts = [
@@ -39,4 +43,4 @@ foreach (array_merge($urls, $webfonts) as $relPath => $url) {
     echo "OK\n";
 }
 
-echo "Done. Reload the site to use local Bootstrap and Font Awesome (no CDN, no tracking warnings).\n";
+echo "Done. Reload the site to use local Bootstrap, Font Awesome, Swiper and GSAP (no CDN, no tracking warnings).\n";

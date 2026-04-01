@@ -31,6 +31,19 @@ require __DIR__ . '/../includes/header.php';
             </a>
         </div>
         <?php endif; ?>
+        <?php if (admin_can('match_reels')): ?>
+        <div class="col-md-4">
+            <a href="match-reels.php" class="text-decoration-none">
+                <div class="card bg-dark border border-secondary border-2 rounded-3 h-100 admin-card hover-orange">
+                    <div class="card-body">
+                        <i class="fas fa-video fa-2x mb-2"></i>
+                        <h5 class="card-title text-white">Match Reels</h5>
+                        <p class="card-text text-muted small">Upload and manage goal clips (reels). Show below Latest Results.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <?php endif; ?>
         <?php if (admin_can('jugador_mes')): ?>
         <div class="col-md-4">
             <a href="jugador-mes.php" class="text-decoration-none">
@@ -159,6 +172,25 @@ require __DIR__ . '/../includes/header.php';
         </div>
         <?php endif; ?>
     </div>
+
+    <?php
+    $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+    $adminDir = rtrim(dirname($scriptName), '/');
+    $host = $_SERVER['HTTP_HOST'] ?? '';
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $staffLoginUrl = $host !== '' ? ($scheme . '://' . $host . $adminDir . '/') : ($adminDir . '/');
+    ?>
+    <div class="card bg-dark border border-secondary border-2 rounded-3 mt-4">
+        <div class="card-body">
+            <h2 class="h5 text-white mb-2"><i class="fas fa-sign-in-alt me-2 text-warning" aria-hidden="true"></i> Staff login (Acceder)</h2>
+            <p class="text-muted small mb-3 mb-md-2">Bookmark or share this URL only with staff. It opens the admin login page. If you are already logged in, you will return here.</p>
+            <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2">
+                <code class="flex-grow-1 text-white bg-black border border-secondary rounded px-3 py-2 small mb-0 user-select-all text-break"><?= htmlspecialchars($staffLoginUrl) ?></code>
+                <a href="index.php" class="btn btn-outline-warning text-nowrap">Open login page</a>
+            </div>
+        </div>
+    </div>
+
     <div class="mt-4">
         <?php if (admin_can('change_own_password')): ?><a href="change-password.php" class="btn btn-outline-warning me-2">Change password</a><?php endif; ?>
         <a href="../index.php" class="btn btn-outline-secondary me-2">View site</a>

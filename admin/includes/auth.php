@@ -40,10 +40,10 @@ function admin_can($permission) {
         'super_admin' => ['*'],
         'editor_coach' => [
             'dashboard', 'jugador_mes', 'roster_edit', 'roster_stats', 'juegos', 'juegos_delete', 'motm',
-            'torneos', 'categorias', 'sedes', 'hero_slider', 'change_own_password', 'activity_log_view'
+            'torneos', 'categorias', 'sedes', 'hero_slider', 'match_reels', 'change_own_password', 'activity_log_view'
         ],
         'staff_campo' => [
-            'dashboard', 'jugador_mes', 'juegos_live_score', 'change_own_password'
+            'dashboard', 'jugador_mes', 'juegos_live_score', 'motm', 'change_own_password'
         ],
     ];
     if (!isset($matrix[$role])) return false;

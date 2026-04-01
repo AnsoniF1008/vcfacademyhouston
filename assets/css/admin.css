@@ -173,3 +173,118 @@ h1.admin-page-title {
         font-size: 1.25rem;
     }
 }
+
+/* ── Admin shell (vcf-style.css + vcf-admin-nav) ── */
+.vcf-admin-site {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+.vcf-admin-site main {
+    flex: 1;
+    width: 100%;
+}
+.vcf-admin-site .text-muted {
+    color: var(--vcf-gray) !important;
+}
+.vcf-admin-site .border-secondary {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.vcf-nav--admin .vcf-nav__links--admin {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    column-gap: 0.2rem;
+    row-gap: 0.15rem;
+    max-width: min(960px, 72vw);
+}
+.vcf-nav--admin .vcf-nav__dropdown .dropdown-menu {
+    margin-top: 0.35rem;
+    border: 1px solid rgba(255, 102, 0, 0.35);
+    z-index: 1080;
+}
+.vcf-nav__admin-dropdown-btn {
+    font-family: var(--font-display, 'Barlow Condensed', sans-serif);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--vcf-gray, #888);
+    background: transparent;
+    border: none;
+    padding: 0.35rem 0.45rem;
+    cursor: pointer;
+    transition: color 0.18s ease;
+}
+.vcf-nav__admin-dropdown-btn:hover,
+.vcf-nav__admin-dropdown-btn:focus-visible,
+.vcf-nav__admin-dropdown-btn.active {
+    color: var(--vcf-orange, #ff6b00) !important;
+    outline: none;
+}
+.vcf-nav__admin-dropdown-btn.dropdown-toggle::after {
+    margin-left: 0.2rem;
+    vertical-align: 0.12em;
+}
+
+.vcf-nav__mobile--admin a {
+    font-size: 13px;
+}
+
+/* Admin footer (vcf-admin-footer.php) */
+.vcf-admin-footer__inner {
+    max-width: var(--page-max, 1280px);
+    margin: 0 auto;
+    padding: 28px var(--page-pad, 28px) 36px;
+    text-align: center;
+}
+.vcf-admin-footer__tagline {
+    font-family: var(--font-display, 'Barlow Condensed', sans-serif);
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 107, 0, 0.35);
+    margin-bottom: 16px;
+}
+.vcf-admin-footer__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px 12px;
+    margin-bottom: 12px;
+}
+.vcf-admin-footer__link {
+    color: var(--vcf-orange, #ff6b00);
+    font-size: 13px;
+    font-weight: 600;
+}
+.vcf-admin-footer__link:hover {
+    color: var(--vcf-white, #fff);
+}
+.vcf-admin-footer__sep {
+    color: var(--vcf-gray, #888);
+    user-select: none;
+}
+.vcf-admin-footer__copy {
+    font-size: 12px;
+    color: var(--vcf-gray, #888);
+}
+.vcf-admin-footer__official {
+    font-size: 11px;
+    color: var(--vcf-gray, #888);
+}
+.vcf-admin-footer__official a {
+    color: var(--vcf-orange, #ff6b00);
+}
+.vcf-admin-footer__official a:hover {
+    opacity: 0.85;
+}
+
+/* Nav active / accent (replaces legacy .navbar rules) */
+.vcf-nav--admin .vcf-nav__links a.active,
+.vcf-nav--admin .vcf-nav__mobile--admin a.active {
+    color: var(--admin-accent) !important;
+    font-weight: 600;
+}

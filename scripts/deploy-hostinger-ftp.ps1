@@ -100,6 +100,8 @@ function Push-FtpItem {
             Push-FtpItem -localFull $c.FullName -relativePath $rel
         }
     } else {
+        # Excluir vídeos de reels (el usuario los sube desde el admin)
+        if ($relativePath -match '^assets/uploads/reels/.*\.(mp4|webm|mov)$') { return }
         $parent = (Split-Path -Parent $relativePath) -replace '\\', '/'
         if ($parent -and $parent -ne ".") {
             $remoteDir = if ($remoteBase -eq "") { $parent } else { "$remoteBase/$parent" }
@@ -124,7 +126,8 @@ function Push-FtpItem {
 Write-Host "Conectando por FTP a ${ftpHost}:${ftpPort} ..." -ForegroundColor Cyan
 # Primero archivos sueltos, luego carpetas (para verificar conexión)
 $toUpload = @(
-    "index.php", "join.php", "contact.php", "calendar.php", "privacy.php", "deploy.php",
+    "index.php", "join.php", "contact.php", "calendar.php", "privacy.php", "recaudaciones.php", "deploy.php",
+    "robots.txt", "sitemap.xml", "sitemap.php",
     "admin", "assets", "config", "includes", "api", "sql", "docs"
 )
 if (Test-Path (Join-Path $root "scripts")) {

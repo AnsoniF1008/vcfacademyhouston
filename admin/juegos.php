@@ -48,10 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($roster_id <= 0) continue;
                 $goles = isset($vals['goles']) ? max(0, (int) $vals['goles']) : 0;
                 $asistencias = isset($vals['asistencias']) ? max(0, (int) $vals['asistencias']) : 0;
-                if ($goles > 0 || $asistencias > 0) {
-                    $totalGoles += $goles;
-                    $rows[] = [$juego_id, $roster_id, $goles, $asistencias];
-                }
+                $totalGoles += $goles;
+                $rows[] = [$juego_id, $roster_id, $goles, $asistencias];
             }
             if ($totalGoles !== $expected) {
                 $message = "Total goals must equal VCF score ($expected). You entered $totalGoles.";
@@ -239,7 +237,7 @@ require __DIR__ . '/../includes/header.php';
                     <?php if ($editing && $editing['estado'] === 'finalizado' && isset($editing['goles_vcf']) && $editing['goles_vcf'] !== null): ?>
                     <hr class="border-secondary my-3">
                     <h6 class="text-white mb-2">Add Scorers / Stats</h6>
-                    <p class="small text-muted">Assign goals and assists to roster players. Total goals must equal VCF score (<?= (int) $editing['goles_vcf'] ?>).</p>
+                    <p class="small text-muted">Assign goals and assists. Include every player who played (use 0–0 if no goal/assist) so Apps and Clean Sheets update on their card. Total goals must equal VCF score (<?= (int) $editing['goles_vcf'] ?>).</p>
                     <?php if (count($rosterForScorers) > 0): ?>
                     <form method="post" action="?torneo_id=<?= $torneo_id ?>&edit=<?= (int) $editing['id'] ?>">
                         <?= csrf_field() ?>

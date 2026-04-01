@@ -72,7 +72,7 @@ function uploadDir($ftp, string $localDir, string $remoteDir, array $skipNames):
 }
 
 echo "Subiendo archivos...\n";
-$rootFiles = ['index.php', 'contact.php', 'privacy.php', 'join.php', 'calendar.php', '.htaccess'];
+$rootFiles = ['index.php', 'contact.php', 'privacy.php', 'join.php', 'calendar.php', 'robots.txt', 'sitemap.xml', 'sitemap.php', '.htaccess'];
 foreach ($rootFiles as $f) {
     $local = $baseDir . DIRECTORY_SEPARATOR . $f;
     if (is_file($local)) {
