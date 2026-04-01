@@ -11,8 +11,26 @@ $venmo = trim((string) ($vcf_site['donation_venmo_url'] ?? ''));
 $kofi = trim((string) ($vcf_site['donation_kofi_url'] ?? ''));
 $otherNote = trim((string) ($vcf_site['donation_other_note'] ?? ''));
 $zelleEmail = trim((string) ($vcf_site['donation_zelle_email'] ?? ''));
+$hostingDueRaw = trim((string) ($vcf_site['donation_hosting_due_date'] ?? ''));
+$hostingPaidAmount = trim((string) ($vcf_site['donation_hosting_paid_amount'] ?? ''));
+$domainDueRaw = trim((string) ($vcf_site['donation_domain_due_date'] ?? ''));
+$domainPaidAmount = trim((string) ($vcf_site['donation_domain_paid_amount'] ?? ''));
 $phone = trim((string) ($vcf_site['phone'] ?? ''));
 $telHref = $phone !== '' ? preg_replace('/[^\d+]/', '', $phone) : '';
+$formatDate = static function (string $raw): string {
+    if ($raw === '') {
+        return '';
+    }
+    try {
+        return (new DateTimeImmutable($raw))->format('F j, Y');
+    } catch (Exception $e) {
+        return $raw;
+    }
+};
+$hostingDueDisplay = $formatDate($hostingDueRaw);
+$domainDueDisplay = $formatDate($domainDueRaw);
+$showHostingMeta = $hostingDueDisplay !== '' || $hostingPaidAmount !== '';
+$showDomainMeta = $domainDueDisplay !== '' || $domainPaidAmount !== '';
 
 $hasAnyLink = $paypal !== '' || $venmo !== '' || $kofi !== '';
 $hasMethods = $hasAnyLink || $zelleEmail !== '' || $phone !== '' || $otherNote !== '';
@@ -42,11 +60,27 @@ $suggestedAmounts = [
                     <div class="vcf-support__cover-icon" aria-hidden="true">&#127760;</div>
                     <div class="vcf-support__cover-title">Hosting</div>
                     <p class="vcf-support__cover-desc">Server costs to keep the site online 24/7, fast and secure for all families.</p>
+                    <?php if ($showHostingMeta): ?>
+                    <?php if ($hostingDueDisplay !== ''): ?>
+                    <p class="vcf-support__cover-desc"><strong>Next renewal:</strong> <?= htmlspecialchars($hostingDueDisplay) ?></p>
+                    <?php endif; ?>
+                    <?php if ($hostingPaidAmount !== ''): ?>
+                    <p class="vcf-support__cover-desc"><strong>Amount paid:</strong> <?= htmlspecialchars($hostingPaidAmount) ?></p>
+                    <?php endif; ?>
+                    <?php endif; ?>
                 </div>
                 <div class="vcf-support__cover-card">
                     <div class="vcf-support__cover-icon" aria-hidden="true">&#128279;</div>
                     <div class="vcf-support__cover-title">Domain</div>
                     <p class="vcf-support__cover-desc">Annual renewal of our official web address so families always find us.</p>
+                    <?php if ($showDomainMeta): ?>
+                    <?php if ($domainDueDisplay !== ''): ?>
+                    <p class="vcf-support__cover-desc"><strong>Next renewal:</strong> <?= htmlspecialchars($domainDueDisplay) ?></p>
+                    <?php endif; ?>
+                    <?php if ($domainPaidAmount !== ''): ?>
+                    <p class="vcf-support__cover-desc"><strong>Amount paid:</strong> <?= htmlspecialchars($domainPaidAmount) ?></p>
+                    <?php endif; ?>
+                    <?php endif; ?>
                 </div>
                 <div class="vcf-support__cover-card">
                     <div class="vcf-support__cover-icon" aria-hidden="true">&#9881;</div>

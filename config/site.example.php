@@ -29,6 +29,14 @@ return [
     'donation_zelle_email' => '',
     /** Plain text for Zelle / bank transfer (shown as paragraph) */
     'donation_other_note' => '',
+    /** Hosting renewal date (supports YYYY-MM-DD or plain text) */
+    'donation_hosting_due_date' => '',
+    /** Hosting amount paid (example: "$129.00 / year") */
+    'donation_hosting_paid_amount' => '',
+    /** Domain renewal date (supports YYYY-MM-DD or plain text) */
+    'donation_domain_due_date' => '',
+    /** Domain amount paid (example: "$19.99 / year") */
+    'donation_domain_paid_amount' => '',
 
     /**
      * Footer "Partners" logos. Empty array = section hidden.
