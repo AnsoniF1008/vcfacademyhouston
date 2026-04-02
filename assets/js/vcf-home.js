@@ -169,6 +169,25 @@
     var pitch = document.getElementById('vfv-pitch');
     if (!dataEl || !pitch) return;
 
+    function escapeHtml(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function sanitizeImageUrl(value) {
+      var raw = String(value == null ? '' : value).trim();
+      if (!raw) return '';
+      if (/^https?:\/\//i.test(raw)) return raw;
+      if (/^\/(?!\/)/.test(raw)) return raw;
+      if (/^\.{1,2}\//.test(raw)) return raw;
+      if (/^[a-zA-Z0-9/_\-.]+$/.test(raw)) return raw;
+      return '';
+    }
+
     var PLAYERS = {};
     try {
       var parsed = JSON.parse(dataEl.textContent || '{}');
@@ -262,6 +281,9 @@
 
       positions.forEach(function (p, i) {
         var player = PLAYERS[p.key] || null;
+        var playerName = player && player.name ? String(player.name) : '';
+        var playerInitials = player && player.initials ? String(player.initials) : p.pos;
+        var safePhoto = player ? sanitizeImageUrl(player.photo) : '';
 
         var div = document.createElement('div');
         div.className = 'vfv-pos';
@@ -270,22 +292,22 @@
         div.dataset.index = String(i);
 
         var avHtml = '';
-        if (player && player.photo) {
+        if (safePhoto) {
           avHtml =
             '<img src="' +
-            player.photo +
+            escapeHtml(safePhoto) +
             '" alt="' +
-            (player.name || '') +
+            escapeHtml(playerName) +
             '" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">' +
             '<span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;">' +
-            (player.initials || p.pos) +
+            escapeHtml(playerInitials) +
             '</span>';
         } else {
-          avHtml = player ? player.initials || p.pos : p.pos;
+          avHtml = escapeHtml(player ? playerInitials : p.pos);
         }
 
         div.innerHTML =
-          '<div class="vfv-pos__dot">' + avHtml + '</div>' + '<span class="vfv-pos__label">' + p.pos + '</span>';
+          '<div class="vfv-pos__dot">' + avHtml + '</div>' + '<span class="vfv-pos__label">' + escapeHtml(p.pos) + '</span>';
 
         div.addEventListener('click', function () {
           selectPos(i);
@@ -301,8 +323,9 @@
         chip.dataset.index = String(i);
         var parts = player ? player.name.split(' ') : [];
         var chipName = player ? parts[0] + ' ' + (parts[1] || '') : p.pos;
-        var numHtml = player && player.num ? '<span class="vfv-chip__num">#' + player.num + '</span>' : '';
-        chip.innerHTML = numHtml + chipName;
+        var playerNum = player ? parseInt(player.num, 10) : 0;
+        var numHtml = playerNum > 0 ? '<span class="vfv-chip__num">#' + playerNum + '</span>' : '';
+        chip.innerHTML = numHtml + escapeHtml(chipName);
         chip.addEventListener('click', function () {
           selectPos(i);
         });
@@ -332,26 +355,26 @@
         chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
       }
 
-      var attrsHtml = p.attrs
-        .map(function (a) {
-          return '<div class="vfv-attr">' + a + '</div>';
-        })
-        .join('');
-
       var assignedHtml = '';
       if (player && player.name) {
+        var safePhotoAssigned = sanitizeImageUrl(player.photo);
+        var safeInitials = escapeHtml(player.initials || '');
+        var safePlayerName = escapeHtml(player.name);
+        var safePlayerNum = parseInt(player.num, 10);
+        if (isNaN(safePlayerNum) || safePlayerNum < 0) safePlayerNum = 0;
         var avInner = '';
-        if (player.photo) {
+        if (safePhotoAssigned) {
           avInner =
             '<img src="' +
-            player.photo +
+            escapeHtml(safePhotoAssigned) +
             '" alt="' +
-            player.name +
-            '" onerror="this.style.display=\'none\';this.parentNode.textContent=\'' +
-            (player.initials || '') +
-            '\'">';
+            safePlayerName +
+            '" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">' +
+            '<span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;">' +
+            safeInitials +
+            '</span>';
         } else {
-          avInner = player.initials || '';
+          avInner = safeInitials;
         }
         assignedHtml =
           '<div class="vfv-assigned">' +
@@ -360,10 +383,10 @@
           '</div>' +
           '<div>' +
           '<div class="vfv-assigned__name">' +
-          player.name +
+          safePlayerName +
           '</div>' +
           '<div class="vfv-assigned__num">' +
-          (player.num ? '#' + player.num + ' · ' : '') +
+          (safePlayerNum > 0 ? '#' + safePlayerNum + ' · ' : '') +
           'VCF Houston</div>' +
           '</div>' +
           '</div>';
@@ -371,22 +394,27 @@
 
       var detail = document.getElementById('vfv-detail');
       if (detail) {
+        var safeAttrsHtml = p.attrs
+          .map(function (a) {
+            return '<div class="vfv-attr">' + escapeHtml(a) + '</div>';
+          })
+          .join('');
         detail.innerHTML =
           '<div class="vfv-detail-inner">' +
           '<div class="vfv-detail__tag">' +
-          p.pos +
+          escapeHtml(p.pos) +
           ' &middot; ' +
-          fname +
+          escapeHtml(fname) +
           '</div>' +
           '<div class="vfv-detail__name">' +
-          p.name +
+          escapeHtml(p.name) +
           '</div>' +
           '<div class="vfv-detail__desc">' +
-          p.desc +
+          escapeHtml(p.desc) +
           '</div>' +
           assignedHtml +
           '<div class="vfv-attrs">' +
-          attrsHtml +
+          safeAttrsHtml +
           '</div>' +
           '</div>';
       }

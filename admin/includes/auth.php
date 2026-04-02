@@ -9,27 +9,53 @@ if (empty($_SESSION['admin_logged'])) {
 
 require __DIR__ . '/../../config/database.php';
 
-if (empty($_SESSION['admin_role'])) {
-    try {
-        $stmt = $pdo->prepare("SELECT role, username FROM admin_users WHERE id = ?");
-        $stmt->execute([$_SESSION['admin_user_id'] ?? 0]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($row) {
-            $_SESSION['admin_role'] = $row['role'];
-            $_SESSION['admin_username'] = $row['username'] ?? 'Unknown';
-        } else {
-            $_SESSION['admin_role'] = 'staff_campo';
-            $_SESSION['admin_username'] = 'Unknown';
-        }
-    } catch (PDOException $e) {
-        // Migration not run: role column missing — treat as super_admin
+$admin_logout = static function (): void {
+    $_SESSION = [];
+    if (ini_get('session.use_cookies')) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+    }
+    session_destroy();
+    header('Location: index.php');
+    exit;
+};
+
+$admin_user_id = (int) ($_SESSION['admin_user_id'] ?? 0);
+if ($admin_user_id <= 0) {
+    $admin_logout();
+}
+
+$resolved_role = 'staff_campo';
+$resolved_username = 'Unknown';
+try {
+    $stmt = $pdo->prepare("SELECT role, username FROM admin_users WHERE id = ?");
+    $stmt->execute([$admin_user_id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$row) {
+        $admin_logout();
+    }
+    $resolved_username = (string) ($row['username'] ?? 'Unknown');
+    $raw_role = $row['role'] ?? '';
+    $resolved_role = (is_string($raw_role) && $raw_role !== '') ? $raw_role : 'staff_campo';
+} catch (PDOException $e) {
+    // Legacy schema (without role): keep least privilege instead of escalating privileges.
+    if (isset($e->errorInfo[1]) && (int) $e->errorInfo[1] === 1054) {
         $stmt = $pdo->prepare("SELECT username FROM admin_users WHERE id = ?");
-        $stmt->execute([$_SESSION['admin_user_id'] ?? 0]);
+        $stmt->execute([$admin_user_id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        $_SESSION['admin_role'] = 'super_admin';
-        $_SESSION['admin_username'] = $row['username'] ?? 'Admin';
+        if (!$row) {
+            $admin_logout();
+        }
+        $resolved_username = (string) ($row['username'] ?? 'Unknown');
+        $resolved_role = 'staff_campo';
+    } else {
+        error_log('admin auth: ' . $e->getMessage());
+        $admin_logout();
     }
 }
+
+$_SESSION['admin_role'] = $resolved_role;
+$_SESSION['admin_username'] = $resolved_username;
 
 $admin_role = $_SESSION['admin_role'] ?? 'staff_campo';
 $admin_username = $_SESSION['admin_username'] ?? '';

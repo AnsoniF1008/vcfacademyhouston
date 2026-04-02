@@ -23,7 +23,7 @@ cd c:\xampp\htdocs\valencia
 .\scripts\deploy-hostinger-ftp.ps1 -Password 'TU_CONTRASEÑA_FTP'
 ```
 
-El script sube los archivos a **las dos carpetas** que Hostinger puede usar (`public_html` y `domains/vcfacademyhouston.com/public_html`), así el sitio debería cargar en una de las dos.
+El script sube los archivos a la **raíz FTP de la cuenta** (que en este hosting ya apunta al `public_html` correcto del dominio).
 
 ### 2. Crear la base de datos en el servidor
 
@@ -59,7 +59,7 @@ Guarda el archivo. Sin este archivo la página dará error de base de datos.
 
 ## Si sigue saliendo 404
 
-1. **Vuelve a ejecutar el deploy** (el script ahora sube a 3 sitios: raíz FTP, `public_html` y `domains/vcfacademyhouston.com/public_html`):
+1. **Vuelve a ejecutar el deploy** (sube a la raíz FTP de la cuenta):
    ```powershell
    .\scripts\deploy-hostinger-ftp.ps1 -Password 'TU_CONTRASEÑA_FTP'
    ```
