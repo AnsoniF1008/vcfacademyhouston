@@ -710,14 +710,41 @@ function vcfAnimateRadar(radarWrap, radarPoly, pointsStr) {
                 .then(function (data) {
                     var container = document.getElementById('star-results-container');
                     if (!container || !Array.isArray(data)) return;
+                    container.innerHTML = '';
                     var maxVotes = 1;
-                    data.forEach(function (p) { if (p.total_votes > maxVotes) maxVotes = p.total_votes; });
-                    container.innerHTML = data.map(function (p) {
-                        var pct = maxVotes > 0 ? (p.total_votes / maxVotes) * 100 : 0;
-                        return '<div class="vote-bar-container">' +
-                            '<div class="player-label"><span>' + (p.nombre || '') + '</span><span>' + p.total_votes + ' votes</span></div>' +
-                            '<div class="bar-bg"><div class="bar-fill" style="width:' + pct + '%"></div></div></div>';
-                    }).join('');
+                    data.forEach(function (p) {
+                        var votes = Number(p && p.total_votes) || 0;
+                        if (votes > maxVotes) maxVotes = votes;
+                    });
+                    data.forEach(function (p) {
+                        var votes = Number(p && p.total_votes) || 0;
+                        var pct = maxVotes > 0 ? (votes / maxVotes) * 100 : 0;
+                        var wrap = document.createElement('div');
+                        wrap.className = 'vote-bar-container';
+
+                        var label = document.createElement('div');
+                        label.className = 'player-label';
+
+                        var nameSpan = document.createElement('span');
+                        nameSpan.textContent = (p && p.nombre) ? String(p.nombre) : '';
+                        label.appendChild(nameSpan);
+
+                        var votesSpan = document.createElement('span');
+                        votesSpan.textContent = String(votes) + ' votes';
+                        label.appendChild(votesSpan);
+
+                        var barBg = document.createElement('div');
+                        barBg.className = 'bar-bg';
+
+                        var barFill = document.createElement('div');
+                        barFill.className = 'bar-fill';
+                        barFill.style.width = Math.max(0, Math.min(100, pct)) + '%';
+
+                        barBg.appendChild(barFill);
+                        wrap.appendChild(label);
+                        wrap.appendChild(barBg);
+                        container.appendChild(wrap);
+                    });
                 })
                 .catch(function () {});
         }

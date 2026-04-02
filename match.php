@@ -41,7 +41,7 @@ try {
     $s = $pdo->prepare("
         SELECT g.minuto, g.tipo, r.nombre, r.apellido, r.dorsal
         FROM juego_goles g
-        LEFT JOIN roster r ON r.id = g.jugador_id
+        LEFT JOIN roster r ON r.id = g.roster_id
         WHERE g.juego_id = ?
         ORDER BY g.minuto ASC
     ");
@@ -88,7 +88,7 @@ $vcf_crest_file = file_exists(__DIR__ . '/assets/img/vcf-crest.png') ? 'vcf-cres
 
 $page_title = 'VCF Houston vs ' . $rival . ' — ' . date('M j, Y', $gameTs) . ' | VCF Academy Houston';
 $page_description = 'Match details: VCF Academy Houston vs ' . $rival . ' on ' . date('F j, Y', $gameTs) . '. ' . ($hasScore ? "Final score: $gv–$gr." : 'Upcoming match.');
-$og_image = $match['rival_logo_url'] ?: '';
+$page_og_image = $match['rival_logo_url'] ?: '';
 require __DIR__ . '/includes/header.php';
 ?>
 

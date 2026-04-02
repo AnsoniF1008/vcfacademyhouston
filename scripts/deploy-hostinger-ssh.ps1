@@ -11,7 +11,7 @@ $ErrorActionPreference = "Stop"
 $hostName = "31.170.166.193"
 $port = 65002
 $user = "u766140586"
-$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$root = Split-Path -Parent $PSScriptRoot
 if (-not (Test-Path (Join-Path $root "index.php"))) { $root = "c:\xampp\htdocs\valencia" }
 
 # Comprobar modulo Posh-SSH
