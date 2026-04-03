@@ -40,8 +40,9 @@ $ErrorActionPreference = "Stop"
 $ftpHost = "31.170.166.193"
 $ftpPort = 21
 $ftpUser = "u766140586"
-# Cuenta FTP principal Hostinger: subir a /public_html
-$remoteBases = @("public_html")
+# En esta cuenta FTP, el directorio inicial YA es /public_html.
+# Si añadimos "public_html" aquí se sube en /public_html/public_html (ruta incorrecta).
+$remoteBases = @("")
 function Ensure-FtpDirectory {
     param([string]$dirPath)
     if ([string]::IsNullOrWhiteSpace($dirPath)) { return }
