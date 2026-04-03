@@ -39,7 +39,7 @@ if (-not $Password) {
 $ErrorActionPreference = "Stop"
 $ftpHost = "ftp.vcfacademyhouston.com"
 $ftpPort = 21
-$ftpUser = "u766140586.ansonif"
+$ftpUser = "u766140586.Ansoni"
 # Esta cuenta FTP adicional ya está enjaulada al public_html del sitio.
 $remoteBases = @("")
 function Ensure-FtpDirectory {
