@@ -37,11 +37,10 @@ if (-not $Password) {
 }
 
 $ErrorActionPreference = "Stop"
-$ftpHost = "31.170.166.193"
+$ftpHost = "ftp.vcfacademyhouston.com"
 $ftpPort = 21
-$ftpUser = "u766140586"
-# En esta cuenta FTP, el directorio inicial YA es /public_html.
-# Si añadimos "public_html" aquí se sube en /public_html/public_html (ruta incorrecta).
+$ftpUser = "u766140586.ansonif"
+# Esta cuenta FTP adicional ya está enjaulada al public_html del sitio.
 $remoteBases = @("")
 function Ensure-FtpDirectory {
     param([string]$dirPath)
