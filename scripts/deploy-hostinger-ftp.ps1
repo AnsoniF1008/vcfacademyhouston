@@ -37,11 +37,11 @@ if (-not $Password) {
 }
 
 $ErrorActionPreference = "Stop"
-$ftpHost = "ftp.vcfacademyhouston.com"
+$ftpHost = "31.170.166.193"
 $ftpPort = 21
-$ftpUser = "u766140586.ansonif"
-# Cuenta FTP con directorio: /home/u766140586/domains/vcfacademyhouston.com/public_html (raíz del usuario)
-$remoteBases = @("")
+$ftpUser = "u766140586"
+# Cuenta FTP principal Hostinger: subir a /public_html
+$remoteBases = @("public_html")
 function Ensure-FtpDirectory {
     param([string]$dirPath)
     if ([string]::IsNullOrWhiteSpace($dirPath)) { return }
