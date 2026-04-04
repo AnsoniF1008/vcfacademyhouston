@@ -37,7 +37,11 @@ Si el workflow falla con error de login o conexión, revisa en GitHub: **Setting
 
 ## Ruta remota (`hostinger_ftp_remote_path`)
 
-El workflow sube a `server-dir: /public_html/`. En `deploy-credentials.php`, `hostinger_ftp_remote_path` debe apuntar a la misma carpeta relativa a la raíz FTP:
+En Hostinger, muchas cuentas FTP **ya abren en `public_html`** (es lo que ves en el administrador como `.../files/public_html/`).
 
-- Si al conectar por FTP ves directamente `public_html`, prueba `public_html` o deja `''` según cómo liste el servidor.
-- Si los archivos suben pero el sitio no cambia, suele ser que se están subiendo fuera de `public_html`; alinea esta clave con la ruta real en el panel (File Manager).
+- **`''` (recomendado en ese caso):** los archivos van a `index.php` en la raíz FTP = la web pública. Si pusieras `'public_html'` aquí, se crearía **`public_html/public_html/`** y el sitio no se actualizaría.
+- **`'public_html'`:** solo si al conectar por FTP la raíz es la **home** de la cuenta y ves `public_html` como **subcarpeta** (junto a `logs`, etc.).
+
+El workflow de GitHub usa `server-dir: /` por la misma razón (raíz FTP = sitio).
+
+Si tras un deploy el sitio no cambia, revisa en File Manager dónde quedó `index.php` y ajusta esta clave.

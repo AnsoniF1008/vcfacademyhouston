@@ -153,6 +153,8 @@ function Push-FtpItem {
             Push-FtpItem -localFull $c.FullName -relativePath $rel
         }
     } else {
+        # No subir credenciales locales a producción
+        if ($relativePath -eq 'config/deploy-credentials.php') { return }
         # Excluir vídeos de reels (el usuario los sube desde el admin)
         if ($relativePath -match '^assets/uploads/reels/.*\.(mp4|webm|mov)$') { return }
         $parent = ConvertTo-RemotePath (Split-Path -Parent $relativePath)
@@ -233,7 +235,13 @@ if (-not $Password) {
     exit 1
 }
 
+$destLabel = if ([string]::IsNullOrWhiteSpace($remoteRoot)) {
+    "raíz FTP (equivale a public_html si tu usuario FTP ya abre ahí)"
+} else {
+    "public_html del panel = carpeta remota '$remoteRoot'"
+}
 Write-Host "Conectando por FTP a ${ftpHost}:${ftpPort} ..." -ForegroundColor Cyan
+Write-Host "Destino: $destLabel" -ForegroundColor Gray
 if ($DryRun) {
     Write-Host "Modo simulación activado: no se suben archivos." -ForegroundColor Yellow
 }

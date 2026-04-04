@@ -15,9 +15,10 @@ return [
     'hostinger_ftp_user' => 'u766140586.AnsoniF',
     'hostinger_ftp_pass' => 'TU_CONTRASEÑA_FTP_HOSTINGER',
     'hostinger_ftp_port' => 21,
-    // Carpeta del sitio respecto a la raíz FTP. Debe coincidir con GitHub Actions (server-dir: /public_html/).
-    // Si al conectar ya estás dentro de public_html, deja ''.
-    'hostinger_ftp_remote_path' => 'public_html',
+    // Carpeta del sitio respecto a la raíz FTP.
+    // Hostinger (muy habitual): la cuenta FTP ya abre en public_html → usa '' para no crear public_html/public_html/.
+    // Solo usa 'public_html' si al conectar por FTP ves public_html como subcarpeta (raíz = home de la cuenta).
+    'hostinger_ftp_remote_path' => '',
     'db_host'      => 'sql101.infinityfree.com',
     'db_name'      => 'if0_41281527_valenciacf',
     'db_user'      => 'if0_41281527',

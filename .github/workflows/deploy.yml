@@ -28,7 +28,8 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./
-          server-dir: /public_html/
+          # Raíz FTP = public_html (Hostinger). Usar / evita /public_html/public_html/ en el servidor.
+          server-dir: /
           exclude: |
             **/.git*
             **/.git*/**
@@ -58,7 +59,8 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./
-          server-dir: /public_html/
+          # Raíz FTP = public_html (Hostinger). Usar / evita /public_html/public_html/ en el servidor.
+          server-dir: /
           exclude: |
             **/.git*
             **/.git*/**
@@ -88,7 +90,8 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./
-          server-dir: /public_html/
+          # Raíz FTP = public_html (Hostinger). Usar / evita /public_html/public_html/ en el servidor.
+          server-dir: /
           exclude: |
             **/.git*
             **/.git*/**
