@@ -22,3 +22,22 @@ No hace falta pasar contraseña: el script lee la conexión FTP de **config/depl
 | **Directorio remoto** | public_html (raíz del sitio) |
 
 Si cambias la contraseña FTP en el panel de Hostinger, actualiza `hostinger_ftp_pass` en `config/deploy-credentials.php`.
+
+## Deploy automático (GitHub Actions)
+
+El workflow `.github/workflows/deploy.yml` sube en cada push a `main` usando **secretos del repositorio**:
+
+| Secreto | Uso |
+|---------|-----|
+| `FTP_SERVER` | Host FTP (p. ej. `ftp.vcfacademyhouston.com` o la IP del panel) |
+| `FTP_USERNAME` | Usuario FTP (exactamente como en Hostinger, mayúsculas/minúsculas) |
+| `FTP_PASSWORD` | Contraseña FTP |
+
+Si el workflow falla con error de login o conexión, revisa en GitHub: **Settings → Secrets and variables → Actions** que existan los tres y coincidan con el panel de Hostinger. El script local (`deploy-hostinger-ftp.ps1`) no usa esos secretos; solo usa `config/deploy-credentials.php`.
+
+## Ruta remota (`hostinger_ftp_remote_path`)
+
+El workflow sube a `server-dir: /public_html/`. En `deploy-credentials.php`, `hostinger_ftp_remote_path` debe apuntar a la misma carpeta relativa a la raíz FTP:
+
+- Si al conectar por FTP ves directamente `public_html`, prueba `public_html` o deja `''` según cómo liste el servidor.
+- Si los archivos suben pero el sitio no cambia, suele ser que se están subiendo fuera de `public_html`; alinea esta clave con la ruta real en el panel (File Manager).

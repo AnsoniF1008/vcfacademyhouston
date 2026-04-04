@@ -471,16 +471,65 @@
     }
   })();
 
-  /* Reels: tap to play/pause */
-  document.querySelectorAll('[data-vcf-reel]').forEach(function (wrap) {
-    var v = wrap.querySelector('video');
-    if (!v) return;
-    wrap.addEventListener('click', function () {
-      if (v.paused) {
-        v.play().catch(function () {});
-      } else {
-        v.pause();
+  /* Reels: entrance animation + hover/tap play */
+  (function () {
+    var cards = document.querySelectorAll('[data-vcf-reel-card]');
+    if (!cards.length) return;
+
+    function initReelAnimations() {
+      if (typeof IntersectionObserver === 'undefined') {
+        cards.forEach(function (card) {
+          card.classList.add('vcf-reel-visible');
+        });
+        return;
       }
-    });
-  });
+
+      var observer = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            var card = entry.target;
+            var idx = parseInt(card.getAttribute('data-index') || '0', 10);
+            setTimeout(function () {
+              card.classList.add('vcf-reel-visible');
+            }, idx * 60);
+            observer.unobserve(card);
+          });
+        },
+        { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+      );
+
+      cards.forEach(function (card) {
+        observer.observe(card);
+      });
+    }
+
+    function initVideoInteraction() {
+      cards.forEach(function (card) {
+        var video = card.querySelector('video.vcf-reel-media');
+        if (!video) return;
+
+        card.addEventListener('mouseenter', function () {
+          video.play().catch(function () {});
+        });
+
+        card.addEventListener('mouseleave', function () {
+          video.pause();
+          video.currentTime = 0;
+        });
+
+        card.addEventListener('click', function () {
+          if (video.paused) {
+            video.play().catch(function () {});
+          } else {
+            video.pause();
+            video.currentTime = 0;
+          }
+        });
+      });
+    }
+
+    initReelAnimations();
+    initVideoInteraction();
+  })();
 })();

@@ -282,22 +282,59 @@ echo json_encode(['players' => $formation_players], JSON_UNESCAPED_UNICODE | JSO
 <?php require __DIR__ . '/partials/home-tournaments-stats.php'; ?>
 
 <?php if (!empty($reels) && is_array($reels) && count($reels) > 0): ?>
-<section id="reels" class="vcf-section">
-  <div class="vcf-section__header">
-    <h2 class="vcf-section__title">Match <em>Reels</em></h2>
-  </div>
-  <div class="vcf-reels">
-    <?php foreach ($reels as $r): ?>
-    <div class="vcf-reel" data-vcf-reel>
-      <video src="<?= htmlspecialchars($b) ?>/<?= htmlspecialchars($r['video_url']) ?>" muted loop playsinline preload="metadata"></video>
-      <div class="vcf-reel__overlay">
-        <div class="vcf-reel__play" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
-        </div>
-        <div class="vcf-reel__title"><?= htmlspecialchars($r['caption'] ?: 'Highlight') ?></div>
-      </div>
+<section id="reels" class="vcf-reels-section" aria-label="Match Reels">
+  <div class="vcf-reels-inner">
+    <div class="vcf-reels-header">
+      <span class="vcf-reels-header-bar" aria-hidden="true"></span>
+      <h2 class="vcf-reels-title">MATCH <span>REELS</span></h2>
     </div>
-    <?php endforeach; ?>
+
+    <div class="vcf-reels-grid">
+      <?php foreach ($reels as $i => $r): ?>
+      <?php
+      $num = str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT);
+      $caption = trim((string) ($r['caption'] ?? ''));
+      $videoUrl = htmlspecialchars($b . '/' . ltrim((string) ($r['video_url'] ?? ''), '/'));
+      $titleLower = strtolower($caption);
+      $type = 'highlight';
+      if (strpos($titleLower, 'gol') !== false) {
+          $type = 'golazo';
+      } elseif (strpos($titleLower, 'train') !== false || strpos($titleLower, 'entren') !== false) {
+          $type = 'entrenamiento';
+      }
+      $badgeText = 'HIGHLIGHT';
+      if ($type === 'golazo') {
+          $badgeText = 'GOLAZO';
+      } elseif ($type === 'entrenamiento') {
+          $badgeText = 'TRAINING';
+      }
+      ?>
+      <article class="vcf-reel-card" data-vcf-reel-card data-index="<?= (int) $i ?>">
+        <video
+          class="vcf-reel-media"
+          src="<?= $videoUrl ?>"
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          aria-label="<?= htmlspecialchars($caption !== '' ? $caption : ('Match reel ' . $num)) ?>"
+        ></video>
+        <div class="vcf-reel-overlay" aria-hidden="true"></div>
+        <div class="vcf-reel-play-wrap" aria-hidden="true">
+          <div class="vcf-reel-play-btn">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="white" aria-hidden="true">
+              <polygon points="3,1 14,8 3,15"></polygon>
+            </svg>
+          </div>
+        </div>
+        <span class="vcf-reel-badge vcf-reel-badge--<?= htmlspecialchars($type) ?>"><?= htmlspecialchars($badgeText) ?></span>
+        <span class="vcf-reel-num" aria-hidden="true">#<?= htmlspecialchars($num) ?></span>
+        <?php if ($caption !== ''): ?>
+        <span class="vcf-reel-title"><?= htmlspecialchars($caption) ?></span>
+        <?php endif; ?>
+      </article>
+      <?php endforeach; ?>
+    </div>
   </div>
 </section>
 <?php endif; ?>
