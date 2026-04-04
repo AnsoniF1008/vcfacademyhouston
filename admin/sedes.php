@@ -4,66 +4,71 @@ require_permission('sedes');
 require __DIR__ . '/includes/csrf.php';
 require __DIR__ . '/../config/database.php';
 
-$message = '';
+$message     = '';
 $messageType = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify()) {
-        $message = 'Invalid request. Please try again.';
-        $messageType = 'danger';
+        $message = 'Invalid request. Please try again.'; $messageType = 'danger';
     } elseif (isset($_POST['delete_sede_id'])) {
         $id = (int) $_POST['delete_sede_id'];
-        $stmt = $pdo->prepare("DELETE FROM sedes WHERE id = ?");
-        $stmt->execute([$id]);
-        $message = 'Sede deleted (and its fields).';
-        $messageType = 'success';
+        $stName = $pdo->prepare("SELECT nombre FROM sedes WHERE id = ?");
+        $stName->execute([$id]);
+        $delName = $stName->fetchColumn() ?: $id;
+        $pdo->prepare("DELETE FROM sedes WHERE id = ?")->execute([$id]);
+        admin_log('sedes.delete', 'Deleted sede "' . $delName . '" (id ' . $id . ') and its fields');
+        $message = 'Sede deleted (and its fields).'; $messageType = 'success';
     } elseif (isset($_POST['delete_cancha_id'])) {
         $id = (int) $_POST['delete_cancha_id'];
-        $stmt = $pdo->prepare("DELETE FROM canchas WHERE id = ?");
-        $stmt->execute([$id]);
-        $message = 'Field deleted.';
-        $messageType = 'success';
+        $stName = $pdo->prepare("SELECT numero_cancha FROM canchas WHERE id = ?");
+        $stName->execute([$id]);
+        $delName = $stName->fetchColumn() ?: $id;
+        $pdo->prepare("DELETE FROM canchas WHERE id = ?")->execute([$id]);
+        admin_log('sedes.cancha_delete', 'Deleted field "' . $delName . '" (id ' . $id . ')');
+        $message = 'Field deleted.'; $messageType = 'success';
     } elseif (isset($_POST['save_sede'])) {
-        $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
-        $nombre = trim($_POST['nombre'] ?? '');
-        $direccion = trim($_POST['direccion'] ?? '');
-        $mapa_general_url = trim($_POST['mapa_general_url'] ?? '');
-        $nota_acceso = trim($_POST['nota_acceso'] ?? '');
+        $id              = isset($_POST['id']) ? (int) $_POST['id'] : 0;
+        $nombre          = mb_substr(trim($_POST['nombre']          ?? ''), 0, 255);
+        $direccion       = mb_substr(trim($_POST['direccion']       ?? ''), 0, 255);
+        $mapa_general_url = mb_substr(trim($_POST['mapa_general_url'] ?? ''), 0, 2083);
+        $nota_acceso     = mb_substr(trim($_POST['nota_acceso']     ?? ''), 0, 500);
 
         if ($nombre === '' || $direccion === '') {
-            $message = 'Name and address are required.';
-            $messageType = 'danger';
+            $message = 'Name and address are required.'; $messageType = 'danger';
         } else {
             if ($id > 0) {
-                $stmt = $pdo->prepare("UPDATE sedes SET nombre = ?, direccion = ?, mapa_general_url = ?, nota_acceso = ? WHERE id = ?");
-                $stmt->execute([$nombre, $direccion, $mapa_general_url ?: null, $nota_acceso ?: null, $id]);
+                $pdo->prepare("UPDATE sedes SET nombre=?, direccion=?, mapa_general_url=?, nota_acceso=? WHERE id=?")
+                    ->execute([$nombre, $direccion, $mapa_general_url ?: null, $nota_acceso ?: null, $id]);
+                admin_log('sedes.update', 'Updated sede "' . $nombre . '" (id ' . $id . ')');
                 $message = 'Sede updated.';
             } else {
-                $stmt = $pdo->prepare("INSERT INTO sedes (nombre, direccion, mapa_general_url, nota_acceso) VALUES (?, ?, ?, ?)");
-                $stmt->execute([$nombre, $direccion, $mapa_general_url ?: null, $nota_acceso ?: null]);
+                $pdo->prepare("INSERT INTO sedes (nombre, direccion, mapa_general_url, nota_acceso) VALUES (?,?,?,?)")
+                    ->execute([$nombre, $direccion, $mapa_general_url ?: null, $nota_acceso ?: null]);
+                admin_log('sedes.create', 'Created sede "' . $nombre . '"');
                 $message = 'Sede added.';
             }
             $messageType = 'success';
         }
     } elseif (isset($_POST['save_cancha'])) {
-        $cancha_id = isset($_POST['cancha_id']) ? (int) $_POST['cancha_id'] : 0;
-        $sede_id = (int) ($_POST['sede_id'] ?? 0);
-        $numero_cancha = trim($_POST['numero_cancha'] ?? '');
-        $sobrenombre = trim($_POST['sobrenombre'] ?? '');
-        $indicaciones_extra = trim($_POST['indicaciones_extra'] ?? '');
-        $mapa_url = trim($_POST['mapa_url'] ?? '');
+        $cancha_id         = isset($_POST['cancha_id']) ? (int) $_POST['cancha_id'] : 0;
+        $sede_id           = (int) ($_POST['sede_id'] ?? 0);
+        $numero_cancha     = mb_substr(trim($_POST['numero_cancha']     ?? ''), 0, 100);
+        $sobrenombre       = mb_substr(trim($_POST['sobrenombre']       ?? ''), 0, 100);
+        $indicaciones_extra = mb_substr(trim($_POST['indicaciones_extra'] ?? ''), 0, 500);
+        $mapa_url          = mb_substr(trim($_POST['mapa_url']          ?? ''), 0, 2083);
 
         if ($sede_id <= 0 || $numero_cancha === '') {
-            $message = 'Sede and field number/name are required.';
-            $messageType = 'danger';
+            $message = 'Sede and field number/name are required.'; $messageType = 'danger';
         } else {
             if ($cancha_id > 0) {
-                $stmt = $pdo->prepare("UPDATE canchas SET numero_cancha = ?, sobrenombre = ?, indicaciones_extra = ?, mapa_url = ? WHERE id = ?");
-                $stmt->execute([$numero_cancha, $sobrenombre ?: null, $indicaciones_extra ?: null, $mapa_url ?: null, $cancha_id]);
+                $pdo->prepare("UPDATE canchas SET numero_cancha=?, sobrenombre=?, indicaciones_extra=?, mapa_url=? WHERE id=?")
+                    ->execute([$numero_cancha, $sobrenombre ?: null, $indicaciones_extra ?: null, $mapa_url ?: null, $cancha_id]);
+                admin_log('sedes.cancha_update', 'Updated field "' . $numero_cancha . '" (id ' . $cancha_id . ')');
                 $message = 'Field updated.';
             } else {
-                $stmt = $pdo->prepare("INSERT INTO canchas (sede_id, numero_cancha, sobrenombre, indicaciones_extra, mapa_url) VALUES (?, ?, ?, ?, ?)");
-                $stmt->execute([$sede_id, $numero_cancha, $sobrenombre ?: null, $indicaciones_extra ?: null, $mapa_url ?: null]);
+                $pdo->prepare("INSERT INTO canchas (sede_id, numero_cancha, sobrenombre, indicaciones_extra, mapa_url) VALUES (?,?,?,?,?)")
+                    ->execute([$sede_id, $numero_cancha, $sobrenombre ?: null, $indicaciones_extra ?: null, $mapa_url ?: null]);
+                admin_log('sedes.cancha_create', 'Added field "' . $numero_cancha . '" to sede id ' . $sede_id);
                 $message = 'Field added.';
             }
             $messageType = 'success';
@@ -73,15 +78,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $sedes = $pdo->query("SELECT id, nombre, direccion, mapa_general_url, nota_acceso FROM sedes ORDER BY nombre")->fetchAll();
 
-$editing = null;
+$editing      = null;
 $canchasBySede = [];
 if (isset($_GET['edit'])) {
     $editId = (int) $_GET['edit'];
     foreach ($sedes as $s) {
-        if ((int) $s['id'] === $editId) {
-            $editing = $s;
-            break;
-        }
+        if ((int) $s['id'] === $editId) { $editing = $s; break; }
     }
     if ($editing) {
         $stmt = $pdo->prepare("SELECT id, sede_id, numero_cancha, sobrenombre, indicaciones_extra, mapa_url FROM canchas WHERE sede_id = ? ORDER BY numero_cancha");
@@ -97,7 +99,7 @@ require __DIR__ . '/../includes/header.php';
 <div class="container py-5">
     <?= admin_breadcrumb([['label' => 'Sedes']]) ?>
     <h1 class="mb-4 admin-page-title">Sedes / Training Grounds</h1>
-    <p><a href="dashboard.php" class="text-decoration-none" style="color: #FF6600;">&larr; Dashboard</a></p>
+    <p><a href="dashboard.php" class="text-decoration-none" style="color:#FF6600;">&larr; Dashboard</a></p>
 
     <?php if ($message): ?>
         <div class="alert alert-<?= $messageType ?> py-2"><?= htmlspecialchars($message) ?></div>
@@ -117,20 +119,20 @@ require __DIR__ . '/../includes/header.php';
                         <?php endif; ?>
                         <div class="mb-2">
                             <label class="form-label text-white small">Park name</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary" name="nombre" required placeholder="e.g. Bear Creek Park" value="<?= htmlspecialchars($editing['nombre'] ?? '') ?>">
+                            <input type="text" class="form-control bg-dark text-white border-secondary" name="nombre" required maxlength="255" placeholder="e.g. Bear Creek Park" value="<?= htmlspecialchars($editing['nombre'] ?? '') ?>">
                         </div>
                         <div class="mb-2">
                             <label class="form-label text-white small">Address</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary" name="direccion" required placeholder="e.g. 3535 War Memorial Dr, Houston, TX" value="<?= htmlspecialchars($editing['direccion'] ?? '') ?>">
+                            <input type="text" class="form-control bg-dark text-white border-secondary" name="direccion" required maxlength="255" placeholder="e.g. 3535 War Memorial Dr, Houston, TX" value="<?= htmlspecialchars($editing['direccion'] ?? '') ?>">
                         </div>
                         <div class="mb-2">
                             <label class="form-label text-white small">Main entrance map URL</label>
-                            <input type="url" class="form-control bg-dark text-white border-secondary" name="mapa_general_url" placeholder="https://maps.google.com/... or Plus Code" value="<?= htmlspecialchars($editing['mapa_general_url'] ?? '') ?>">
+                            <input type="url" class="form-control bg-dark text-white border-secondary" name="mapa_general_url" placeholder="https://maps.google.com/..." value="<?= htmlspecialchars($editing['mapa_general_url'] ?? '') ?>">
                             <span class="small text-white-50">Link to park entrance. Plus Codes or long-press pin work best.</span>
                         </div>
                         <div class="mb-3">
                             <label class="form-label text-white small">Access note (optional)</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary" name="nota_acceso" placeholder="e.g. Use the North Entrance for easier access" value="<?= htmlspecialchars($editing['nota_acceso'] ?? '') ?>">
+                            <input type="text" class="form-control bg-dark text-white border-secondary" name="nota_acceso" maxlength="500" placeholder="e.g. Use the North Entrance" value="<?= htmlspecialchars($editing['nota_acceso'] ?? '') ?>">
                         </div>
                         <button type="submit" class="btn btn-primary" style="background:#FF6600;border:none;"><?= $editing ? 'Update' : 'Add' ?></button>
                         <?php if ($editing): ?>
@@ -151,15 +153,15 @@ require __DIR__ . '/../includes/header.php';
                         <input type="hidden" name="sede_id" value="<?= (int) $editing['id'] ?>">
                         <div class="mb-2">
                             <label class="form-label text-white small">Field number/name</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary" name="numero_cancha" required placeholder="e.g. Field #5 (U8-U10)">
+                            <input type="text" class="form-control bg-dark text-white border-secondary" name="numero_cancha" required maxlength="100" placeholder="e.g. Field #5 (U8-U10)">
                         </div>
                         <div class="mb-2">
                             <label class="form-label text-white small">Nickname (optional)</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary" name="sobrenombre" placeholder="e.g. The Mestalla Pitch">
+                            <input type="text" class="form-control bg-dark text-white border-secondary" name="sobrenombre" maxlength="100" placeholder="e.g. The Mestalla Pitch">
                         </div>
                         <div class="mb-2">
                             <label class="form-label text-white small">How to get there from parking</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary" name="indicaciones_extra" placeholder="e.g. Near playground area">
+                            <input type="text" class="form-control bg-dark text-white border-secondary" name="indicaciones_extra" maxlength="500" placeholder="e.g. Near playground area">
                         </div>
                         <div class="mb-3">
                             <label class="form-label text-white small">Exact map URL (Plus Code or pin)</label>
@@ -181,13 +183,7 @@ require __DIR__ . '/../includes/header.php';
                     <?php else: ?>
                         <div class="table-responsive">
                             <table class="table table-dark table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Address</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
+                                <thead><tr><th>Name</th><th>Address</th><th></th></tr></thead>
                                 <tbody>
                                     <?php foreach ($sedes as $s): ?>
                                         <tr>
@@ -215,14 +211,7 @@ require __DIR__ . '/../includes/header.php';
                     <h6 class="card-title text-white">Fields for <?= htmlspecialchars($editing['nombre']) ?></h6>
                     <div class="table-responsive">
                         <table class="table table-dark table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Field</th>
-                                    <th>Reference</th>
-                                    <th>Map</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>Field</th><th>Reference</th><th>Map</th><th></th></tr></thead>
                             <tbody>
                                 <?php foreach ($canchasBySede as $c): ?>
                                     <tr>

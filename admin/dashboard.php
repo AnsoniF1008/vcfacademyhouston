@@ -1,20 +1,25 @@
 <?php
 require __DIR__ . '/includes/auth.php';
+require __DIR__ . '/includes/csrf.php';      // needed for the logout form token
 require_once __DIR__ . '/includes/breadcrumb.php';
 
 // ── KPI queries ──────────────────────────────────────────────
 $kpi = [
-    'next_match'       => null,
-    'inscripciones'    => 0,
-    'mensajes'         => 0,
-    'voto_activo'      => null,
+    'next_match'    => null,
+    'inscripciones' => 0,
+    'mensajes'      => 0,
+    'voto_activo'   => null,
 ];
 try {
     $nowHouston = new DateTime('now', new DateTimeZone('America/Chicago'));
-    $today = $nowHouston->format('Y-m-d');
-    $timeNow = $nowHouston->format('H:i:s');
+    $today      = $nowHouston->format('Y-m-d');
+    $timeNow    = $nowHouston->format('H:i:s');
 
-    $s = $pdo->prepare("SELECT j.fecha, j.hora, j.rival FROM juegos j WHERE (j.fecha > ?) OR (j.fecha = ? AND (j.hora IS NULL OR j.hora > ?)) ORDER BY j.fecha ASC, j.hora ASC LIMIT 1");
+    $s = $pdo->prepare(
+        "SELECT j.fecha, j.hora, j.rival FROM juegos j
+         WHERE (j.fecha > ?) OR (j.fecha = ? AND (j.hora IS NULL OR j.hora > ?))
+         ORDER BY j.fecha ASC, j.hora ASC LIMIT 1"
+    );
     $s->execute([$today, $today, $timeNow]);
     $kpi['next_match'] = $s->fetch(PDO::FETCH_ASSOC);
 
@@ -24,7 +29,6 @@ try {
     $s = $pdo->query("SELECT COUNT(*) FROM contact_messages WHERE created_at >= NOW() - INTERVAL 7 DAY");
     $kpi['mensajes'] = (int) $s->fetchColumn();
 
-    // Active MOTM or Star vote
     try {
         $s = $pdo->query("SELECT 'MOTM' AS tipo, ends_at FROM motm_votaciones WHERE status='open' ORDER BY created_at DESC LIMIT 1");
         $kpi['voto_activo'] = $s->fetch(PDO::FETCH_ASSOC);
@@ -61,14 +65,12 @@ require __DIR__ . '/../includes/header.php';
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <a href="inscripciones.php" class="text-decoration-none" style="pointer-events:none;">
             <div class="card bg-dark border border-secondary rounded-3 h-100 text-center p-3">
                 <div class="mb-1"><i class="fas fa-user-plus fa-lg text-success" aria-hidden="true"></i></div>
                 <div class="small text-muted text-uppercase fw-bold mb-1" style="letter-spacing:.06em;font-size:10px;">New Registrations</div>
                 <div class="text-white fw-bold" style="font-size:24px;"><?= $kpi['inscripciones'] ?></div>
                 <div class="text-muted" style="font-size:11px;">last 7 days</div>
             </div>
-            </a>
         </div>
         <div class="col-6 col-md-3">
             <div class="card bg-dark border border-secondary rounded-3 h-100 text-center p-3">
@@ -91,6 +93,7 @@ require __DIR__ . '/../includes/header.php';
             </div>
         </div>
     </div>
+
     <?php if (isset($_GET['error']) && $_GET['error'] === 'forbidden'): ?>
     <div class="alert alert-danger py-2 mb-3">You do not have permission to access that page.</div>
     <?php endif; ?>
@@ -100,7 +103,9 @@ require __DIR__ . '/../includes/header.php';
     <?php if (isset($_GET['rollback']) && $_GET['rollback'] === '1'): ?>
     <div class="alert alert-info py-2 mb-3">Demo data removed. Your games and data are as before.</div>
     <?php endif; ?>
+
     <p class="text-muted mb-4">Role: <strong><?= htmlspecialchars($admin_role) ?></strong>. Manage content for the VCF Academy Houston landing page.</p>
+
     <div class="row g-3">
         <?php if (admin_can('hero_slider')): ?>
         <div class="col-md-4">
@@ -219,6 +224,34 @@ require __DIR__ . '/../includes/header.php';
             </a>
         </div>
         <?php endif; ?>
+
+        <?php if (admin_can('inscripciones_view')): ?>
+        <div class="col-md-4">
+            <a href="inscripciones.php" class="text-decoration-none">
+                <div class="card bg-dark border border-secondary border-2 rounded-3 h-100 admin-card hover-orange">
+                    <div class="card-body">
+                        <i class="fas fa-user-plus fa-2x mb-2"></i>
+                        <h5 class="card-title text-white">Inscripciones</h5>
+                        <p class="card-text text-muted small">View registration form submissions.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <?php endif; ?>
+        <?php if (admin_can('contact_messages_view')): ?>
+        <div class="col-md-4">
+            <a href="contact-messages.php" class="text-decoration-none">
+                <div class="card bg-dark border border-secondary border-2 rounded-3 h-100 admin-card hover-orange">
+                    <div class="card-body">
+                        <i class="fas fa-envelope fa-2x mb-2"></i>
+                        <h5 class="card-title text-white">Contact Messages</h5>
+                        <p class="card-text text-muted small">Read messages sent through the contact form.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <?php endif; ?>
+
         <?php if (admin_can('*')): ?>
         <div class="col-md-4">
             <a href="users.php" class="text-decoration-none">
@@ -259,15 +292,15 @@ require __DIR__ . '/../includes/header.php';
 
     <?php
     $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
-    $adminDir = rtrim(dirname($scriptName), '/');
-    $host = $_SERVER['HTTP_HOST'] ?? '';
-    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $adminDir   = rtrim(dirname($scriptName), '/');
+    $host       = $_SERVER['HTTP_HOST'] ?? '';
+    $scheme     = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $staffLoginUrl = $host !== '' ? ($scheme . '://' . $host . $adminDir . '/') : ($adminDir . '/');
     ?>
     <div class="card bg-dark border border-secondary border-2 rounded-3 mt-4">
         <div class="card-body">
             <h2 class="h5 text-white mb-2"><i class="fas fa-sign-in-alt me-2 text-warning" aria-hidden="true"></i> Staff login (Acceder)</h2>
-            <p class="text-muted small mb-3 mb-md-2">Bookmark or share this URL only with staff. It opens the admin login page. If you are already logged in, you will return here.</p>
+            <p class="text-muted small mb-3 mb-md-2">Bookmark or share this URL only with staff. It opens the admin login page.</p>
             <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2">
                 <code class="flex-grow-1 text-white bg-black border border-secondary rounded px-3 py-2 small mb-0 user-select-all text-break"><?= htmlspecialchars($staffLoginUrl) ?></code>
                 <a href="index.php" class="btn btn-outline-warning text-nowrap">Open login page</a>
@@ -275,10 +308,17 @@ require __DIR__ . '/../includes/header.php';
         </div>
     </div>
 
-    <div class="mt-4">
-        <?php if (admin_can('change_own_password')): ?><a href="change-password.php" class="btn btn-outline-warning me-2">Change password</a><?php endif; ?>
-        <a href="../index.php" class="btn btn-outline-secondary me-2">View site</a>
-        <a href="logout.php" class="btn btn-outline-danger">Log out</a>
+    <div class="mt-4 d-flex flex-wrap gap-2">
+        <?php if (admin_can('change_own_password')): ?>
+        <a href="change-password.php" class="btn btn-outline-warning">Change password</a>
+        <?php endif; ?>
+        <a href="../index.php" class="btn btn-outline-secondary">View site</a>
+        <!-- Logout is POST to prevent CSRF logout via GET links / <img> tags -->
+        <form method="post" action="logout.php" class="d-inline"
+              onsubmit="return confirm('¿Cerrar sesión?');">
+            <?= csrf_field() ?>
+            <button type="submit" class="btn btn-outline-danger">Log out</button>
+        </form>
     </div>
 </div>
 <?php require __DIR__ . '/../includes/footer.php'; ?>

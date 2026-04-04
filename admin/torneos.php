@@ -4,35 +4,37 @@ require_permission('torneos');
 require __DIR__ . '/includes/csrf.php';
 require __DIR__ . '/../config/database.php';
 
-$message = '';
+$message     = '';
 $messageType = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify()) {
-        $message = 'Invalid request. Please try again.';
-        $messageType = 'danger';
+        $message = 'Invalid request. Please try again.'; $messageType = 'danger';
     } elseif (isset($_POST['delete_id'])) {
         $id = (int) $_POST['delete_id'];
-        $stmt = $pdo->prepare("DELETE FROM torneos_info WHERE id = ?");
-        $stmt->execute([$id]);
-        $message = 'Tournament deleted (and all its games).';
-        $messageType = 'success';
+        $stName = $pdo->prepare("SELECT nombre_torneo FROM torneos_info WHERE id = ?");
+        $stName->execute([$id]);
+        $delName = $stName->fetchColumn() ?: $id;
+        $pdo->prepare("DELETE FROM torneos_info WHERE id = ?")->execute([$id]);
+        admin_log('torneos.delete', 'Deleted tournament "' . $delName . '" (id ' . $id . ') and all its games');
+        $message = 'Tournament deleted (and all its games).'; $messageType = 'success';
     } else {
-        $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
-        $nombre_torneo = trim($_POST['nombre_torneo'] ?? '');
-        $temporada = trim($_POST['temporada'] ?? '') ?: null;
+        $id             = isset($_POST['id']) ? (int) $_POST['id'] : 0;
+        $nombre_torneo  = mb_substr(trim($_POST['nombre_torneo'] ?? ''), 0, 255);
+        $temporada      = mb_substr(trim($_POST['temporada']     ?? ''), 0, 100) ?: null;
 
         if ($nombre_torneo === '') {
-            $message = 'Tournament name is required.';
-            $messageType = 'danger';
+            $message = 'Tournament name is required.'; $messageType = 'danger';
         } else {
             if ($id > 0) {
-                $stmt = $pdo->prepare("UPDATE torneos_info SET nombre_torneo = ?, temporada = ? WHERE id = ?");
-                $stmt->execute([$nombre_torneo, $temporada, $id]);
+                $pdo->prepare("UPDATE torneos_info SET nombre_torneo=?, temporada=? WHERE id=?")
+                    ->execute([$nombre_torneo, $temporada, $id]);
+                admin_log('torneos.update', 'Updated tournament "' . $nombre_torneo . '" (id ' . $id . ')');
                 $message = 'Tournament updated.';
             } else {
-                $stmt = $pdo->prepare("INSERT INTO torneos_info (nombre_torneo, temporada) VALUES (?, ?)");
-                $stmt->execute([$nombre_torneo, $temporada]);
+                $pdo->prepare("INSERT INTO torneos_info (nombre_torneo, temporada) VALUES (?,?)")
+                    ->execute([$nombre_torneo, $temporada]);
+                admin_log('torneos.create', 'Created tournament "' . $nombre_torneo . '"' . ($temporada ? ' — ' . $temporada : ''));
                 $message = 'Tournament added.';
             }
             $messageType = 'success';
@@ -46,10 +48,7 @@ $editing = null;
 if (isset($_GET['edit'])) {
     $editId = (int) $_GET['edit'];
     foreach ($torneos as $t) {
-        if ((int) $t['id'] === $editId) {
-            $editing = $t;
-            break;
-        }
+        if ((int) $t['id'] === $editId) { $editing = $t; break; }
     }
 }
 
@@ -77,11 +76,11 @@ require __DIR__ . '/../includes/header.php';
                         <?php endif; ?>
                         <div class="mb-2">
                             <label class="form-label text-white small">Tournament name</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary" name="nombre_torneo" required placeholder="e.g. Houston Spring Cup 2026" value="<?= htmlspecialchars($editing['nombre_torneo'] ?? '') ?>">
+                            <input type="text" class="form-control bg-dark text-white border-secondary" name="nombre_torneo" required maxlength="255" placeholder="e.g. Houston Spring Cup 2026" value="<?= htmlspecialchars($editing['nombre_torneo'] ?? '') ?>">
                         </div>
                         <div class="mb-3">
                             <label class="form-label text-white small">Season (optional)</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary" name="temporada" placeholder="e.g. Spring 2026" value="<?= htmlspecialchars($editing['temporada'] ?? '') ?>">
+                            <input type="text" class="form-control bg-dark text-white border-secondary" name="temporada" maxlength="100" placeholder="e.g. Spring 2026" value="<?= htmlspecialchars($editing['temporada'] ?? '') ?>">
                         </div>
                         <button type="submit" class="btn btn-primary btn-admin-primary"><?= $editing ? 'Update' : 'Add' ?></button>
                         <?php if ($editing): ?>
@@ -100,13 +99,7 @@ require __DIR__ . '/../includes/header.php';
                     <?php else: ?>
                         <div class="table-responsive admin-table-wrap">
                             <table class="table table-dark table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Tournament</th>
-                                        <th>Season</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
+                                <thead><tr><th>Tournament</th><th>Season</th><th></th></tr></thead>
                                 <tbody>
                                     <?php foreach ($torneos as $t): ?>
                                         <tr>

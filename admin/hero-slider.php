@@ -2,6 +2,7 @@
 require __DIR__ . '/includes/auth.php';
 require_permission('hero_slider');
 require __DIR__ . '/includes/csrf.php';
+require __DIR__ . '/includes/upload_helper.php';   // delete_upload()
 require __DIR__ . '/../config/database.php';
 
 $uploadDir = __DIR__ . '/../assets/uploads/';
@@ -9,122 +10,105 @@ if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0755, true);
 }
 
-$allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-$maxSize = 5 * 1024 * 1024; // 5MB
-$heroMaxWidth = 1920;
+$allowedTypes  = ['image/jpeg', 'image/png', 'image/webp'];
+$maxSize       = 5 * 1024 * 1024; // 5 MB
+$heroMaxWidth  = 1920;
 $heroJpegQuality = 82;
 
-/**
- * Redimensiona y comprime imagen del hero para mejorar LCP (max 1920px ancho, calidad 82).
- */
 function optimize_hero_image(string $path, int $maxWidth = 1920, int $jpegQuality = 82): bool {
-    if (!function_exists('imagecreatefromjpeg')) {
-        return true;
-    }
+    if (!function_exists('imagecreatefromjpeg')) return true;
     $info = @getimagesize($path);
-    if (!$info || !in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP], true)) {
-        return true;
-    }
-    $w = (int) $info[0];
-    $h = (int) $info[1];
-    if ($w <= $maxWidth && $info[2] === IMAGETYPE_JPEG && filesize($path) < 350 * 1024) {
-        return true;
-    }
+    if (!$info || !in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP], true)) return true;
+    $w = (int) $info[0]; $h = (int) $info[1];
+    if ($w <= $maxWidth && $info[2] === IMAGETYPE_JPEG && filesize($path) < 350 * 1024) return true;
     $src = null;
-    if ($info[2] === IMAGETYPE_JPEG) {
-        $src = @imagecreatefromjpeg($path);
-    } elseif ($info[2] === IMAGETYPE_PNG) {
-        $src = @imagecreatefrompng($path);
-    } elseif ($info[2] === IMAGETYPE_WEBP && function_exists('imagecreatefromwebp')) {
-        $src = @imagecreatefromwebp($path);
-    }
-    if (!$src) {
-        return true;
-    }
+    if ($info[2] === IMAGETYPE_JPEG) $src = @imagecreatefromjpeg($path);
+    elseif ($info[2] === IMAGETYPE_PNG) $src = @imagecreatefrompng($path);
+    elseif ($info[2] === IMAGETYPE_WEBP && function_exists('imagecreatefromwebp')) $src = @imagecreatefromwebp($path);
+    if (!$src) return true;
     $newW = min($w, $maxWidth);
     $newH = (int) round($h * ($newW / $w));
-    $dst = imagecreatetruecolor($newW, $newH);
-    if (!$dst) {
-        imagedestroy($src);
-        return true;
-    }
+    $dst  = imagecreatetruecolor($newW, $newH);
+    if (!$dst) { imagedestroy($src); return true; }
     imagecopyresampled($dst, $src, 0, 0, 0, 0, $newW, $newH, $w, $h);
     imagedestroy($src);
     $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-    $ok = false;
-    if ($ext === 'png') {
-        $ok = imagepng($dst, $path, 8);
-    } elseif ($ext === 'webp' && function_exists('imagewebp')) {
-        $ok = imagewebp($dst, $path, 82);
-    } else {
-        $ok = imagejpeg($dst, $path, $jpegQuality);
-    }
+    $ok  = false;
+    if ($ext === 'png') $ok = imagepng($dst, $path, 8);
+    elseif ($ext === 'webp' && function_exists('imagewebp')) $ok = imagewebp($dst, $path, 82);
+    else $ok = imagejpeg($dst, $path, $jpegQuality);
     imagedestroy($dst);
     return $ok;
 }
 
-$message = '';
+$message     = '';
 $messageType = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify()) {
-        $message = 'Invalid request. Please try again.';
+        $message     = 'Invalid request. Please try again.';
         $messageType = 'danger';
     } elseif (isset($_POST['delete_id'])) {
         $id = (int) $_POST['delete_id'];
+        // Fetch old image path before deleting the row
+        $stOld = $pdo->prepare("SELECT image_url FROM hero_slides WHERE id = ?");
+        $stOld->execute([$id]);
+        $oldRow = $stOld->fetch(PDO::FETCH_ASSOC);
+
         $pdo->prepare("DELETE FROM hero_slides WHERE id = ?")->execute([$id]);
-        $message = 'Slide deleted.';
+
+        if ($oldRow && !empty($oldRow['image_url'])) {
+            delete_upload($oldRow['image_url']);
+        }
+        admin_log('hero_slider.delete', 'Deleted slide id ' . $id);
+        $message     = 'Slide deleted.';
         $messageType = 'success';
     } else {
-        $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
-        $title = trim($_POST['title'] ?? '');
-        $button_text = trim($_POST['button_text'] ?? '') ?: 'Read More';
-        $button_url = trim($_POST['button_url'] ?? '') ?: null;
-        $orden = (int) ($_POST['orden'] ?? 0);
-        $activo = isset($_POST['activo']) ? 1 : 0;
-        $image_url = null;
+        $id          = isset($_POST['id']) ? (int) $_POST['id'] : 0;
+        $title       = mb_substr(trim($_POST['title']       ?? ''), 0, 255);
+        $button_text = mb_substr(trim($_POST['button_text'] ?? '') ?: 'Read More', 0, 100);
+        $button_url  = mb_substr(trim($_POST['button_url']  ?? ''), 0, 2083) ?: null;
+        $orden       = (int) ($_POST['orden'] ?? 0);
+        $activo      = isset($_POST['activo']) ? 1 : 0;
+        $image_url   = null;
 
         if ($title === '') {
-            $message = 'Title is required.';
+            $message     = 'Title is required.';
             $messageType = 'danger';
         } elseif ($id === 0 && empty($_FILES['image']['name'])) {
-            $message = 'Image is required for new slide. Recommended: 1920×1080px.';
+            $message     = 'Image is required for new slide. Recommended: 1920×1080px.';
             $messageType = 'danger';
         } else {
             if (!empty($_FILES['image']['name']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
                 $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                $mime = finfo_file($finfo, $_FILES['image']['tmp_name']);
+                $mime  = finfo_file($finfo, $_FILES['image']['tmp_name']);
                 finfo_close($finfo);
                 if (!in_array($mime, $allowedTypes, true)) {
-                    $message = 'Invalid image type. Use JPG, PNG or WebP.';
-                    $messageType = 'danger';
+                    $message = 'Invalid image type. Use JPG, PNG or WebP.'; $messageType = 'danger';
                 } elseif ($_FILES['image']['size'] > $maxSize) {
-                    $message = 'Image too large. Max 5MB.';
-                    $messageType = 'danger';
+                    $message = 'Image too large. Max 5MB.'; $messageType = 'danger';
                 } else {
                     $clientName = basename($_FILES['image']['name'] ?? '');
                     if (strpos($clientName, '..') !== false || preg_match('/\.(php|phtml|php3|php4|php5|phar|htaccess)(\.|$)/i', $clientName)) {
-                        $message = 'Invalid file name.';
-                        $messageType = 'danger';
+                        $message = 'Invalid file name.'; $messageType = 'danger';
                     } else {
-                    $ext = match ($mime) {
-                        'image/jpeg' => 'jpg',
-                        'image/png' => 'png',
-                        'image/webp' => 'webp',
-                        default => 'jpg',
-                    };
-                    $ext = in_array($ext, ['jpg', 'png', 'webp'], true) ? $ext : 'jpg';
-                    $filename = 'hero-' . uniqid() . '.' . $ext;
-                    if (strpos($filename, '..') !== false || strpbrk($filename, '/\\') !== false) {
-                        $message = 'Invalid file name.';
-                        $messageType = 'danger';
-                    } else {
-                    $fullPath = $uploadDir . $filename;
-                    if (move_uploaded_file($_FILES['image']['tmp_name'], $fullPath)) {
-                        optimize_hero_image($fullPath, $heroMaxWidth, $heroJpegQuality);
-                        $image_url = 'assets/uploads/' . $filename;
-                    }
-                    }
+                        $ext = match ($mime) {
+                            'image/jpeg' => 'jpg',
+                            'image/png'  => 'png',
+                            'image/webp' => 'webp',
+                            default      => 'jpg',
+                        };
+                        $ext      = in_array($ext, ['jpg','png','webp'], true) ? $ext : 'jpg';
+                        $filename = 'hero-' . uniqid() . '.' . $ext;
+                        if (strpos($filename, '..') !== false || strpbrk($filename, '/\\') !== false) {
+                            $message = 'Invalid file name.'; $messageType = 'danger';
+                        } else {
+                            $fullPath = $uploadDir . $filename;
+                            if (move_uploaded_file($_FILES['image']['tmp_name'], $fullPath)) {
+                                optimize_hero_image($fullPath, $heroMaxWidth, $heroJpegQuality);
+                                $image_url = 'assets/uploads/' . $filename;
+                            }
+                        }
                     }
                 }
             }
@@ -132,16 +116,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($message === '') {
                 if ($id > 0) {
                     if ($image_url !== null) {
-                        $pdo->prepare("UPDATE hero_slides SET image_url = ?, title = ?, button_text = ?, button_url = ?, orden = ?, activo = ? WHERE id = ?")
+                        // Cleanup old image before overwriting
+                        $stOld = $pdo->prepare("SELECT image_url FROM hero_slides WHERE id = ?");
+                        $stOld->execute([$id]);
+                        $oldRow = $stOld->fetch(PDO::FETCH_ASSOC);
+                        if ($oldRow && !empty($oldRow['image_url'])) {
+                            delete_upload($oldRow['image_url']);
+                        }
+                        $pdo->prepare("UPDATE hero_slides SET image_url=?, title=?, button_text=?, button_url=?, orden=?, activo=? WHERE id=?")
                             ->execute([$image_url, $title, $button_text, $button_url, $orden, $activo, $id]);
                     } else {
-                        $pdo->prepare("UPDATE hero_slides SET title = ?, button_text = ?, button_url = ?, orden = ?, activo = ? WHERE id = ?")
+                        $pdo->prepare("UPDATE hero_slides SET title=?, button_text=?, button_url=?, orden=?, activo=? WHERE id=?")
                             ->execute([$title, $button_text, $button_url, $orden, $activo, $id]);
                     }
+                    admin_log('hero_slider.update', 'Updated slide id ' . $id . ' — "' . $title . '"');
                     $message = 'Slide updated.';
                 } else {
-                    $pdo->prepare("INSERT INTO hero_slides (image_url, title, button_text, button_url, orden, activo) VALUES (?, ?, ?, ?, ?, ?)")
+                    $pdo->prepare("INSERT INTO hero_slides (image_url, title, button_text, button_url, orden, activo) VALUES (?,?,?,?,?,?)")
                         ->execute([$image_url, $title, $button_text, $button_url, $orden, $activo]);
+                    admin_log('hero_slider.create', 'Added slide — "' . $title . '"');
                     $message = 'Slide added.';
                 }
                 $messageType = 'success';
@@ -153,17 +146,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $slides = [];
 try {
     $slides = $pdo->query("SELECT id, image_url, title, button_text, button_url, orden, activo FROM hero_slides ORDER BY orden ASC, id ASC")->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    // Run sql/migrate_hero_slider.sql or scripts/run_migrate_hero_slider.php
-}
+} catch (PDOException $e) {}
 $editing = null;
 if (isset($_GET['edit'])) {
     $editId = (int) $_GET['edit'];
     foreach ($slides as $s) {
-        if ((int) $s['id'] === $editId) {
-            $editing = $s;
-            break;
-        }
+        if ((int) $s['id'] === $editId) { $editing = $s; break; }
     }
 }
 
@@ -194,16 +182,16 @@ require __DIR__ . '/../includes/header.php';
                             <label class="form-label text-white small">Image (1920×1080 recommended)</label>
                             <input type="file" class="form-control bg-dark text-white border-secondary" name="image" accept="image/jpeg,image/png,image/webp">
                             <?php if ($editing && !empty($editing['image_url'])): ?>
-                                <p class="small text-white-50 mt-1 mb-0">Current image set. Upload to replace.</p>
+                                <p class="small text-white-50 mt-1 mb-0">Current image set. Upload to replace (old file will be deleted).</p>
                             <?php endif; ?>
                         </div>
                         <div class="mb-2">
                             <label class="form-label text-white small">Banner title</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary" name="title" required placeholder="e.g. Next Match: Houston Derby" value="<?= htmlspecialchars($editing['title'] ?? '') ?>">
+                            <input type="text" class="form-control bg-dark text-white border-secondary" name="title" required maxlength="255" placeholder="e.g. Next Match: Houston Derby" value="<?= htmlspecialchars($editing['title'] ?? '') ?>">
                         </div>
                         <div class="mb-2">
                             <label class="form-label text-white small">Button text</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary" name="button_text" placeholder="Read More" value="<?= htmlspecialchars($editing['button_text'] ?? 'Read More') ?>">
+                            <input type="text" class="form-control bg-dark text-white border-secondary" name="button_text" maxlength="100" placeholder="Read More" value="<?= htmlspecialchars($editing['button_text'] ?? 'Read More') ?>">
                         </div>
                         <div class="mb-2">
                             <label class="form-label text-white small">Button URL</label>
@@ -235,13 +223,7 @@ require __DIR__ . '/../includes/header.php';
                         <div class="table-responsive">
                             <table class="table table-dark table-sm">
                                 <thead>
-                                    <tr>
-                                        <th>Order</th>
-                                        <th>Preview</th>
-                                        <th>Title</th>
-                                        <th>Active</th>
-                                        <th></th>
-                                    </tr>
+                                    <tr><th>Order</th><th>Preview</th><th>Title</th><th>Active</th><th></th></tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($slides as $s): ?>
@@ -252,7 +234,7 @@ require __DIR__ . '/../includes/header.php';
                                         <td><?= (int) $s['activo'] === 1 ? 'Yes' : 'No' ?></td>
                                         <td>
                                             <a href="hero-slider.php?edit=<?= (int) $s['id'] ?>" class="btn btn-sm btn-outline-secondary">Edit</a>
-                                            <form method="post" class="d-inline" onsubmit="return confirm('Delete this slide?');">
+                                            <form method="post" class="d-inline" onsubmit="return confirm('Delete this slide and its image file?');">
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="delete_id" value="<?= (int) $s['id'] ?>">
                                                 <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
