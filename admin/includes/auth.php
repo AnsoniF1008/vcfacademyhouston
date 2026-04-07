@@ -70,7 +70,7 @@ function admin_can(string $permission): bool {
             'dashboard', 'jugador_mes', 'roster_edit', 'roster_stats',
             'juegos', 'juegos_delete', 'motm', 'torneos', 'categorias', 'sedes',
             'hero_slider', 'match_reels', 'change_own_password', 'activity_log_view',
-            'inscripciones_view', 'contact_messages_view',
+            'inscripciones_view', 'contact_messages_view', 'support_donations',
         ],
         'staff_campo' => [
             'dashboard', 'jugador_mes', 'juegos_live_score', 'motm', 'change_own_password',

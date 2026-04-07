@@ -2426,6 +2426,42 @@ select.vcf-form-control option {
   line-height: 1.6;
   max-width: 420px;
 }
+.vcf-support__contrib-card {
+  max-width: 640px;
+  border: 1px solid var(--vcf-border);
+  background: var(--vcf-dark2);
+}
+.vcf-support__contrib-head,
+.vcf-support__contrib-row {
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+}
+.vcf-support__contrib-head {
+  border-bottom: 1px solid var(--vcf-border);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--vcf-orange);
+}
+.vcf-support__contrib-row {
+  border-bottom: 1px solid var(--vcf-border);
+  font-size: 13px;
+  color: var(--vcf-lightgray);
+}
+.vcf-support__contrib-row:last-child {
+  border-bottom: 0;
+}
+.vcf-support__contrib-row strong {
+  font-family: var(--font-display);
+  color: var(--vcf-white);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
 .vcf-support__closing {
   max-width: var(--page-max);
   margin: 0 auto;

@@ -15,6 +15,7 @@ $hostingDueRaw = trim((string) ($vcf_site['donation_hosting_due_date'] ?? ''));
 $hostingPaidAmount = trim((string) ($vcf_site['donation_hosting_paid_amount'] ?? ''));
 $domainDueRaw = trim((string) ($vcf_site['donation_domain_due_date'] ?? ''));
 $domainPaidAmount = trim((string) ($vcf_site['donation_domain_paid_amount'] ?? ''));
+$parentContributionsRaw = trim((string) ($vcf_site['donation_parent_contributions'] ?? ''));
 $phone = trim((string) ($vcf_site['phone'] ?? ''));
 $telHref = $phone !== '' ? preg_replace('/[^\d+]/', '', $phone) : '';
 $formatDate = static function (string $raw): string {
@@ -31,6 +32,33 @@ $hostingDueDisplay = $formatDate($hostingDueRaw);
 $domainDueDisplay = $formatDate($domainDueRaw);
 $showHostingMeta = $hostingDueDisplay !== '' || $hostingPaidAmount !== '';
 $showDomainMeta = $domainDueDisplay !== '' || $domainPaidAmount !== '';
+$parentContributions = [];
+if ($parentContributionsRaw !== '') {
+    $lines = preg_split('/\r\n|\r|\n/', $parentContributionsRaw) ?: [];
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '') {
+            continue;
+        }
+        $parts = array_map('trim', explode('|', $line));
+        if (count($parts) >= 3 && $parts[0] !== '' && $parts[1] !== '' && $parts[2] !== '') {
+            $parentContributions[] = [
+                'date' => $parts[0],
+                'name' => $parts[1],
+                'amount' => $parts[2],
+            ];
+            continue;
+        }
+        if (count($parts) < 2 || $parts[0] === '' || $parts[1] === '') {
+            continue;
+        }
+        $parentContributions[] = [
+            'date' => '',
+            'name' => $parts[0],
+            'amount' => $parts[1],
+        ];
+    }
+}
 
 $hasAnyLink = $paypal !== '' || $venmo !== '' || $kofi !== '';
 $hasMethods = $hasAnyLink || $zelleEmail !== '' || $phone !== '' || $otherNote !== '';
@@ -182,6 +210,28 @@ $suggestedAmounts = [
             <p class="vcf-support__amount-note">No minimum, no obligation. 100% voluntary. Thank you for supporting the players and families of VCF Academy Houston.</p>
         </div>
     </div>
+
+    <?php if ($parentContributions !== []): ?>
+    <div class="vcf-support__strip">
+        <div class="vcf-support__strip-inner">
+            <div class="vcf-support__section-label">Parent contributions</div>
+            <div class="vcf-support__contrib-card">
+                <div class="vcf-support__contrib-head">
+                    <span>Date</span>
+                    <span>Parent / Family</span>
+                    <span>Amount</span>
+                </div>
+                <?php foreach ($parentContributions as $contribution): ?>
+                <div class="vcf-support__contrib-row">
+                    <span><?= htmlspecialchars($contribution['date'] !== '' ? $contribution['date'] : '-') ?></span>
+                    <span><?= htmlspecialchars($contribution['name']) ?></span>
+                    <strong><?= htmlspecialchars($contribution['amount']) ?></strong>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <div class="vcf-support__closing">
         <div>

@@ -37,6 +37,15 @@ return [
     'donation_domain_due_date' => '',
     /** Domain amount paid (example: "$19.99 / year") */
     'donation_domain_paid_amount' => '',
+    /**
+     * Parent contributions list.
+     * One item per line with this format: Date|Name|$Amount
+     * Backward compatible format also supported: Name|$Amount
+     * Example:
+     * 04/03/2026|Ana Lopez|$25
+     * 04/03/2026|Carlos M.|$10
+     */
+    'donation_parent_contributions' => "04/03/2026|Francis Moreno de Yepez|$15.00\n04/03/2026|Yeneli Farinas|$20.00\n04/03/2026|Luis F Gonzalez Luna|$20.00\n04/03/2026|Vanesa Montero (Tiziano)|$20.00",
 
     /**
      * Footer "Partners" logos. Empty array = section hidden.

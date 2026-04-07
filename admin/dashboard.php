@@ -251,6 +251,19 @@ require __DIR__ . '/../includes/header.php';
             </a>
         </div>
         <?php endif; ?>
+        <?php if (admin_can('support_donations')): ?>
+        <div class="col-md-4">
+            <a href="support-donations.php" class="text-decoration-none">
+                <div class="card bg-dark border border-secondary border-2 rounded-3 h-100 admin-card hover-orange">
+                    <div class="card-body">
+                        <i class="fas fa-hand-holding-heart fa-2x mb-2"></i>
+                        <h5 class="card-title text-white">Support Donations</h5>
+                        <p class="card-text text-muted small">Edit parent donations shown on the support page.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <?php endif; ?>
 
         <?php if (admin_can('*')): ?>
         <div class="col-md-4">
