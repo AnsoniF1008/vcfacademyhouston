@@ -1,10 +1,13 @@
 <?php
 require __DIR__ . '/includes/page_cache.php';
-if (vcf_page_cache_try_serve(60)) {
+// Aggressive TTL: home content changes in scale of hours, not seconds.
+// Admins get an instant "Clear cache" button on the dashboard if they
+// need fresh data right now.
+if (vcf_page_cache_try_serve(300)) {
     exit;
 }
 require __DIR__ . '/config/database.php';
-vcf_page_cache_start(60);
+vcf_page_cache_start(300);
 
 $sedes = [];
 $juegosPorTorneo = [];

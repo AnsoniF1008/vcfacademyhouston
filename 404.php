@@ -1,10 +1,10 @@
 <?php
 http_response_code(404);
 require __DIR__ . '/includes/page_cache.php';
-if (vcf_page_cache_try_serve(600)) {
+if (vcf_page_cache_try_serve(1800)) {
     exit;
 }
-vcf_page_cache_start(600);
+vcf_page_cache_start(1800);
 
 $page_title = 'Page not found - VCF Academy Houston';
 $page_description = 'The page you were looking for does not exist or has moved.';

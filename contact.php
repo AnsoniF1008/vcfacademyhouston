@@ -1,10 +1,10 @@
 <?php
 require __DIR__ . '/includes/page_cache.php';
-if (vcf_page_cache_try_serve(120)) {
+if (vcf_page_cache_try_serve(900)) {
     exit;
 }
 require __DIR__ . '/config/database.php';
-vcf_page_cache_start(120);
+vcf_page_cache_start(900);
 
 $message = '';
 $messageType = '';

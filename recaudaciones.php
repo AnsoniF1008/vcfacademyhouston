@@ -1,10 +1,10 @@
 <?php
 require __DIR__ . '/includes/page_cache.php';
-if (vcf_page_cache_try_serve(60)) {
+if (vcf_page_cache_try_serve(600)) {
     exit;
 }
 require __DIR__ . '/config/database.php';
-vcf_page_cache_start(60);
+vcf_page_cache_start(600);
 
 $page_active = 'support';
 $page_title = 'Support the site - VCF Academy Houston';

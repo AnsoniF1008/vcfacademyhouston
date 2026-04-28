@@ -1,9 +1,9 @@
 <?php
 require __DIR__ . '/includes/page_cache.php';
-if (vcf_page_cache_try_serve(600)) {
+if (vcf_page_cache_try_serve(1800)) {
     exit;
 }
-vcf_page_cache_start(600);
+vcf_page_cache_start(1800);
 
 $page_title = 'Privacy Policy - VCF Academy Houston';
 $page_description = 'Privacy policy for VCF Academy Houston: how we collect, use, and protect your information.';
