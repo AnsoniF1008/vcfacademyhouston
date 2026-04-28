@@ -7,6 +7,9 @@ assets/uploads/*
 cache/page/*
 !cache/page/.gitkeep
 !cache/page/.htaccess
+# Circuit breaker state file (managed at runtime by config/database.php)
+cache/db_blocked_until.txt
+!cache/.htaccess
 
 # Export for migration (SQL dumps and build)
 export/

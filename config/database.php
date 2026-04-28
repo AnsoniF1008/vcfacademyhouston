@@ -38,12 +38,50 @@ $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     PDO::ATTR_EMULATE_PREPARES   => false,
+    // Reasonable connect timeout: don't hang for ages if MySQL is down.
+    PDO::ATTR_TIMEOUT            => 4,
 ];
 
+// ── Circuit breaker ───────────────────────────────────────────────────
+// When Hostinger's per-user MySQL cap (500 connections / hour) is hit,
+// every visitor that arrives during that window also tries to connect,
+// fails, and *each failure also counts* against the cap. That keeps the
+// site stuck in the rate-limited state long after traffic would have
+// otherwise died down.
+//
+// To break the cycle: once we observe a connection failure we stamp a
+// "blocked-until" timestamp on disk, and for the next N seconds NO
+// request even attempts a new PDO connection — they all go straight to
+// the stale cache or the branded fallback page. After N seconds, ONE
+// request probes again. If it succeeds, the breaker resets; if not, the
+// timestamp slides forward.
+$breakerFile = __DIR__ . '/../cache/db_blocked_until.txt';
+$breakerWindow = 90; // seconds the breaker stays open after a failure.
+$breakerOpen = false;
+if (php_sapi_name() !== 'cli' && is_file($breakerFile)) {
+    $blockedUntil = (int) @file_get_contents($breakerFile);
+    if ($blockedUntil > time()) {
+        $breakerOpen = true;
+    }
+}
+
 try {
+    if ($breakerOpen) {
+        // Synthesize an exception so we share the catch block with real
+        // failures. The message is for logs only — it never reaches users.
+        throw new PDOException('Circuit breaker open: skipping connection attempt to ' . $DB_HOST);
+    }
     $pdo = new PDO($dsn, $DB_USER, $DB_PASS, $options);
+    // Successful connection → clear any prior breaker state.
+    if (is_file($breakerFile)) {
+        @unlink($breakerFile);
+    }
 } catch (PDOException $e) {
     error_log('Database connection failed: ' . $e->getMessage());
+    // Trip the breaker (only on real failures, not on every short-circuit).
+    if (!$breakerOpen) {
+        @file_put_contents($breakerFile, (string) (time() + $breakerWindow), LOCK_EX);
+    }
     if (php_sapi_name() === 'cli') {
         throw $e;
     }
