@@ -1,25 +1,52 @@
 ---
-description: Cómo subir a producción (Hostinger por FTP). La conexión FTP está guardada en config.
+description: Cómo subir a producción (vcfacademyhouston.com en Hostinger). El deploy es automático vía GitHub Action al hacer push a main.
 alwaysApply: true
 ---
 
 # Deploy a producción (VCF Academy Houston)
 
 - **Producción:** https://vcfacademyhouston.com
-- **Método:** FTP (Hostinger). No usar SSH para subir archivos salvo que se pida explícitamente.
+- **Repositorio:** https://github.com/AnsoniF1008/vcfacademyhouston
+- **Método:** **GitHub Action automático** (`.github/workflows/deploy.yml`) que sube por FTP a Hostinger en cada push a `main`.
 
-## Comando para subir
-
-Desde la raíz del proyecto (PowerShell):
+## Cómo desplegar
 
 ```powershell
-.\scripts\deploy-hostinger-ftp.ps1
+git add <archivos>
+git commit -m "<mensaje>"
+git push origin main
 ```
 
-**No pedir contraseña al usuario:** la conexión FTP está guardada en `config/deploy-credentials.php` (clave `hostinger_ftp_pass`). El script la lee automáticamente.
+Eso es todo. NO correr el script `.\scripts\deploy-hostinger-ftp.ps1` salvo que el usuario lo pida explícitamente o que el GitHub Action esté caído. Hacer `git push` Y correr el script local es **doble deploy** y desperdicia tiempo / FTP / cuota.
 
-- Host: ftp.vcfacademyhouston.com
-- Usuario: u766140586.ansonif (en el script)
-- Contraseña: en deploy-credentials.php
+## Verificación opcional
 
-Si el usuario pide "subir a producción", "guardar en producción", "deploy" o similar: ejecutar este script. Opcionalmente hacer antes un backup en `backup/` (zip con la fecha).
+Después del push, puedes verificar el estado del deploy con:
+
+```powershell
+gh run list --workflow=deploy.yml --limit=3
+```
+
+O en https://github.com/AnsoniF1008/vcfacademyhouston/actions.
+
+El sitio suele estar actualizado entre 1 y 3 minutos después del push.
+
+## Base de datos
+
+- **Hay UNA SOLA base de datos** (la de Hostinger), tanto local como producción la usan:
+  - Host: `srv1144.hstgr.io`
+  - BD: `u766140586_db_6K3gelNG`
+  - Usuario: `u766140586_usr_6K3gelNG`
+  - Las credenciales están en `config/database.local.php` (gitignored).
+- NO crear una BD local en XAMPP; el sitio espera siempre la remota.
+- Hostinger limita el plan compartido a **500 conexiones MySQL/hora**. El sitio tiene un page cache + circuit breaker para evitar tropezar con ese tope.
+
+## Archivos NO sincronizados al servidor
+
+El `.gitignore` y el GitHub Action los excluyen automáticamente:
+
+- `config/database.local.php` (credenciales de BD)
+- `config/deploy-credentials.php`
+- `config/site.php` (lo edita el panel admin en producción)
+- `cache/db_blocked_until.txt`, `cache/page/*.html` (runtime)
+- `scripts/`, `sql/`, `docs/`, `backup/`, `export/`

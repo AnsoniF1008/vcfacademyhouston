@@ -117,6 +117,9 @@ try {
 
     if ($isLocal) {
         // Developer-facing diagnostic page (only on localhost / 127.0.0.1).
+        $msg = $e->getMessage();
+        $isRateLimit = strpos($msg, 'max_connections_per_hour') !== false || strpos($msg, '1226') !== false;
+        $isBreakerOpen = strpos($msg, 'Circuit breaker') !== false;
         ?>
         <!DOCTYPE html>
         <html lang="en">
@@ -125,19 +128,52 @@ try {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Database connection failed (dev)</title>
             <style>
-                body { font-family: system-ui, sans-serif; background: #1A1A1A; color: #fff; margin: 2rem; line-height: 1.6; }
+                body { font-family: system-ui, sans-serif; background: #1A1A1A; color: #fff; margin: 2rem; line-height: 1.6; max-width: 760px; }
                 h1 { color: #FF6600; }
-                code { background: #333; padding: 0.2em 0.4em; border-radius: 4px; }
-                ul { margin: 1rem 0; }
+                h2 { color: #FF6B00; font-size: 1.1rem; margin-top: 1.4rem; }
+                code { background: #333; padding: 0.2em 0.4em; border-radius: 4px; word-break: break-all; }
+                ul { margin: 0.6rem 0; padding-left: 1.4rem; }
+                .err { background: #2a1212; border-left: 3px solid #FF6600; padding: 12px 16px; border-radius: 4px; margin: 1rem 0; }
+                .meta { color: #888; font-size: 0.9rem; margin-top: 1.5rem; }
+                kbd { background: #444; padding: 1px 6px; border-radius: 3px; font-size: 0.9em; }
             </style>
         </head>
         <body>
             <h1>Database connection failed</h1>
-            <p><strong>Error:</strong> <code><?php echo htmlspecialchars($e->getMessage()); ?></code></p>
+            <div class="err"><strong>Error:</strong> <code><?php echo htmlspecialchars($msg); ?></code></div>
+            <?php if ($usingRemote): ?>
+            <p>Tu <code>config/database.local.php</code> apunta a <strong>la base remota de Hostinger</strong> (<code><?php echo htmlspecialchars($DB_HOST); ?></code>), no a XAMPP. Esa BD es la misma que usa producción, así que cualquier problema lo verás también en https://vcfacademyhouston.com.</p>
+
+            <?php if ($isRateLimit): ?>
+            <h2>Causa: límite del plan de Hostinger</h2>
+            <p>El plan compartido limita al usuario MySQL a <strong>500 conexiones por hora</strong>. Cuando se rebasa, MySQL rechaza nuevas conexiones hasta que pase la ventana rolling.</p>
             <ul>
-                <li>Check XAMPP MySQL is running, or that <code>config/database.local.php</code> has the correct credentials.</li>
-                <li>If this is a Hostinger rate-limit (<code>max_connections_per_hour</code>), wait a few minutes and reload.</li>
+                <li>Suele restablecerse solo en 30-60 minutos.</li>
+                <li>El page cache + circuit breaker reducen drásticamente la frecuencia con la que esto ocurre.</li>
+                <li>Si vuelve a pasar a menudo, considera subir al plan Premium/Business de Hostinger.</li>
             </ul>
+            <?php elseif ($isBreakerOpen): ?>
+            <h2>Causa: circuit breaker activo</h2>
+            <p>Una conexión falló hace pocos segundos. Para no machacar a MySQL, el sistema deja de intentar conectar durante 90 segundos.</p>
+            <ul>
+                <li>Espera ~90s y recarga.</li>
+                <li>Para forzar el reseteo manualmente: borra <code>cache/db_blocked_until.txt</code> en el proyecto.</li>
+            </ul>
+            <?php else: ?>
+            <h2>Comprobaciones</h2>
+            <ul>
+                <li>Verifica que el host <code><?php echo htmlspecialchars($DB_HOST); ?></code> sea accesible desde tu red (algunos proveedores bloquean conexiones MySQL salientes).</li>
+                <li>Confirma en el panel Hostinger que el usuario <code><?php echo htmlspecialchars($DB_USER); ?></code> sigue asignado a la BD <code><?php echo htmlspecialchars($DB_NAME); ?></code>.</li>
+                <li>Comprueba que la contraseña en <code>config/database.local.php</code> coincide con la del panel.</li>
+            </ul>
+            <?php endif; ?>
+            <p class="meta">Pulsa <kbd>F5</kbd> para reintentar, o limpia <code>cache/</code> y <code>cache/db_blocked_until.txt</code> si quieres forzar el estado.</p>
+            <?php else: ?>
+            <ul>
+                <li>Comprueba que XAMPP MySQL esté corriendo.</li>
+                <li>O que <code>config/database.local.php</code> tenga credenciales correctas.</li>
+            </ul>
+            <?php endif; ?>
         </body>
         </html>
         <?php
