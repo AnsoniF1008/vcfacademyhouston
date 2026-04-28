@@ -259,6 +259,8 @@ foreach ($base in $remoteBases) {
 # Primero archivos sueltos, luego carpetas (para verificar conexión)
 $toUpload = @(
     "index.php", "join.php", "contact.php", "calendar.php", "privacy.php", "recaudaciones.php", "deploy.php",
+    "match.php", "404.php", "terms.php",
+    ".htaccess",
     "robots.txt", "sitemap.xml", "sitemap.php",
     "admin", "assets", "config", "includes", "api"
 )
