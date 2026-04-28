@@ -3,8 +3,11 @@
  * Admin shell: same topbar + sticky nav as public redesign (vcf-style.css).
  * Expects: $base, $script, $header_crest_file, admin auth loaded (admin_can).
  */
+require_once __DIR__ . '/../admin/includes/csrf.php';
 $vcf_base_url = ($base === '' ? '/' : $base . '/');
 $admin_current = basename($script);
+$vcf_logout_token = csrf_token();
+$vcf_logout_action = htmlspecialchars($base) . '/admin/logout.php';
 $vcf_nav_crest = $header_crest_file ?? null;
 $vcf_nav_crest_qs = ($vcf_nav_crest === 'vcf-crest.png') ? '?v=20260401' : '';
 if ($vcf_nav_crest === null && file_exists(__DIR__ . '/../assets/img/vfc-crest.svg')) {
@@ -94,7 +97,7 @@ $in_content = in_array($admin_current, ['hero-slider.php', 'match-reels.php', 'j
       <?php if (function_exists('admin_can') && (admin_can('*') || admin_can('activity_log_view'))): ?>
       <a href="<?= htmlspecialchars($base) ?>/admin/activity-log.php" class="<?= $admin_current === 'activity-log.php' ? 'active' : '' ?>">Activity log</a>
       <?php endif; ?>
-      <a href="<?= htmlspecialchars($base) ?>/admin/logout.php">Log out</a>
+      <a href="<?= htmlspecialchars($base) ?>/admin/logout.php" class="js-logout" data-confirm="¿Cerrar sesión?">Log out</a>
     </nav>
 
     <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php" class="vcf-nav__cta">View site</a>
@@ -116,9 +119,13 @@ $in_content = in_array($admin_current, ['hero-slider.php', 'match-reels.php', 'j
     <a href="<?= htmlspecialchars($base) ?>/admin/activity-log.php" class="<?= $admin_current === 'activity-log.php' ? 'active' : '' ?>">Activity log</a>
     <?php endif; ?>
     <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php">View site</a>
-    <a href="<?= htmlspecialchars($base) ?>/admin/logout.php">Log out</a>
+    <a href="<?= htmlspecialchars($base) ?>/admin/logout.php" class="js-logout" data-confirm="¿Cerrar sesión?">Log out</a>
   </nav>
 </header>
+
+<form id="vcf-logout-form" method="post" action="<?= $vcf_logout_action ?>" style="display:none;">
+  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($vcf_logout_token) ?>">
+</form>
 
 <script>
 (function(){
@@ -131,5 +138,24 @@ $in_content = in_array($admin_current, ['hero-slider.php', 'match-reels.php', 'j
       if (!e.target.closest('#vcf-admin-nav')) m.classList.remove('open');
     });
   }
+
+  // Intercept any logout link (nav, footer, mobile menu) and submit a POST form
+  // with CSRF token. The /admin/logout.php endpoint requires POST to prevent
+  // CSRF logout via GET links / <img> tags. Delegated on document so links
+  // rendered after this script (e.g. the footer) are also covered.
+  document.addEventListener('click', function(e){
+    var link = e.target.closest && e.target.closest('a.js-logout');
+    if (!link) return;
+    e.preventDefault();
+    var msg = link.getAttribute('data-confirm');
+    if (msg && !confirm(msg)) return;
+    var form = document.getElementById('vcf-logout-form');
+    if (form) {
+      form.action = link.getAttribute('href') || form.action;
+      form.submit();
+    } else {
+      window.location.href = link.getAttribute('href');
+    }
+  });
 })();
 </script>
