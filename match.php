@@ -87,7 +87,7 @@ if ($hasScore) {
 $vcf_crest_file = file_exists(__DIR__ . '/assets/img/vcf-crest.png') ? 'vcf-crest.png' : (file_exists(__DIR__ . '/assets/img/vfc-crest.svg') ? 'vfc-crest.svg' : null);
 
 $page_title = 'VCF Houston vs ' . $rival . ' — ' . date('M j, Y', $gameTs) . ' | VCF Academy Houston';
-$page_description = 'Match details: VCF Academy Houston vs ' . $rival . ' on ' . date('F j, Y', $gameTs) . '. ' . ($hasScore ? "Final score: $gv–$gr." : 'Upcoming match.');
+$page_description = 'Match details: VCF Academy Houston vs ' . $rival . ' on ' . date('F j, Y', $gameTs) . '. ' . ($hasScore ? 'Final score: ' . (int) $gv . '–' . (int) $gr . '.' : 'Upcoming match.');
 if (!empty($match['rival_logo_url'])) {
     $page_og_image = $match['rival_logo_url'];
     $page_og_image_alt = 'VCF Houston vs ' . $rival;
