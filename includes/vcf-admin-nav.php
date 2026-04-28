@@ -60,31 +60,25 @@ $in_content = in_array($admin_current, ['hero-slider.php', 'match-reels.php', 'j
   </div>
 </div>
 
-<!-- ══ NAVBAR (admin): cinematic branding strip + tools row ══ -->
-<header class="vcf-nav vcf-nav--admin vcf-nav--admin-cinematic" id="vcf-admin-nav">
-  <div class="admin-header-cinematic" aria-label="VCF Academy Houston Admin">
-    <a href="<?= htmlspecialchars($base) ?>/admin/dashboard.php" class="ahc-brand" aria-label="VCF Academy Houston — Ir al panel (Dashboard)">
-      <div class="ahc-content">
-        <div class="ahc-shield-wrap">
-          <?php if ($vcf_nav_crest): ?>
-          <img class="ahc-shield" src="<?= htmlspecialchars($base) ?>/assets/img/<?= htmlspecialchars($vcf_nav_crest) ?><?= $vcf_nav_crest_qs ?>" alt="Valencia CF" width="50" height="66" loading="eager" decoding="async">
-          <?php else: ?>
-          <div class="ahc-shield ahc-shield--fallback" aria-hidden="true">V</div>
-          <?php endif; ?>
-        </div>
-        <div class="ahc-text">
-          <p class="ahc-title">
-            <span>V</span><span>C</span><span>F</span><span class="ahc-space" aria-hidden="true">&nbsp;</span><span>A</span><span>C</span><span>A</span><span>D</span><span>E</span><span>M</span><span>Y</span>
-          </p>
-          <p class="ahc-subtitle">ADMIN &middot; HOUSTON</p>
-        </div>
+<!-- ══ NAVBAR (admin) ══ -->
+<header class="vcf-nav vcf-nav--admin" id="vcf-admin-nav">
+  <div class="vcf-nav__inner">
+    <a href="<?= htmlspecialchars($base) ?>/admin/dashboard.php" class="vcf-nav__logo" aria-label="VCF Academy Houston — Dashboard">
+      <?php if ($vcf_nav_crest): ?>
+      <img class="vcf-nav__crest vcf-logo-anim--premium" src="<?= htmlspecialchars($base) ?>/assets/img/<?= htmlspecialchars($vcf_nav_crest) ?><?= $vcf_nav_crest_qs ?>" alt="Valencia CF" width="44" height="58" loading="eager" decoding="async">
+      <?php else: ?>
+      <div class="vcf-nav__flag" aria-hidden="true">
+        <span class="f1"></span>
+        <span class="f2"></span>
+        <span class="f3"></span>
+      </div>
+      <?php endif; ?>
+      <div class="vcf-nav__text">
+        <span class="t1">VCF Academy</span>
+        <span class="t2">Admin &middot; Houston</span>
       </div>
     </a>
-    <div class="ahc-line" aria-hidden="true"></div>
-    <div class="ahc-flash" aria-hidden="true"></div>
-  </div>
 
-  <div class="vcf-nav__inner">
     <nav class="vcf-nav__links vcf-nav__links--admin" aria-label="Admin navigation">
       <a href="<?= htmlspecialchars($base) ?>/admin/dashboard.php" class="<?= $admin_current === 'dashboard.php' ? 'active' : '' ?>">Dashboard</a>
       <?php if (!empty($content_links)): ?>

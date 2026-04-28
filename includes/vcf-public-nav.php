@@ -47,31 +47,25 @@ if ($vcf_nav_crest === null && file_exists(__DIR__ . '/../assets/img/vfc-crest.s
   </div>
 </div>
 
-<!-- ══ NAVBAR: franja cinematográfica (como admin) + fila de enlaces ══ -->
-<header class="vcf-nav vcf-nav--public-cinematic" id="vcf-nav">
-  <div class="admin-header-cinematic" aria-label="VCF Academy Houston">
-    <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php" class="ahc-brand" aria-label="VCF Academy Houston — Inicio">
-      <div class="ahc-content">
-        <div class="ahc-shield-wrap">
-          <?php if ($vcf_nav_crest): ?>
-          <img class="ahc-shield" src="<?= htmlspecialchars($base) ?>/assets/img/<?= htmlspecialchars($vcf_nav_crest) ?><?= $vcf_nav_crest_qs ?>" alt="Valencia CF" width="50" height="66" loading="eager" decoding="async">
-          <?php else: ?>
-          <div class="ahc-shield ahc-shield--fallback" aria-hidden="true">V</div>
-          <?php endif; ?>
-        </div>
-        <div class="ahc-text">
-          <p class="ahc-title">
-            <span>V</span><span>C</span><span>F</span><span class="ahc-space" aria-hidden="true">&nbsp;</span><span>A</span><span>C</span><span>A</span><span>D</span><span>E</span><span>M</span><span>Y</span>
-          </p>
-          <p class="ahc-subtitle">Houston &middot; Official</p>
-        </div>
+<!-- ══ NAVBAR ══ -->
+<header class="vcf-nav" id="vcf-nav">
+  <div class="vcf-nav__inner">
+    <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php" class="vcf-nav__logo" aria-label="VCF Academy Houston — Home">
+      <?php if ($vcf_nav_crest): ?>
+      <img class="vcf-nav__crest vcf-logo-anim--premium" src="<?= htmlspecialchars($base) ?>/assets/img/<?= htmlspecialchars($vcf_nav_crest) ?><?= $vcf_nav_crest_qs ?>" alt="Valencia CF" width="44" height="58" loading="eager" decoding="async">
+      <?php else: ?>
+      <div class="vcf-nav__flag" aria-hidden="true">
+        <span class="f1"></span>
+        <span class="f2"></span>
+        <span class="f3"></span>
+      </div>
+      <?php endif; ?>
+      <div class="vcf-nav__text">
+        <span class="t1">VCF Academy</span>
+        <span class="t2">Houston &middot; Official</span>
       </div>
     </a>
-    <div class="ahc-line" aria-hidden="true"></div>
-    <div class="ahc-flash" aria-hidden="true"></div>
-  </div>
 
-  <div class="vcf-nav__inner">
     <nav class="vcf-nav__links">
       <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php#hero" class="<?= $page_active === 'home' ? 'active' : '' ?>">Home</a>
       <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php#methodology" class="<?= $page_active === 'methodology' ? 'active' : '' ?>">Methodology</a>
@@ -88,20 +82,18 @@ if ($vcf_nav_crest === null && file_exists(__DIR__ . '/../assets/img/vfc-crest.s
       <a href="<?= htmlspecialchars($vcf_base_url) ?>join.php" class="<?= $page_active === 'join' ? 'active' : '' ?>">Join</a>
       <a href="<?= htmlspecialchars($vcf_base_url) ?>recaudaciones.php" class="<?= $page_active === 'support' ? 'active' : '' ?>">Support</a>
     </nav>
-    <div class="vcf-nav__tools">
-      <div class="vcf-nav__actions">
-        <?php if (!empty($show_back_admin)): ?>
-        <a href="<?= htmlspecialchars($base) ?>/admin/dashboard.php" class="vcf-nav__admin-link">Dashboard</a>
-        <?php else: ?>
-        <a href="<?= htmlspecialchars($base) ?>/admin/" class="vcf-nav__admin-link">Admin</a>
-        <?php endif; ?>
-        <a href="<?= htmlspecialchars($vcf_base_url) ?>contact.php" class="vcf-nav__cta">Contact Us</a>
-      </div>
-
-      <button class="vcf-nav__burger" id="vcf-burger" type="button" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </button>
+    <div class="vcf-nav__actions">
+      <?php if (!empty($show_back_admin)): ?>
+      <a href="<?= htmlspecialchars($base) ?>/admin/dashboard.php" class="vcf-nav__admin-link">Dashboard</a>
+      <?php else: ?>
+      <a href="<?= htmlspecialchars($base) ?>/admin/" class="vcf-nav__admin-link">Admin</a>
+      <?php endif; ?>
+      <a href="<?= htmlspecialchars($vcf_base_url) ?>contact.php" class="vcf-nav__cta">Contact Us</a>
     </div>
+
+    <button class="vcf-nav__burger" id="vcf-burger" type="button" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 
   <nav class="vcf-nav__mobile" id="vcf-mobile-menu" aria-label="Site navigation">

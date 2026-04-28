@@ -289,22 +289,3 @@ h1.admin-page-title {
     font-weight: 600;
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   Cinematic admin header (entry animation — Barlow Condensed)
-   ═══════════════════════════════════════════════════════════════════ */
-.vcf-nav.vcf-nav--admin.vcf-nav--admin-cinematic {
-    flex-direction: column;
-    height: auto;
-    align-items: stretch;
-}
-.vcf-nav--admin-cinematic .vcf-nav__inner {
-    border-top: 1px solid rgba(255, 255, 255, 0.07);
-    min-height: 64px;
-}
-.vcf-nav--admin-cinematic .vcf-nav__links--admin {
-    max-width: none;
-    flex: 1;
-    justify-content: flex-end;
-}
-
-/* Cinematic strip + keyframes: assets/css/vcf-style.css (loaded for public + admin) */
