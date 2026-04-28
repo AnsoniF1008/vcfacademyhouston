@@ -110,7 +110,7 @@
     <?php endif; ?>
     <script src="<?= $vcf_base_safe ?>/assets/js/main.js?v=12" defer></script>
     <?php if (!empty($vcf_public_redesign) && empty($is_admin) && !empty($vcf_home_scripts)): ?>
-    <script src="<?= $vcf_base_safe ?>/assets/js/vcf-home.js?v=5" defer></script>
+    <script src="<?= $vcf_base_safe ?>/assets/js/vcf-home.js?v=6" defer></script>
     <?php endif; ?>
     <?php if (isset($reels) && count($reels) > 0 && empty($vcf_public_redesign)): ?><script src="<?= $vcf_base_safe ?>/assets/js/reels-carousel.js?v=1" defer></script><?php endif; ?>
 </body>

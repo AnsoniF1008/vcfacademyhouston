@@ -224,10 +224,23 @@ $vm_gps_url = !empty($sedes[0]['mapa_general_url']) ? $sedes[0]['mapa_general_ur
       <p style="font-size:13px;color:var(--vcf-gray);margin-bottom:22px;max-width:520px;line-height:1.6;">
         Tap a position to learn about the role and see the assigned player. Switch formations to compare systems.
       </p>
-      <div class="vcf-formation__tabs" id="formation-tabs">
-        <button type="button" class="vcf-formation__tab active" data-f="433">4-3-3</button>
-        <button type="button" class="vcf-formation__tab" data-f="442">4-4-2</button>
-        <button type="button" class="vcf-formation__tab" data-f="352">3-5-2</button>
+      <div class="vcf-formation__controls">
+        <div class="vcf-formation__tabs" id="formation-tabs" role="tablist" aria-label="Formation">
+          <button type="button" class="vcf-formation__tab active" data-f="433">4-3-3</button>
+          <button type="button" class="vcf-formation__tab" data-f="442">4-4-2</button>
+          <button type="button" class="vcf-formation__tab" data-f="352">3-5-2</button>
+        </div>
+        <?php if (!empty($formation_categories)): ?>
+        <div class="vcf-formation__cat" role="group" aria-label="Squad / Category">
+          <label for="formation-cat" class="vcf-formation__cat-label">Squad</label>
+          <select id="formation-cat" class="vcf-formation__cat-select">
+            <option value="all">All squad</option>
+            <?php foreach ($formation_categories as $cat): ?>
+            <option value="<?= htmlspecialchars($cat['id']) ?>"><?= htmlspecialchars($cat['name']) ?> &middot; <?= (int) $cat['count'] ?> players</option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <?php endif; ?>
       </div>
       <div class="vfv-grid">
         <div>
@@ -272,7 +285,11 @@ $vm_gps_url = !empty($sedes[0]['mapa_general_url']) ? $sedes[0]['mapa_general_ur
   </div>
 </section>
 <script type="application/json" id="vfv-formation-data"><?php
-echo json_encode(['players' => $formation_players], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP);
+echo json_encode([
+    'players'    => $formation_players,
+    'byCategory' => $formation_by_category ?? [],
+    'categories' => $formation_categories ?? [],
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP);
 ?></script>
 
 <?php require __DIR__ . '/partials/home-grounds.php'; ?>

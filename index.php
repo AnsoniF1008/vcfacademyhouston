@@ -220,17 +220,48 @@ try {
 }
 
 $formationBase = rtrim(dirname(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '')), '/');
-$formation_players = array_fill_keys(['GK', 'RB', 'CBR', 'CBL', 'LB', 'CMR', 'CMC', 'CML', 'RW', 'ST', 'LW'], [
+$formation_empty_slots = array_fill_keys(['GK', 'RB', 'CBR', 'CBL', 'LB', 'CMR', 'CMC', 'CML', 'RW', 'ST', 'LW', 'LM'], [
     'name' => '', 'initials' => '', 'num' => '', 'photo' => '',
 ]);
-if (!empty($rosterPorCategoria)) {
+
+$fpRow = static function (array $j) use ($formationBase): array {
+    $name = trim(($j['nombre'] ?? '') . ' ' . ($j['apellido'] ?? ''));
+    $n1 = trim($j['nombre'] ?? '');
+    $n2 = trim($j['apellido'] ?? '');
+    if (function_exists('mb_substr')) {
+        $ini = mb_strtoupper(mb_substr($n1, 0, 1)) . mb_strtoupper(mb_substr($n2, 0, 1));
+    } else {
+        $ini = strtoupper(substr($n1, 0, 1)) . strtoupper(substr($n2, 0, 1));
+    }
+    $photo = '';
+    $fu = trim($j['foto_url'] ?? '');
+    if ($fu !== '') {
+        if (preg_match('#^https?://#i', $fu)) {
+            $photo = $fu;
+        } else {
+            $photo = ($formationBase === '' ? '' : $formationBase) . '/' . ltrim($fu, '/');
+        }
+    }
+    $dorsal = $j['dorsal'] ?? null;
+    $num = ($dorsal !== null && $dorsal !== '') ? (string) (int) $dorsal : '';
+
+    return ['name' => $name, 'initials' => $ini !== '' ? $ini : '?', 'num' => $num, 'photo' => $photo];
+};
+
+/**
+ * Build the slot → player map for a given list of players (already filtered).
+ * Auto-assigns by position + dorsal until per-coach overrides are introduced.
+ */
+$buildFormationSlots = static function (array $players) use ($fpRow, $formation_empty_slots): array {
+    $slots_out = $formation_empty_slots;
+    if (empty($players)) {
+        return $slots_out;
+    }
     $byPos = ['Portero' => [], 'Defensa' => [], 'Mediocampista' => [], 'Delantero' => []];
-    foreach ($rosterPorCategoria as $cat) {
-        foreach ($cat['jugadores'] as $j) {
-            $p = $j['posicion'] ?? '';
-            if (isset($byPos[$p])) {
-                $byPos[$p][] = $j;
-            }
+    foreach ($players as $j) {
+        $p = $j['posicion'] ?? '';
+        if (isset($byPos[$p])) {
+            $byPos[$p][] = $j;
         }
     }
     foreach ($byPos as &$arr) {
@@ -239,34 +270,11 @@ if (!empty($rosterPorCategoria)) {
         });
     }
     unset($arr);
-    $fpRow = static function (array $j) use ($formationBase): array {
-        $name = trim(($j['nombre'] ?? '') . ' ' . ($j['apellido'] ?? ''));
-        $n1 = trim($j['nombre'] ?? '');
-        $n2 = trim($j['apellido'] ?? '');
-        if (function_exists('mb_substr')) {
-            $ini = mb_strtoupper(mb_substr($n1, 0, 1)) . mb_strtoupper(mb_substr($n2, 0, 1));
-        } else {
-            $ini = strtoupper(substr($n1, 0, 1)) . strtoupper(substr($n2, 0, 1));
-        }
-        $photo = '';
-        $fu = trim($j['foto_url'] ?? '');
-        if ($fu !== '') {
-            if (preg_match('#^https?://#i', $fu)) {
-                $photo = $fu;
-            } else {
-                $photo = ($formationBase === '' ? '' : $formationBase) . '/' . ltrim($fu, '/');
-            }
-        }
-        $dorsal = $j['dorsal'] ?? null;
-        $num = ($dorsal !== null && $dorsal !== '') ? (string) (int) $dorsal : '';
-
-        return ['name' => $name, 'initials' => $ini !== '' ? $ini : '?', 'num' => $num, 'photo' => $photo];
-    };
     $gk = $byPos['Portero'][0] ?? null;
     $defs = array_slice($byPos['Defensa'], 0, 4);
     $mids = $byPos['Mediocampista'];
     $fws = array_slice($byPos['Delantero'], 0, 3);
-    $slots = [
+    $slots_in = [
         'GK' => $gk,
         'RB' => $defs[0] ?? null,
         'CBR' => $defs[1] ?? null,
@@ -279,12 +287,38 @@ if (!empty($rosterPorCategoria)) {
         'ST' => $fws[1] ?? null,
         'LW' => $fws[2] ?? null,
     ];
-    foreach ($slots as $slot => $j) {
+    foreach ($slots_in as $slot => $j) {
         if ($j) {
-            $formation_players[$slot] = $fpRow($j);
+            $slots_out[$slot] = $fpRow($j);
         }
     }
-    $formation_players['LM'] = isset($mids[3]) ? $fpRow($mids[3]) : $formation_players['CML'];
+    $slots_out['LM'] = isset($mids[3]) ? $fpRow($mids[3]) : $slots_out['CML'];
+    return $slots_out;
+};
+
+// "All squad" view: pool every active player.
+$formation_all_players = [];
+foreach ($rosterPorCategoria as $cat) {
+    foreach ($cat['jugadores'] as $j) {
+        $formation_all_players[] = $j;
+    }
+}
+$formation_players = $buildFormationSlots($formation_all_players);
+
+// Per-category views (one slot map per team / age group).
+$formation_by_category = [];
+$formation_categories = [];
+foreach ($rosterPorCategoria as $cid => $cat) {
+    if (empty($cat['jugadores'])) {
+        continue; // skip categories with no active players
+    }
+    $key = (string) $cid;
+    $formation_by_category[$key] = $buildFormationSlots($cat['jugadores']);
+    $formation_categories[] = [
+        'id'    => $key,
+        'name'  => $cat['nombre'] ?? ('Cat ' . $cid),
+        'count' => count($cat['jugadores']),
+    ];
 }
 
 $motmOpen = null;

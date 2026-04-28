@@ -1116,6 +1116,72 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   color: #fff;
 }
 
+.vcf-formation__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.vcf-formation__controls .vcf-formation__tabs {
+  margin-bottom: 0;
+}
+.vcf-formation__cat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vcf-formation__cat-label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--vcf-gray);
+  margin: 0;
+}
+.vcf-formation__cat-select {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--vcf-dark2);
+  color: var(--vcf-white);
+  border: 1px solid var(--vcf-border2);
+  border-radius: var(--radius-sm);
+  padding: 7px 30px 7px 12px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='%23ff6b00' d='M1 1l5 5 5-5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 10px 7px;
+  transition: border-color var(--transition), color var(--transition);
+}
+.vcf-formation__cat-select:hover,
+.vcf-formation__cat-select:focus {
+  border-color: var(--vcf-orange);
+  color: var(--vcf-orange);
+  outline: none;
+}
+.vcf-formation__cat-select option {
+  background: #0c0c0c;
+  color: var(--vcf-white);
+}
+@media (max-width: 600px) {
+  .vcf-formation__controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .vcf-formation__cat-select {
+    width: 100%;
+  }
+}
+
 /* ── ROSTER GRID ── */
 .vcf-roster-grid {
   display: grid;

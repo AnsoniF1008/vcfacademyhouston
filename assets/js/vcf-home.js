@@ -170,12 +170,18 @@
     if (!dataEl || !pitch) return;
 
     var PLAYERS = {};
+    var BY_CAT = {};
+    var CATEGORIES = [];
     try {
       var parsed = JSON.parse(dataEl.textContent || '{}');
       PLAYERS = parsed.players || {};
+      BY_CAT = parsed.byCategory || {};
+      CATEGORIES = parsed.categories || [];
     } catch (e) {
       return;
     }
+    var ALL_PLAYERS = PLAYERS;
+    var currentCat = 'all';
 
     var FORMATIONS = {
       '433': [
@@ -413,6 +419,22 @@
         if (f) renderFormation(f);
       });
     });
+
+    var catSelect = document.getElementById('formation-cat');
+    if (catSelect) {
+      catSelect.addEventListener('change', function () {
+        var val = catSelect.value || 'all';
+        currentCat = val;
+        if (val === 'all') {
+          PLAYERS = ALL_PLAYERS;
+        } else if (BY_CAT[val]) {
+          PLAYERS = BY_CAT[val];
+        } else {
+          PLAYERS = ALL_PLAYERS;
+        }
+        renderFormation(currentF);
+      });
+    }
 
     renderFormation('433');
   })();
