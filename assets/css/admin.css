@@ -191,12 +191,17 @@ h1.admin-page-title {
     border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
+.vcf-nav--admin .vcf-nav__inner {
+    justify-content: flex-end;
+}
 .vcf-nav--admin .vcf-nav__links--admin {
+    flex: 1;
     flex-wrap: wrap;
     justify-content: flex-end;
     column-gap: 0.2rem;
     row-gap: 0.15rem;
-    max-width: min(960px, 72vw);
+    max-width: none;
+    min-width: 0;
 }
 .vcf-nav--admin .vcf-nav__dropdown .dropdown-menu {
     margin-top: 0.35rem;

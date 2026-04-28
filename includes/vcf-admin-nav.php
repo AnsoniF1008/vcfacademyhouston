@@ -8,11 +8,6 @@ $vcf_base_url = ($base === '' ? '/' : $base . '/');
 $admin_current = basename($script);
 $vcf_logout_token = csrf_token();
 $vcf_logout_action = htmlspecialchars($base) . '/admin/logout.php';
-$vcf_nav_crest = $header_crest_file ?? null;
-$vcf_nav_crest_qs = ($vcf_nav_crest === 'vcf-crest.png') ? '?v=20260401' : '';
-if ($vcf_nav_crest === null && file_exists(__DIR__ . '/../assets/img/vfc-crest.svg')) {
-    $vcf_nav_crest = 'vfc-crest.svg';
-}
 
 $content_pages = [
     'hero_slider' => ['/admin/hero-slider.php', 'Hero'],
@@ -63,22 +58,6 @@ $in_content = in_array($admin_current, ['hero-slider.php', 'match-reels.php', 'j
 <!-- ══ NAVBAR (admin) ══ -->
 <header class="vcf-nav vcf-nav--admin" id="vcf-admin-nav">
   <div class="vcf-nav__inner">
-    <a href="<?= htmlspecialchars($base) ?>/admin/dashboard.php" class="vcf-nav__logo" aria-label="VCF Academy Houston — Dashboard">
-      <?php if ($vcf_nav_crest): ?>
-      <img class="vcf-nav__crest vcf-logo-anim--premium" src="<?= htmlspecialchars($base) ?>/assets/img/<?= htmlspecialchars($vcf_nav_crest) ?><?= $vcf_nav_crest_qs ?>" alt="Valencia CF" width="44" height="58" loading="eager" decoding="async">
-      <?php else: ?>
-      <div class="vcf-nav__flag" aria-hidden="true">
-        <span class="f1"></span>
-        <span class="f2"></span>
-        <span class="f3"></span>
-      </div>
-      <?php endif; ?>
-      <div class="vcf-nav__text">
-        <span class="t1">VCF Academy</span>
-        <span class="t2">Admin &middot; Houston</span>
-      </div>
-    </a>
-
     <nav class="vcf-nav__links vcf-nav__links--admin" aria-label="Admin navigation">
       <a href="<?= htmlspecialchars($base) ?>/admin/dashboard.php" class="<?= $admin_current === 'dashboard.php' ? 'active' : '' ?>">Dashboard</a>
       <?php if (!empty($content_links)): ?>
