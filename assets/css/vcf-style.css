@@ -301,12 +301,27 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 .vcf-nav__mobile a:hover,
 .vcf-nav__mobile a.active { color: var(--vcf-orange); }
 
-/* Public header: CSS grid — marca | enlaces centrados | acciones + burger */
-.vcf-nav--public-cinematic .vcf-nav__inner {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+/* Público: misma jerarquía que admin — franja cinematográfica + fila de herramientas */
+.vcf-nav.vcf-nav--public-cinematic {
+  flex-direction: column;
+  height: auto;
+  min-height: 0;
   align-items: stretch;
-  column-gap: clamp(12px, 2.2vw, 28px);
+  background: var(--vcf-dark2);
+}
+.vcf-nav--public-cinematic .vcf-nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 64px;
+  height: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--vcf-dark2);
+}
+.vcf-nav--public-cinematic .vcf-nav__links {
+  flex: 1;
+  justify-content: flex-end;
+  min-width: 0;
 }
 .vcf-nav__tools {
   display: flex;
@@ -314,12 +329,7 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   justify-content: flex-end;
   gap: 10px;
   flex-shrink: 0;
-}
-.vcf-nav--public-cinematic .vcf-nav__links {
-  justify-content: center;
-  align-self: center;
-  width: 100%;
-  min-width: 0;
+  margin-left: 8px;
 }
 .vcf-nav--public-cinematic .vcf-nav__actions {
   margin-left: 0;
@@ -327,70 +337,16 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 .vcf-nav--public-cinematic .vcf-nav__burger {
   margin-left: 0;
 }
-.admin-header-cinematic--inline {
-  width: auto;
-  max-width: min(288px, 34vw);
-  flex: none;
-  margin-right: 0;
-  padding: 0 clamp(8px, 1.2vw, 18px) 0 0;
-  border-right: 1px solid rgba(255, 255, 255, 0.09);
-  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.2);
-  background: transparent;
-  align-self: stretch;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.vcf-nav--public-cinematic .ahc-content {
-  max-width: none;
-  margin: 0;
-  padding: 0;
-  gap: clamp(8px, 1.5vw, 14px);
-}
-.vcf-nav--public-cinematic .ahc-brand {
-  position: relative;
-  z-index: 2;
-}
-.vcf-nav--public-cinematic .ahc-shield {
-  width: 40px;
-  max-height: 48px;
-}
-.vcf-nav--public-cinematic .ahc-shield--fallback {
-  width: 40px;
-  height: 40px;
-  font-size: 17px;
-}
-.vcf-nav--public-cinematic .ahc-title {
-  font-size: clamp(16px, 1.9vw, 24px);
-  letter-spacing: 1px;
-  line-height: 1.05;
-  white-space: nowrap;
-}
-.vcf-nav--public-cinematic .ahc-subtitle {
-  font-size: 10px;
-  letter-spacing: 1.8px;
-  margin-top: 3px;
-  opacity: 0.95;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.vcf-nav--public-cinematic .ahc-text {
-  min-width: 0;
-}
 
 @media (min-width: 901px) and (max-width: 1180px) {
   .vcf-nav--public-cinematic .vcf-nav__links a {
-    padding: 6px 6px;
-    font-size: 11.5px;
+    padding: 6px 7px;
+    font-size: 12px;
     letter-spacing: 0.05em;
-  }
-  .vcf-nav--public-cinematic .admin-header-cinematic--inline {
-    max-width: min(260px, 32vw);
   }
 }
 
-/* Cinematic brand strip (shared public + admin; admin = fila completa; public inline = bloque anterior) */
+/* Cinematic brand strip (shared public + admin) */
 .admin-header-cinematic {
   background: #000;
   padding: 18px 24px 16px;
@@ -572,37 +528,33 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   }
 }
 
-/* Fixed mobile drawer: admin sigue con franja + fila; público = una sola barra 64px */
+/* Fixed mobile drawer: debajo de franja cinematográfica + fila 64px */
+.vcf-nav--public-cinematic .vcf-nav__mobile,
 .vcf-nav--admin-cinematic .vcf-nav__mobile {
   top: 152px;
 }
-.vcf-nav--public-cinematic .vcf-nav__mobile {
-  top: 64px;
-}
 @media (max-width: 575.98px) {
-  .admin-header-cinematic:not(.admin-header-cinematic--inline) {
+  .admin-header-cinematic {
     padding: 14px 0 12px;
   }
-  .admin-header-cinematic:not(.admin-header-cinematic--inline) .ahc-content {
+  .admin-header-cinematic .ahc-content {
     padding: 0 16px;
   }
-  .admin-header-cinematic:not(.admin-header-cinematic--inline) .ahc-title {
+  .admin-header-cinematic .ahc-title {
     letter-spacing: 1px;
-  }
-  .vcf-nav--admin-cinematic .vcf-nav__mobile {
-    top: 168px;
-  }
-  .vcf-nav--public-cinematic .ahc-title {
     font-size: clamp(15px, 4vw, 22px);
-    letter-spacing: 1px;
   }
-  .vcf-nav--public-cinematic .ahc-subtitle {
+  .admin-header-cinematic .ahc-subtitle {
     font-size: 10px;
     letter-spacing: 1.5px;
   }
-  .vcf-nav--public-cinematic .ahc-shield {
+  .admin-header-cinematic .ahc-shield {
     width: 34px;
     max-height: 42px;
+  }
+  .vcf-nav--public-cinematic .vcf-nav__mobile,
+  .vcf-nav--admin-cinematic .vcf-nav__mobile {
+    top: 168px;
   }
 }
 
@@ -2616,15 +2568,6 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   .vcf-topbar { display: none; }
   .vcf-nav__links, .vcf-nav__actions { display: none; }
   .vcf-nav__burger { display: flex; }
-  .vcf-nav--public-cinematic .vcf-nav__inner {
-    grid-template-columns: minmax(0, 1fr) auto;
-    column-gap: 12px;
-    align-items: center;
-  }
-  .vcf-nav--public-cinematic .admin-header-cinematic--inline {
-    max-width: none;
-    align-self: center;
-  }
   .vcf-hero { height: 480px; }
   .vcf-statsbar__grid { grid-template-columns: repeat(3, 1fr); }
   .vcf-pillars { grid-template-columns: 1fr; }

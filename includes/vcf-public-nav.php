@@ -47,31 +47,31 @@ if ($vcf_nav_crest === null && file_exists(__DIR__ . '/../assets/img/vfc-crest.s
   </div>
 </div>
 
-<!-- ══ NAVBAR: marca + enlaces + acciones (una sola fila) ══ -->
+<!-- ══ NAVBAR: franja cinematográfica (como admin) + fila de enlaces ══ -->
 <header class="vcf-nav vcf-nav--public-cinematic" id="vcf-nav">
-  <div class="vcf-nav__inner">
-    <div class="admin-header-cinematic admin-header-cinematic--inline" aria-label="VCF Academy Houston">
-      <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php" class="ahc-brand" aria-label="VCF Academy Houston — Inicio">
-        <div class="ahc-content">
-          <div class="ahc-shield-wrap">
-            <?php if ($vcf_nav_crest): ?>
-            <img class="ahc-shield" src="<?= htmlspecialchars($base) ?>/assets/img/<?= htmlspecialchars($vcf_nav_crest) ?><?= $vcf_nav_crest_qs ?>" alt="Valencia CF" width="50" height="66" loading="eager" decoding="async">
-            <?php else: ?>
-            <div class="ahc-shield ahc-shield--fallback" aria-hidden="true">V</div>
-            <?php endif; ?>
-          </div>
-          <div class="ahc-text">
-            <p class="ahc-title">
-              <span>V</span><span>C</span><span>F</span><span class="ahc-space" aria-hidden="true">&nbsp;</span><span>A</span><span>C</span><span>A</span><span>D</span><span>E</span><span>M</span><span>Y</span>
-            </p>
-            <p class="ahc-subtitle">Houston &middot; Official</p>
-          </div>
+  <div class="admin-header-cinematic" aria-label="VCF Academy Houston">
+    <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php" class="ahc-brand" aria-label="VCF Academy Houston — Inicio">
+      <div class="ahc-content">
+        <div class="ahc-shield-wrap">
+          <?php if ($vcf_nav_crest): ?>
+          <img class="ahc-shield" src="<?= htmlspecialchars($base) ?>/assets/img/<?= htmlspecialchars($vcf_nav_crest) ?><?= $vcf_nav_crest_qs ?>" alt="Valencia CF" width="50" height="66" loading="eager" decoding="async">
+          <?php else: ?>
+          <div class="ahc-shield ahc-shield--fallback" aria-hidden="true">V</div>
+          <?php endif; ?>
         </div>
-      </a>
-      <div class="ahc-line" aria-hidden="true"></div>
-      <div class="ahc-flash" aria-hidden="true"></div>
-    </div>
+        <div class="ahc-text">
+          <p class="ahc-title">
+            <span>V</span><span>C</span><span>F</span><span class="ahc-space" aria-hidden="true">&nbsp;</span><span>A</span><span>C</span><span>A</span><span>D</span><span>E</span><span>M</span><span>Y</span>
+          </p>
+          <p class="ahc-subtitle">Houston &middot; Official</p>
+        </div>
+      </div>
+    </a>
+    <div class="ahc-line" aria-hidden="true"></div>
+    <div class="ahc-flash" aria-hidden="true"></div>
+  </div>
 
+  <div class="vcf-nav__inner">
     <nav class="vcf-nav__links">
       <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php#hero" class="<?= $page_active === 'home' ? 'active' : '' ?>">Home</a>
       <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php#methodology" class="<?= $page_active === 'methodology' ? 'active' : '' ?>">Methodology</a>
