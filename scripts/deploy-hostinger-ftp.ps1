@@ -162,6 +162,8 @@ function Push-FtpItem {
         if ($relativePath -eq 'config/site.php') { return }
         # No subir páginas cacheadas locales (las regenera producción al vuelo).
         if ($relativePath -match '^cache/page/.+\.(html|tmp)$') { return }
+        # No subir el estado del circuit breaker (es runtime de cada entorno).
+        if ($relativePath -eq 'cache/db_blocked_until.txt') { return }
         # Excluir vídeos de reels (el usuario los sube desde el admin)
         if ($relativePath -match '^assets/uploads/reels/.*\.(mp4|webm|mov)$') { return }
         $parent = ConvertTo-RemotePath (Split-Path -Parent $relativePath)
