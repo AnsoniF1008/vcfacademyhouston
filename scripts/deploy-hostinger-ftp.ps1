@@ -160,6 +160,8 @@ function Push-FtpItem {
         if ($relativePath -eq 'config/database.local.php') { return }
         # No subir site.php: cada entorno tiene el suyo (p.ej. donations propias).
         if ($relativePath -eq 'config/site.php') { return }
+        # No subir páginas cacheadas locales (las regenera producción al vuelo).
+        if ($relativePath -match '^cache/page/.+\.(html|tmp)$') { return }
         # Excluir vídeos de reels (el usuario los sube desde el admin)
         if ($relativePath -match '^assets/uploads/reels/.*\.(mp4|webm|mov)$') { return }
         $parent = ConvertTo-RemotePath (Split-Path -Parent $relativePath)
@@ -267,7 +269,7 @@ $toUpload = @(
     "match.php", "404.php", "terms.php",
     ".htaccess",
     "robots.txt", "sitemap.xml", "sitemap.php",
-    "admin", "assets", "config", "includes", "api"
+    "admin", "assets", "config", "includes", "api", "cache"
 )
 # sql/, docs/, scripts/ excluidos: no son necesarios en producción
 

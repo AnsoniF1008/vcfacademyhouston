@@ -1,0 +1,19 @@
+# Block direct web access to cache files. Apache 2.4 syntax + 2.2 fallback.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+</IfModule>
+
+# Make sure no PHP/CGI ever runs from here even if a malicious file lands.
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+RemoveHandler .php .php3 .php4 .php5 .php7 .phtml .phar
+RemoveType .php .php3 .php4 .php5 .php7 .phtml .phar
+Options -Indexes -ExecCGI

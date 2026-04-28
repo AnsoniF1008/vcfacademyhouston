@@ -3,6 +3,11 @@ assets/uploads/*
 !assets/uploads/.gitkeep
 !assets/uploads/.htaccess
 
+# Page cache (HTML snapshots, regenerated automatically)
+cache/page/*
+!cache/page/.gitkeep
+!cache/page/.htaccess
+
 # Export for migration (SQL dumps and build)
 export/
 valencia-website.zip

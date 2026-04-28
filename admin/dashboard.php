@@ -55,6 +55,15 @@ require __DIR__ . '/../includes/header.php';
     <?= admin_breadcrumb([]) ?>
     <h1 class="mb-4 admin-page-title">Admin Dashboard</h1>
 
+    <?php if (isset($_GET['cache_cleared'])): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        Public page cache cleared (<?= (int) $_GET['cache_cleared'] ?> file(s) removed). Visitors now see the latest content.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <?php elseif (($_GET['cache_err'] ?? '') === 'csrf'): ?>
+    <div class="alert alert-warning" role="alert">Could not clear cache: invalid security token. Try again.</div>
+    <?php endif; ?>
+
     <!-- KPI Cards -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
@@ -331,6 +340,14 @@ require __DIR__ . '/../includes/header.php';
         <a href="change-password.php" class="btn btn-outline-warning">Change password</a>
         <?php endif; ?>
         <a href="../index.php" class="btn btn-outline-secondary">View site</a>
+        <!-- Clear public page cache so saved changes show up instantly -->
+        <form method="post" action="clear-cache.php" class="d-inline"
+              onsubmit="return confirm('Clear the public page cache now?');">
+            <?= csrf_field() ?>
+            <button type="submit" class="btn btn-outline-info" title="Force visitors to see the latest content immediately (bypass the 60s cache).">
+                <i class="fas fa-broom me-1" aria-hidden="true"></i>Clear cache
+            </button>
+        </form>
         <!-- Logout is POST to prevent CSRF logout via GET links / <img> tags -->
         <form method="post" action="logout.php" class="d-inline"
               onsubmit="return confirm('¿Cerrar sesión?');">
