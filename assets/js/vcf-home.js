@@ -394,9 +394,72 @@
       return POOL[currentCat] || POOL.all || [];
     }
 
+    /* ── Persistence (localStorage) ──────────────────────────────────
+     * Lineup overrides are persisted per (formation, category) combo so
+     * that visitors who tweak the XI ("put Mateo at GK", swap the wingers,
+     * etc.) don't lose their changes on reload. The Reset button wipes
+     * the saved override and falls back to the auto-assigned default.
+     *
+     * Schema: { slotKey: playerId, ... }  (only ids — the player object
+     * is re-resolved from the current pool, so adding/removing players
+     * from the squad doesn't break old saves).
+     */
+    var STORAGE_PREFIX = 'vcf-formation-lineup-v1::';
+    function lineupStorageKey() {
+      return STORAGE_PREFIX + currentF + '::' + currentCat;
+    }
+    function saveLineupToStorage() {
+      try {
+        var ids = {};
+        Object.keys(lineup).forEach(function (k) {
+          var pl = lineup[k];
+          if (pl && pl.id) ids[k] = pl.id;
+        });
+        localStorage.setItem(lineupStorageKey(), JSON.stringify(ids));
+      } catch (e) {
+        // localStorage disabled / quota exceeded → silently ignore.
+      }
+    }
+    function clearLineupStorage() {
+      try { localStorage.removeItem(lineupStorageKey()); } catch (e) {}
+    }
+    function loadLineupFromStorage(positions, pool) {
+      try {
+        var raw = localStorage.getItem(lineupStorageKey());
+        if (!raw) return null;
+        var saved = JSON.parse(raw);
+        if (!saved || typeof saved !== 'object') return null;
+        var byId = {};
+        pool.forEach(function (p) { byId[p.id] = p; });
+        var restored = {};
+        var any = false;
+        var inUse = {};
+        positions.forEach(function (slot) {
+          var savedId = saved[slot.key];
+          if (savedId && byId[savedId] && !inUse[savedId]) {
+            restored[slot.key] = byId[savedId];
+            inUse[savedId] = true;
+            any = true;
+          }
+        });
+        if (!any) return null;
+        // Fill the remaining (empty) slots by auto-assigning the
+        // remaining (un-used) players against those specific slots.
+        var emptySlots = positions.filter(function (s) { return !restored[s.key]; });
+        var remaining = pool.filter(function (p) { return !inUse[p.id]; });
+        var fill = autoAssign(emptySlots, remaining);
+        Object.keys(fill).forEach(function (k) { restored[k] = fill[k]; });
+        return restored;
+      } catch (e) {
+        return null;
+      }
+    }
+
     function rebuildLineup() {
       var positions = FORMATIONS[currentF].positions;
-      lineup = autoAssign(positions, currentPool());
+      var pool = currentPool();
+      var restored = loadLineupFromStorage(positions, pool);
+      lineup = restored || autoAssign(positions, pool);
     }
 
     function computeBench() {
@@ -406,6 +469,24 @@
         if (pl && pl.id) inUse[pl.id] = true;
       });
       return currentPool().filter(function (p) { return !inUse[p.id]; }).sort(byDorsal);
+    }
+
+    /* ── UI feedback toast ──────────────────────────────────────────── */
+    var toastTimer = null;
+    function showToast(message, kind) {
+      var el = document.getElementById('vfv-toast');
+      if (!el) return;
+      el.textContent = message;
+      el.dataset.kind = kind || 'info';
+      el.hidden = false;
+      // Force reflow before adding the class so the transition runs.
+      void el.offsetWidth;
+      el.classList.add('vfv-toast--show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () {
+        el.classList.remove('vfv-toast--show');
+        setTimeout(function () { el.hidden = true; }, 250);
+      }, 2200);
     }
 
     /* ── Render ─────────────────────────────────────────────────────── */
@@ -605,9 +686,11 @@
         lineup[otherSlotKey] = current;
       }
 
+      saveLineupToStorage();
       renderFormation();
       // Re-highlight the slot we just substituted, with the new player.
       selectPos(activeIdx);
+      showToast('Lineup saved');
     }
 
     function resetDetail() {
@@ -619,6 +702,250 @@
         '<div class="vfv-placeholder__text">Select a position</div>' +
         '<div class="vfv-placeholder__sub">Tap any dot on the pitch</div>' +
         '</div>';
+    }
+
+    /* ── Share / capture ────────────────────────────────────────────
+     * Renders the active lineup into an off-screen canvas (1080×1350,
+     * the WhatsApp-Status / Instagram-Stories aspect) and hands the PNG
+     * blob to the native Web Share API. On desktop or browsers without
+     * Share API (Web Share Level 2) we fall back to a plain download.
+     *
+     * Player photos are loaded via <img> in parallel before drawing —
+     * the assets/uploads/ folder is same-origin so the canvas isn't
+     * tainted and toBlob() works.
+     */
+    function drawShareImage(done) {
+      var W = 1080, H = 1350;
+      var canvas = document.createElement('canvas');
+      canvas.width = W;
+      canvas.height = H;
+      var ctx = canvas.getContext('2d');
+
+      var bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, '#1a1a1a');
+      bg.addColorStop(1, '#080808');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.fillStyle = '#FF6B00';
+      ctx.fillRect(0, 0, W, 6);
+
+      ctx.fillStyle = '#FF6B00';
+      ctx.font = '700 22px "Bebas Neue", Oswald, Impact, sans-serif';
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'left';
+      ctx.fillText('VCF ACADEMY HOUSTON', 60, 50);
+
+      ctx.fillStyle = '#fff';
+      ctx.font = '900 78px "Bebas Neue", Oswald, Impact, sans-serif';
+      ctx.fillText(FORMATIONS[currentF].label, 60, 80);
+
+      var catName = 'All Squad';
+      if (currentCat !== 'all') {
+        for (var ci = 0; ci < CATEGORIES.length; ci++) {
+          if (CATEGORIES[ci].id === currentCat) { catName = CATEGORIES[ci].name; break; }
+        }
+      }
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#FF6B00';
+      ctx.font = '700 14px sans-serif';
+      ctx.fillText('SQUAD', W - 60, 60);
+      ctx.fillStyle = '#fff';
+      ctx.font = '700 36px "Bebas Neue", Oswald, Impact, sans-serif';
+      ctx.fillText(catName.toUpperCase(), W - 60, 85);
+      ctx.textAlign = 'left';
+
+      var px = 60, py = 220, pw = 960, ph = 720;
+
+      ctx.fillStyle = '#0d4523';
+      ctx.fillRect(px, py, pw, ph);
+      ctx.fillStyle = 'rgba(255,255,255,0.025)';
+      for (var s = 0; s < 8; s += 2) {
+        ctx.fillRect(px + (pw / 8) * s, py, pw / 8, ph);
+      }
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(px + 4, py + 4, pw - 8, ph - 8);
+      ctx.beginPath();
+      ctx.moveTo(px + pw / 2, py + 4);
+      ctx.lineTo(px + pw / 2, py + ph - 4);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(px + pw / 2, py + ph / 2, 80, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(px + pw / 2, py + ph / 2, 4, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.fill();
+      ctx.strokeRect(px + 4, py + ph * 0.22, pw * 0.16, ph * 0.56);
+      ctx.strokeRect(px + pw - 4 - pw * 0.16, py + ph * 0.22, pw * 0.16, ph * 0.56);
+      ctx.strokeRect(px + 4, py + ph * 0.36, pw * 0.06, ph * 0.28);
+      ctx.strokeRect(px + pw - 4 - pw * 0.06, py + ph * 0.36, pw * 0.06, ph * 0.28);
+
+      var formation = FORMATIONS[currentF];
+      var positions = formation.positions;
+
+      ctx.strokeStyle = 'rgba(255, 107, 0, 0.5)';
+      ctx.lineWidth = 2;
+      (formation.connections || []).forEach(function (pair) {
+        var a = positions[pair[0]], b = positions[pair[1]];
+        if (!a || !b) return;
+        ctx.beginPath();
+        ctx.moveTo(px + (a.x / 100) * pw, py + (a.y / 100) * ph);
+        ctx.lineTo(px + (b.x / 100) * pw, py + (b.y / 100) * ph);
+        ctx.stroke();
+      });
+
+      function drawDot(x, y, slot, player, image) {
+        var R = 38;
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.55)';
+        ctx.shadowBlur = 14;
+        ctx.shadowOffsetY = 4;
+        ctx.beginPath();
+        ctx.arc(x, y, R, 0, Math.PI * 2);
+        ctx.fillStyle = '#FF6B00';
+        ctx.fill();
+        ctx.restore();
+
+        if (image) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(x, y, R - 3, 0, Math.PI * 2);
+          ctx.clip();
+          // Cover-fit the photo into the circle.
+          var ratio = image.width / image.height || 1;
+          var d = (R - 3) * 2;
+          var iw = d, ih = d;
+          if (ratio > 1) { iw = d * ratio; } else { ih = d / ratio; }
+          ctx.drawImage(image, x - iw / 2, y - ih / 2, iw, ih);
+          ctx.restore();
+        } else {
+          ctx.fillStyle = '#fff';
+          ctx.font = '900 24px "Bebas Neue", Oswald, Impact, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(player ? player.initials : slot.pos, x, y + 1);
+        }
+
+        var labelW = 44, labelH = 20;
+        ctx.fillStyle = '#0a0a0a';
+        ctx.fillRect(x - labelW / 2, y + R + 8, labelW, labelH);
+        ctx.fillStyle = '#fff';
+        ctx.font = '700 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(slot.pos, x, y + R + 8 + labelH / 2);
+      }
+
+      var promises = positions.map(function (slot) {
+        var pl = lineup[slot.key] || null;
+        var x = px + (slot.x / 100) * pw;
+        var y = py + (slot.y / 100) * ph;
+        return new Promise(function (resolve) {
+          if (!pl || !pl.photo) {
+            drawDot(x, y, slot, pl, null);
+            resolve();
+            return;
+          }
+          var img = new Image();
+          img.onload = function () { drawDot(x, y, slot, pl, img); resolve(); };
+          img.onerror = function () { drawDot(x, y, slot, pl, null); resolve(); };
+          img.src = pl.photo;
+        });
+      });
+
+      Promise.all(promises).then(function () {
+        var listY = 970;
+        ctx.fillStyle = '#FF6B00';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.font = '700 14px sans-serif';
+        ctx.fillText('STARTING XI', 60, listY);
+        ctx.fillRect(60, listY + 28, 50, 3);
+
+        var rowY = listY + 60;
+        var col1X = 60, col2X = W / 2 + 20;
+        var rowH = 38;
+        positions.forEach(function (slot, i) {
+          var pl = lineup[slot.key] || null;
+          var col = i % 2;
+          var rowIdx = Math.floor(i / 2);
+          var x = col === 0 ? col1X : col2X;
+          var y = rowY + rowIdx * rowH;
+          ctx.fillStyle = '#FF6B00';
+          ctx.fillRect(x, y, 50, 24);
+          ctx.fillStyle = '#fff';
+          ctx.font = '700 12px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(slot.pos, x + 25, y + 12);
+
+          ctx.fillStyle = '#888';
+          ctx.font = '700 14px sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText(pl && pl.num ? '#' + pl.num : '—', x + 60, y + 12);
+
+          ctx.fillStyle = '#fff';
+          ctx.font = '700 16px sans-serif';
+          var name = pl ? pl.name : 'Vacant';
+          var maxW = (W / 2) - 140;
+          while (name.length > 0 && ctx.measureText(name).width > maxW) {
+            name = name.slice(0, -1);
+          }
+          ctx.fillText(name, x + 100, y + 12);
+        });
+
+        ctx.fillStyle = '#666';
+        ctx.font = '500 12px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText('vcfacademyhouston.com', 60, H - 40);
+        ctx.textAlign = 'right';
+        var dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        ctx.fillText(dateStr, W - 60, H - 40);
+
+        done(canvas);
+      });
+    }
+
+    function downloadBlob(blob, fname) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = fname;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+    }
+
+    function shareFormation() {
+      showToast('Generating image…');
+      drawShareImage(function (canvas) {
+        canvas.toBlob(function (blob) {
+          if (!blob) { showToast('Could not generate image', 'error'); return; }
+          var fname = 'vcf-' + currentF + '-' + (currentCat || 'all') + '-' + Date.now() + '.png';
+          var file = new File([blob], fname, { type: 'image/png' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({
+              files: [file],
+              title: 'VCF Academy Houston — ' + FORMATIONS[currentF].label,
+              text: 'Our ' + FORMATIONS[currentF].label + ' lineup',
+            }).then(function () {
+              showToast('Shared!');
+            }).catch(function (err) {
+              if (err && err.name === 'AbortError') return;
+              downloadBlob(blob, fname);
+              showToast('Image downloaded');
+            });
+          } else {
+            downloadBlob(blob, fname);
+            showToast('Image downloaded');
+          }
+        }, 'image/png');
+      });
     }
 
     /* ── Wiring ─────────────────────────────────────────────────────── */
@@ -647,8 +974,17 @@
     var resetBtn = document.getElementById('formation-reset');
     if (resetBtn) {
       resetBtn.addEventListener('click', function () {
+        clearLineupStorage();
         rebuildLineup();
         renderFormation();
+        showToast('Lineup reset');
+      });
+    }
+
+    var shareBtn = document.getElementById('formation-share');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', function () {
+        shareFormation();
       });
     }
 
