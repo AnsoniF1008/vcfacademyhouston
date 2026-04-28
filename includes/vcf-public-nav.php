@@ -88,18 +88,20 @@ if ($vcf_nav_crest === null && file_exists(__DIR__ . '/../assets/img/vfc-crest.s
       <a href="<?= htmlspecialchars($vcf_base_url) ?>join.php" class="<?= $page_active === 'join' ? 'active' : '' ?>">Join</a>
       <a href="<?= htmlspecialchars($vcf_base_url) ?>recaudaciones.php" class="<?= $page_active === 'support' ? 'active' : '' ?>">Support</a>
     </nav>
-    <div class="vcf-nav__actions">
-      <?php if (!empty($show_back_admin)): ?>
-      <a href="<?= htmlspecialchars($base) ?>/admin/dashboard.php" class="vcf-nav__admin-link">Dashboard</a>
-      <?php else: ?>
-      <a href="<?= htmlspecialchars($base) ?>/admin/" class="vcf-nav__admin-link">Admin</a>
-      <?php endif; ?>
-      <a href="<?= htmlspecialchars($vcf_base_url) ?>contact.php" class="vcf-nav__cta">Contact Us</a>
-    </div>
+    <div class="vcf-nav__tools">
+      <div class="vcf-nav__actions">
+        <?php if (!empty($show_back_admin)): ?>
+        <a href="<?= htmlspecialchars($base) ?>/admin/dashboard.php" class="vcf-nav__admin-link">Dashboard</a>
+        <?php else: ?>
+        <a href="<?= htmlspecialchars($base) ?>/admin/" class="vcf-nav__admin-link">Admin</a>
+        <?php endif; ?>
+        <a href="<?= htmlspecialchars($vcf_base_url) ?>contact.php" class="vcf-nav__cta">Contact Us</a>
+      </div>
 
-    <button class="vcf-nav__burger" id="vcf-burger" type="button" aria-label="Menu">
-      <span></span><span></span><span></span>
-    </button>
+      <button class="vcf-nav__burger" id="vcf-burger" type="button" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </div>
 
   <nav class="vcf-nav__mobile" id="vcf-mobile-menu" aria-label="Site navigation">

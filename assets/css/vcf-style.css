@@ -120,6 +120,7 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   top: 0;
   z-index: 200;
   height: 64px;
+  min-height: 64px;
 }
 .vcf-nav__inner {
   max-width: var(--page-max);
@@ -300,16 +301,40 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 .vcf-nav__mobile a:hover,
 .vcf-nav__mobile a.active { color: var(--vcf-orange); }
 
-/* Public nav: marca cinematográfica en la misma fila que vcf-nav__links (no franja apilada) */
+/* Public header: CSS grid — marca | enlaces centrados | acciones + burger */
+.vcf-nav--public-cinematic .vcf-nav__inner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: stretch;
+  column-gap: clamp(12px, 2.2vw, 28px);
+}
+.vcf-nav__tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
 .vcf-nav--public-cinematic .vcf-nav__links {
   justify-content: center;
+  align-self: center;
+  width: 100%;
+  min-width: 0;
+}
+.vcf-nav--public-cinematic .vcf-nav__actions {
+  margin-left: 0;
+}
+.vcf-nav--public-cinematic .vcf-nav__burger {
+  margin-left: 0;
 }
 .admin-header-cinematic--inline {
   width: auto;
-  flex: 0 1 auto;
-  min-width: 0;
-  margin-right: clamp(12px, 2vw, 28px);
-  padding: 0;
+  max-width: min(288px, 34vw);
+  flex: none;
+  margin-right: 0;
+  padding: 0 clamp(8px, 1.2vw, 18px) 0 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.2);
   background: transparent;
   align-self: stretch;
   display: flex;
@@ -327,22 +352,42 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   z-index: 2;
 }
 .vcf-nav--public-cinematic .ahc-shield {
-  width: 42px;
-  max-height: 50px;
+  width: 40px;
+  max-height: 48px;
 }
 .vcf-nav--public-cinematic .ahc-shield--fallback {
-  width: 42px;
-  height: 42px;
-  font-size: 18px;
+  width: 40px;
+  height: 40px;
+  font-size: 17px;
 }
 .vcf-nav--public-cinematic .ahc-title {
-  font-size: clamp(17px, 2.2vw, 26px);
-  letter-spacing: 1.5px;
+  font-size: clamp(16px, 1.9vw, 24px);
+  letter-spacing: 1px;
+  line-height: 1.05;
+  white-space: nowrap;
 }
 .vcf-nav--public-cinematic .ahc-subtitle {
-  font-size: 11px;
-  letter-spacing: 2px;
+  font-size: 10px;
+  letter-spacing: 1.8px;
   margin-top: 3px;
+  opacity: 0.95;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vcf-nav--public-cinematic .ahc-text {
+  min-width: 0;
+}
+
+@media (min-width: 901px) and (max-width: 1180px) {
+  .vcf-nav--public-cinematic .vcf-nav__links a {
+    padding: 6px 6px;
+    font-size: 11.5px;
+    letter-spacing: 0.05em;
+  }
+  .vcf-nav--public-cinematic .admin-header-cinematic--inline {
+    max-width: min(260px, 32vw);
+  }
 }
 
 /* Cinematic brand strip (shared public + admin; admin = fila completa; public inline = bloque anterior) */
@@ -2571,6 +2616,15 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   .vcf-topbar { display: none; }
   .vcf-nav__links, .vcf-nav__actions { display: none; }
   .vcf-nav__burger { display: flex; }
+  .vcf-nav--public-cinematic .vcf-nav__inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
+    align-items: center;
+  }
+  .vcf-nav--public-cinematic .admin-header-cinematic--inline {
+    max-width: none;
+    align-self: center;
+  }
   .vcf-hero { height: 480px; }
   .vcf-statsbar__grid { grid-template-columns: repeat(3, 1fr); }
   .vcf-pillars { grid-template-columns: 1fr; }
