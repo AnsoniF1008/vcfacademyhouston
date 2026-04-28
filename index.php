@@ -7,6 +7,7 @@ if (vcf_page_cache_try_serve(300)) {
     exit;
 }
 require __DIR__ . '/config/database.php';
+require_once __DIR__ . '/includes/vcf_foto_url.php';
 vcf_page_cache_start(300);
 
 $sedes = [];
@@ -166,6 +167,9 @@ try {
     $jmCols = $hasStarDorsal ? 'id, nombre, categoria, dorsal, foto_url, descripcion_logro, mes' : 'id, nombre, categoria, foto_url, descripcion_logro, mes';
     $stmt = $pdo->query("SELECT $jmCols FROM jugador_mes ORDER BY created_at DESC LIMIT 1");
     $jugadorMes = $stmt->fetch();
+    if ($jugadorMes && !empty($jugadorMes['foto_url'])) {
+        $jugadorMes['foto_url'] = vcf_normalize_foto_url($jugadorMes['foto_url']);
+    }
 } catch (PDOException $e) {
     error_log('Jugador mes query: ' . $e->getMessage());
 }
@@ -204,6 +208,9 @@ try {
         ORDER BY c.nombre ASC, total_goles DESC, r.dorsal ASC, r.apellido ASC
     ");
     foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        if (!empty($row['foto_url'])) {
+            $row['foto_url'] = vcf_normalize_foto_url($row['foto_url']);
+        }
         $cid = (int) $row['categoria_id'];
         if (!isset($rosterPorCategoria[$cid])) {
             $rosterPorCategoria[$cid] = ['nombre' => $row['categoria_nombre'], 'jugadores' => []];
@@ -244,7 +251,7 @@ $fpRow = static function (array $j) use ($formationBase): array {
         $ini = strtoupper(substr($n1, 0, 1)) . strtoupper(substr($n2, 0, 1));
     }
     $photo = '';
-    $fu = trim($j['foto_url'] ?? '');
+    $fu = vcf_normalize_foto_url($j['foto_url'] ?? '');
     if ($fu !== '') {
         if (preg_match('#^https?://#i', $fu)) {
             $photo = $fu;
@@ -300,11 +307,20 @@ try {
         $stmt2 = $pdo->prepare("SELECT id, nombre, foto_url, orden FROM motm_nominees WHERE votacion_id = ? ORDER BY orden ASC");
         $stmt2->execute([$motmOpen['id']]);
         $motmOpen['nominees'] = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($motmOpen['nominees'] as &$mn) {
+            if (!empty($mn['foto_url'])) {
+                $mn['foto_url'] = vcf_normalize_foto_url($mn['foto_url']);
+            }
+        }
+        unset($mn);
     }
 
     if (!$motmOpen) {
         $stmt = $pdo->query("SELECT v.id, v.winner_nominee_id, n.nombre AS winner_nombre, n.foto_url AS winner_foto FROM motm_votaciones v LEFT JOIN motm_nominees n ON n.id = v.winner_nominee_id WHERE v.status = 'closed' AND v.winner_nominee_id IS NOT NULL ORDER BY v.ends_at DESC LIMIT 1");
         $motmWinner = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($motmWinner && !empty($motmWinner['winner_foto'])) {
+            $motmWinner['winner_foto'] = vcf_normalize_foto_url($motmWinner['winner_foto']);
+        }
         if ($motmWinner) {
             $st = $pdo->prepare("SELECT COUNT(*) AS total, SUM(nominee_id = ?) AS winner_votes FROM motm_votes WHERE votacion_id = ?");
             $st->execute([$motmWinner['winner_nominee_id'], $motmWinner['id']]);

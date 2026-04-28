@@ -44,6 +44,17 @@ function applyFormationToPitch(pitchEl, formation) {
     });
 }
 
+/** Normalize roster/MOTM photo paths: bare filenames live under assets/uploads/ */
+function vcfNormalizeUploadPath(fotoUrl) {
+    if (!fotoUrl) return '';
+    if (/^https?:\/\//i.test(fotoUrl)) return fotoUrl;
+    var p = String(fotoUrl).replace(/^\//, '');
+    if (p.indexOf('assets/uploads/') !== 0 && /^[^/]+\.(jpe?g|png|webp)$/i.test(p)) {
+        p = 'assets/uploads/' + p;
+    }
+    return p;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     // Smooth scroll for anchor links (same page)
     document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
@@ -228,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 metaParts.forEach(function (node) { metaEl.appendChild(node); });
             }
             if (p.foto_url) {
-                photoEl.src = baseUrl + '/' + p.foto_url;
+                photoEl.src = (baseUrl ? baseUrl.replace(/\/$/, '') + '/' : '/') + vcfNormalizeUploadPath(p.foto_url).replace(/^\//, '');
                 photoEl.classList.remove('d-none');
                 if (photoPl) photoPl.classList.add('d-none');
             } else {
@@ -382,7 +393,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (modalPhotoWrap && modalPhoto) {
                     var firstWithPhoto = players.filter(function (p) { return p.foto_url; })[0];
                     if (firstWithPhoto && firstWithPhoto.foto_url) {
-                        var src = (baseUrl ? baseUrl + '/' : '') + firstWithPhoto.foto_url.replace(/^\//, '');
+                        var src = (baseUrl ? baseUrl.replace(/\/$/, '') + '/' : '/') + vcfNormalizeUploadPath(firstWithPhoto.foto_url).replace(/^\//, '');
                         modalPhoto.onerror = function () {
                             modalPhoto.src = '';
                             modalPhotoWrap.classList.add('d-none');

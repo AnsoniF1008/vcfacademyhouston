@@ -27,6 +27,7 @@ if (is_file($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTtl) {
 }
 
 require __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/vcf_foto_url.php';
 
 try {
     $stmt = $pdo->prepare("SELECT id, status FROM star_votaciones WHERE id = ?");
@@ -50,6 +51,9 @@ try {
 
     foreach ($results as &$r) {
         $r['total_votes'] = (int) $r['total_votes'];
+        if (!empty($r['foto_url'])) {
+            $r['foto_url'] = vcf_normalize_foto_url($r['foto_url']);
+        }
     }
     unset($r);
 

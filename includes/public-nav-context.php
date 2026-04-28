@@ -9,6 +9,7 @@ if (!empty($vcf_nav_context_loaded)) {
 if (!isset($pdo)) {
     require_once __DIR__ . '/../config/database.php';
 }
+require_once __DIR__ . '/vcf_foto_url.php';
 
 if (!isset($motmOpen) && !isset($motmWinner)) {
     $motmOpen = null;
@@ -22,11 +23,20 @@ if (!isset($motmOpen) && !isset($motmWinner)) {
             $stmt2 = $pdo->prepare("SELECT id, nombre, foto_url, orden FROM motm_nominees WHERE votacion_id = ? ORDER BY orden ASC");
             $stmt2->execute([$motmOpen['id']]);
             $motmOpen['nominees'] = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($motmOpen['nominees'] as &$mn) {
+                if (!empty($mn['foto_url'])) {
+                    $mn['foto_url'] = vcf_normalize_foto_url($mn['foto_url']);
+                }
+            }
+            unset($mn);
         }
 
         if (!$motmOpen) {
             $stmt = $pdo->query("SELECT v.id, v.winner_nominee_id, n.nombre AS winner_nombre, n.foto_url AS winner_foto FROM motm_votaciones v LEFT JOIN motm_nominees n ON n.id = v.winner_nominee_id WHERE v.status = 'closed' AND v.winner_nominee_id IS NOT NULL ORDER BY v.ends_at DESC LIMIT 1");
             $motmWinner = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($motmWinner && !empty($motmWinner['winner_foto'])) {
+                $motmWinner['winner_foto'] = vcf_normalize_foto_url($motmWinner['winner_foto']);
+            }
             if ($motmWinner) {
                 $st = $pdo->prepare("SELECT COUNT(*) AS total, SUM(nominee_id = ?) AS winner_votes FROM motm_votes WHERE votacion_id = ?");
                 $st->execute([$motmWinner['winner_nominee_id'], $motmWinner['id']]);

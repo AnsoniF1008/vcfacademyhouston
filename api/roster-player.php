@@ -15,6 +15,7 @@ if ($id <= 0) {
 
 require __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/roster_i18n.php';
+require_once __DIR__ . '/../includes/vcf_foto_url.php';
 
 $hasSubPosicion = false;
 try {
@@ -42,6 +43,8 @@ try {
         echo json_encode(['error' => 'not_found']);
         exit;
     }
+
+    $player['foto_url'] = vcf_normalize_foto_url($player['foto_url'] ?? '');
 
     $stmt = $pdo->prepare("SELECT partidos_jugados, goles, asistencias, motm, clean_sheets FROM roster_estadisticas WHERE roster_id = ?");
     $stmt->execute([$id]);

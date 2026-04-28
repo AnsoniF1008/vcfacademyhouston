@@ -108,7 +108,7 @@
         <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
         <?php endif; ?>
     <?php endif; ?>
-    <script src="<?= $vcf_base_safe ?>/assets/js/main.js?v=12" defer></script>
+    <script src="<?= $vcf_base_safe ?>/assets/js/main.js?v=13" defer></script>
     <?php if (!empty($vcf_public_redesign) && empty($is_admin) && !empty($vcf_home_scripts)): ?>
     <script src="<?= $vcf_base_safe ?>/assets/js/vcf-home.js?v=8" defer></script>
     <?php endif; ?>
