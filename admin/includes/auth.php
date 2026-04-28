@@ -27,6 +27,21 @@ if (empty($_SESSION['admin_logged'])) {
     exit;
 }
 
+// Idle timeout: 45 minutes of inactivity logs the admin out.
+$VCF_ADMIN_IDLE_TIMEOUT = 45 * 60;
+$now = time();
+if (isset($_SESSION['admin_last_activity']) && ($now - (int) $_SESSION['admin_last_activity']) > $VCF_ADMIN_IDLE_TIMEOUT) {
+    $_SESSION = [];
+    if (ini_get('session.use_cookies')) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', $now - 3600, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+    }
+    session_destroy();
+    header('Location: index.php?timeout=1');
+    exit;
+}
+$_SESSION['admin_last_activity'] = $now;
+
 require __DIR__ . '/../../config/database.php';
 
 if (empty($_SESSION['admin_role'])) {

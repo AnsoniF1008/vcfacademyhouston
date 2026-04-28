@@ -144,6 +144,13 @@ if (file_exists($root . '/assets/img/vfc-crest.svg')) {
       <div class="form-header__sub">Enter your admin credentials to continue.</div>
     </div>
 
+    <?php if (isset($_GET['timeout']) && $_GET['timeout'] === '1' && !$error): ?>
+    <div class="login-alert login-alert--info">
+      <div class="login-alert__title">Session expired</div>
+      You were signed out due to inactivity. Please sign in again.
+    </div>
+    <?php endif; ?>
+
     <?php if ($is_locked && $lockout_remaining > 0): ?>
     <div class="login-alert login-alert--locked">
       <div class="login-alert__title">Account temporarily locked</div>

@@ -1,6 +1,7 @@
 # Uploaded content (jugador del mes photos)
 assets/uploads/*
 !assets/uploads/.gitkeep
+!assets/uploads/.htaccess
 
 # Export for migration (SQL dumps and build)
 export/

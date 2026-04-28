@@ -37,6 +37,14 @@ if ($ip === '') {
     $ip = '0.0.0.0';
 }
 
+require_once __DIR__ . '/../includes/rate_limit.php';
+if (!vcf_rate_limit_check('motm-vote', $ip, 10, 60)) {
+    http_response_code(429);
+    header('Retry-After: 60');
+    echo json_encode(['error' => 'rate_limited']);
+    exit;
+}
+
 try {
     $stmt = $pdo->prepare("SELECT id, status, ends_at FROM motm_votaciones WHERE id = ?");
     $stmt->execute([$votacion_id]);

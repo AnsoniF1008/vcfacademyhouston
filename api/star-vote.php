@@ -29,6 +29,14 @@ if ($ip === '') {
     $ip = '0.0.0.0';
 }
 
+require_once __DIR__ . '/../includes/rate_limit.php';
+if (!vcf_rate_limit_check('star-vote', $ip, 10, 60)) {
+    http_response_code(429);
+    header('Retry-After: 60');
+    echo json_encode(['status' => 'error', 'message' => 'Too many requests. Please wait a minute.']);
+    exit;
+}
+
 if ($votacion_id <= 0 || $nominee_id <= 0) {
     http_response_code(400);
     echo json_encode(['status' => 'error', 'message' => 'Invalid request.']);

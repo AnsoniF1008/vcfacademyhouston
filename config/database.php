@@ -14,6 +14,14 @@ date_default_timezone_set('America/Chicago');
 $host = $_SERVER['HTTP_HOST'] ?? '';
 $isLocal = (php_sapi_name() !== 'cli') && in_array($host, ['localhost', '127.0.0.1'], true);
 
+// Hide PHP errors from the public response in production. Errors are still written to the server log.
+if (!$isLocal && php_sapi_name() !== 'cli') {
+    @ini_set('display_errors', '0');
+    @ini_set('display_startup_errors', '0');
+    @ini_set('log_errors', '1');
+    error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT & ~E_NOTICE);
+}
+
 if (file_exists(__DIR__ . '/database.local.php')) {
     require __DIR__ . '/database.local.php';
 } else {
