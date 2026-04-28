@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $messageType = 'danger';
                 } else {
                     $clientName = basename($_FILES['video']['name'] ?? '');
-                    if (strpos($clientName, '..') !== false || preg_match('/\.(php|phtml|phar|htaccess)(\.|$)/i', $clientName)) {
+                    if (strpos($clientName, '..') !== false || preg_match('/\.(php|phtml|php3|php4|php5|php7|phps|phar|htaccess|pl|py|jsp|asp|aspx|cgi|fcgi)(\.|$)/i', $clientName)) {
                         $message = 'Invalid file name.';
                         $messageType = 'danger';
                     } else {

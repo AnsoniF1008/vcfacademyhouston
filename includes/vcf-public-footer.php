@@ -63,6 +63,7 @@ $telHref = $fp !== '' ? preg_replace('/[^\d+]/', '', $fp) : '';
       <a href="<?= htmlspecialchars($vcf_base_url) ?>contact.php">Contact Us</a>
       <a href="<?= htmlspecialchars($vcf_base_url) ?>recaudaciones.php">Support the Site</a>
       <a href="<?= htmlspecialchars($vcf_base_url) ?>privacy.php">Privacy Policy</a>
+      <a href="<?= htmlspecialchars($vcf_base_url) ?>terms.php">Terms of Use</a>
       <a href="https://www.valenciacf.com" target="_blank" rel="noopener">valenciacf.com</a>
     </div>
 

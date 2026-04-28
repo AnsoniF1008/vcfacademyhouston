@@ -12,6 +12,7 @@ foreach ([
     ['/recaudaciones.php', 'monthly', '0.7'],
     ['/calendar.php', 'weekly', '0.85'],
     ['/privacy.php', 'yearly', '0.3'],
+    ['/terms.php', 'yearly', '0.3'],
 ] as $row) {
     echo "  <url>\n    <loc>{$base}{$row[0]}</loc>\n    <changefreq>{$row[1]}</changefreq>\n    <priority>{$row[2]}</priority>\n  </url>\n";
 }

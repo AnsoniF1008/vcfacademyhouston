@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $message = 'Image too large. Max 5MB.'; $messageType = 'danger';
                 } else {
                     $clientName = basename($_FILES['image']['name'] ?? '');
-                    if (strpos($clientName, '..') !== false || preg_match('/\.(php|phtml|php3|php4|php5|phar|htaccess)(\.|$)/i', $clientName)) {
+                    if (strpos($clientName, '..') !== false || preg_match('/\.(php|phtml|php3|php4|php5|php7|phps|phar|htaccess|pl|py|jsp|asp|aspx|cgi|fcgi)(\.|$)/i', $clientName)) {
                         $message = 'Invalid file name.'; $messageType = 'danger';
                     } else {
                         $ext = match ($mime) {

@@ -47,7 +47,8 @@
                                             <span class="vcf-badge-proximo">Upcoming</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td>
+                                    <td class="vcf-table-actions">
+                                        <a href="<?= htmlspecialchars($base ?? '') ?>/match.php?id=<?= (int) $j['id'] ?>" class="vcf-btn-link" title="View match details">Details</a>
                                         <?php if ($canAddCalendar): ?>
                                             <a href="<?= htmlspecialchars($base ?? '') ?>/calendar.php?id=<?= (int) $j['id'] ?>" class="vcf-btn-calendar" target="_blank" rel="noopener noreferrer" title="Add to my calendar">Add to calendar</a>
                                         <?php endif; ?>
@@ -162,7 +163,7 @@
                                         <span class="<?= $rivalClass ?>"><?= $rivalName ?></span>
                                     </span>
                                 </td>
-                                <td>
+                                <td class="vcf-table-actions">
                                     <?php if ($resultOutcome === 'W'): ?>
                                         <span class="vcf-badge-w">W</span>
                                     <?php elseif ($resultOutcome === 'L'): ?>
@@ -171,6 +172,9 @@
                                         <span class="vcf-badge-d">D</span>
                                     <?php else: ?>
                                         <span class="vcf-result-draw">—</span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($r['id'])): ?>
+                                        <a href="<?= htmlspecialchars($base ?? '') ?>/match.php?id=<?= (int) $r['id'] ?>" class="vcf-btn-link ms-2" title="View match details">Details</a>
                                     <?php endif; ?>
                                 </td>
                             </tr>

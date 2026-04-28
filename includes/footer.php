@@ -1,4 +1,7 @@
     </main>
+    <?php
+    $vcf_base_safe = htmlspecialchars((string) ($base ?? ''), ENT_QUOTES, 'UTF-8');
+    ?>
     <?php if (!empty($vcf_public_redesign) && empty($is_admin)): ?>
     <?php require __DIR__ . '/vcf-public-footer.php'; ?>
     <?php elseif (!empty($is_admin)): ?>
@@ -11,20 +14,21 @@
                 <div class="col-6 col-md-4 mb-4 mb-md-0">
                     <h4 class="vcf-footer-heading">Academy</h4>
                     <ul class="vcf-footer-list">
-                        <li><a href="<?= isset($base) ? $base : '' ?>/contact.php" class="footer-link">Contact</a></li>
-                        <li><a href="<?= isset($base) ? $base : '' ?>/recaudaciones.php" class="footer-link">Support the site</a></li>
-                        <li><a href="<?= isset($base) ? $base : '' ?>/calendar.php" class="footer-link">Calendar</a></li>
-                        <li><a href="<?= isset($base) ? $base : '' ?>/index.php" class="footer-link">Home</a></li>
-                        <li><a href="<?= isset($base) ? $base : '' ?>/index.php#methodology" class="footer-link">Methodology</a></li>
-                        <li><a href="<?= isset($base) ? $base : '' ?>/index.php#grounds" class="footer-link">Grounds</a></li>
-                        <li><a href="<?= isset($base) ? $base : '' ?>/index.php#roster" class="footer-link">Roster</a></li>
-                        <li><a href="<?= isset($base) ? $base : '' ?>/index.php#tournaments" class="footer-link">Tournaments</a></li>
+                        <li><a href="<?= $vcf_base_safe ?>/contact.php" class="footer-link">Contact</a></li>
+                        <li><a href="<?= $vcf_base_safe ?>/recaudaciones.php" class="footer-link">Support the site</a></li>
+                        <li><a href="<?= $vcf_base_safe ?>/calendar.php" class="footer-link">Calendar</a></li>
+                        <li><a href="<?= $vcf_base_safe ?>/index.php" class="footer-link">Home</a></li>
+                        <li><a href="<?= $vcf_base_safe ?>/index.php#methodology" class="footer-link">Methodology</a></li>
+                        <li><a href="<?= $vcf_base_safe ?>/index.php#grounds" class="footer-link">Grounds</a></li>
+                        <li><a href="<?= $vcf_base_safe ?>/index.php#roster" class="footer-link">Roster</a></li>
+                        <li><a href="<?= $vcf_base_safe ?>/index.php#tournaments" class="footer-link">Tournaments</a></li>
                     </ul>
                 </div>
                 <div class="col-6 col-md-4 mb-4 mb-md-0">
                     <h4 class="vcf-footer-heading">Legal</h4>
                     <ul class="vcf-footer-list">
-                        <li><a href="<?= isset($base) ? $base : '' ?>/privacy.php" class="footer-link">Privacy</a></li>
+                        <li><a href="<?= $vcf_base_safe ?>/privacy.php" class="footer-link">Privacy</a></li>
+                        <li><a href="<?= $vcf_base_safe ?>/terms.php" class="footer-link">Terms</a></li>
                     </ul>
                 </div>
                 <div class="col-6 col-md-4 mb-4 mb-md-0">
@@ -85,22 +89,29 @@
     $use_local_bootstrap_js = file_exists($footer_vendor_root . '/bootstrap/js/bootstrap.bundle.min.js');
     $use_local_gsap = file_exists($footer_vendor_root . '/gsap/gsap.min.js');
     ?>
+    <?php
+    // GSAP is heavy; load it only on pages that actually use scroll animations
+    // (home redesign and admin). Static pages (privacy, terms, contact, etc.) skip it.
+    $vcf_load_gsap = !empty($vcf_home_scripts) || !empty($is_admin);
+    ?>
     <?php if ($use_local_bootstrap_js): ?>
-    <script src="<?= isset($base) ? $base : '' ?>/assets/vendor/bootstrap/js/bootstrap.bundle.min.js" defer></script>
+    <script src="<?= $vcf_base_safe ?>/assets/vendor/bootstrap/js/bootstrap.bundle.min.js" defer></script>
     <?php else: ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
     <?php endif; ?>
-    <?php if ($use_local_gsap): ?>
-    <script src="<?= isset($base) ? $base : '' ?>/assets/vendor/gsap/gsap.min.js" defer></script>
-    <script src="<?= isset($base) ? $base : '' ?>/assets/vendor/gsap/ScrollTrigger.min.js" defer></script>
-    <?php else: ?>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+    <?php if ($vcf_load_gsap): ?>
+        <?php if ($use_local_gsap): ?>
+        <script src="<?= $vcf_base_safe ?>/assets/vendor/gsap/gsap.min.js" defer></script>
+        <script src="<?= $vcf_base_safe ?>/assets/vendor/gsap/ScrollTrigger.min.js" defer></script>
+        <?php else: ?>
+        <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+        <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+        <?php endif; ?>
     <?php endif; ?>
-    <script src="<?= isset($base) ? $base : '' ?>/assets/js/main.js?v=12" defer></script>
+    <script src="<?= $vcf_base_safe ?>/assets/js/main.js?v=12" defer></script>
     <?php if (!empty($vcf_public_redesign) && empty($is_admin) && !empty($vcf_home_scripts)): ?>
-    <script src="<?= isset($base) ? $base : '' ?>/assets/js/vcf-home.js?v=5" defer></script>
+    <script src="<?= $vcf_base_safe ?>/assets/js/vcf-home.js?v=5" defer></script>
     <?php endif; ?>
-    <?php if (isset($reels) && count($reels) > 0 && empty($vcf_public_redesign)): ?><script src="<?= isset($base) ? $base : '' ?>/assets/js/reels-carousel.js?v=1" defer></script><?php endif; ?>
+    <?php if (isset($reels) && count($reels) > 0 && empty($vcf_public_redesign)): ?><script src="<?= $vcf_base_safe ?>/assets/js/reels-carousel.js?v=1" defer></script><?php endif; ?>
 </body>
 </html>

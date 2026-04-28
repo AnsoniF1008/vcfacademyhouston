@@ -1,6 +1,9 @@
 # VCF Academy Houston - Performance (mobile & desktop)
 # Hostinger: activa "LiteSpeed Cache" o "Cache" en el panel para mejor puntuación.
 
+# Custom error page
+ErrorDocument 404 /404.php
+
 # Block deploy.php from public access
 <Files "deploy.php">
     Order Allow,Deny
