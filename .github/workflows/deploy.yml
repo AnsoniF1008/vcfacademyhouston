@@ -49,6 +49,13 @@ jobs:
             **/.DS_Store
           dangerous-clean-slate: false
 
+      - name: Wait before retry 2
+        if: steps.deploy_1.outcome == 'failure'
+        run: |
+          echo "Attempt 1 failed. Hostinger sometimes throttles FTP after rapid"
+          echo "successive logins; waiting 30s before retrying."
+          sleep 30
+
       - name: Deploy to Hostinger via FTP (attempt 2)
         id: deploy_2
         if: steps.deploy_1.outcome == 'failure'
@@ -79,6 +86,12 @@ jobs:
             **/.env
             **/.DS_Store
           dangerous-clean-slate: false
+
+      - name: Wait before retry 3
+        if: steps.deploy_1.outcome == 'failure' && steps.deploy_2.outcome == 'failure'
+        run: |
+          echo "Attempt 2 also failed. Backing off 60s before final attempt."
+          sleep 60
 
       - name: Deploy to Hostinger via FTP (attempt 3)
         id: deploy_3
