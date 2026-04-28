@@ -228,10 +228,12 @@ try {
 }
 
 $formationBase = rtrim(dirname(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '')), '/');
-$formation_empty_slots = array_fill_keys(['GK', 'RB', 'CBR', 'CBL', 'LB', 'CMR', 'CMC', 'CML', 'RW', 'ST', 'LW', 'LM'], [
-    'name' => '', 'initials' => '', 'num' => '', 'photo' => '',
-]);
 
+/**
+ * Normalize a single roster row into the compact shape the JS formation
+ * viewer consumes. Includes `id` + `pos` (raw position) so the client side
+ * can auto-assign across multiple formation systems and handle swaps.
+ */
 $fpRow = static function (array $j) use ($formationBase): array {
     $name = trim(($j['nombre'] ?? '') . ' ' . ($j['apellido'] ?? ''));
     $n1 = trim($j['nombre'] ?? '');
@@ -253,75 +255,33 @@ $fpRow = static function (array $j) use ($formationBase): array {
     $dorsal = $j['dorsal'] ?? null;
     $num = ($dorsal !== null && $dorsal !== '') ? (string) (int) $dorsal : '';
 
-    return ['name' => $name, 'initials' => $ini !== '' ? $ini : '?', 'num' => $num, 'photo' => $photo];
-};
-
-/**
- * Build the slot → player map for a given list of players (already filtered).
- * Auto-assigns by position + dorsal until per-coach overrides are introduced.
- */
-$buildFormationSlots = static function (array $players) use ($fpRow, $formation_empty_slots): array {
-    $slots_out = $formation_empty_slots;
-    if (empty($players)) {
-        return $slots_out;
-    }
-    $byPos = ['Portero' => [], 'Defensa' => [], 'Mediocampista' => [], 'Delantero' => []];
-    foreach ($players as $j) {
-        $p = $j['posicion'] ?? '';
-        if (isset($byPos[$p])) {
-            $byPos[$p][] = $j;
-        }
-    }
-    foreach ($byPos as &$arr) {
-        usort($arr, static function ($a, $b) {
-            return ((int) ($a['dorsal'] ?? 999)) <=> ((int) ($b['dorsal'] ?? 999));
-        });
-    }
-    unset($arr);
-    $gk = $byPos['Portero'][0] ?? null;
-    $defs = array_slice($byPos['Defensa'], 0, 4);
-    $mids = $byPos['Mediocampista'];
-    $fws = array_slice($byPos['Delantero'], 0, 3);
-    $slots_in = [
-        'GK' => $gk,
-        'RB' => $defs[0] ?? null,
-        'CBR' => $defs[1] ?? null,
-        'CBL' => $defs[2] ?? null,
-        'LB' => $defs[3] ?? null,
-        'CMR' => $mids[0] ?? null,
-        'CMC' => $mids[1] ?? null,
-        'CML' => $mids[2] ?? null,
-        'RW' => $fws[0] ?? null,
-        'ST' => $fws[1] ?? null,
-        'LW' => $fws[2] ?? null,
+    return [
+        'id'       => (int) ($j['id'] ?? 0),
+        'name'     => $name,
+        'initials' => $ini !== '' ? $ini : '?',
+        'num'      => $num,
+        'photo'    => $photo,
+        'pos'      => $j['posicion'] ?? '',
     ];
-    foreach ($slots_in as $slot => $j) {
-        if ($j) {
-            $slots_out[$slot] = $fpRow($j);
-        }
-    }
-    $slots_out['LM'] = isset($mids[3]) ? $fpRow($mids[3]) : $slots_out['CML'];
-    return $slots_out;
 };
 
-// "All squad" view: pool every active player.
-$formation_all_players = [];
-foreach ($rosterPorCategoria as $cat) {
-    foreach ($cat['jugadores'] as $j) {
-        $formation_all_players[] = $j;
-    }
-}
-$formation_players = $buildFormationSlots($formation_all_players);
-
-// Per-category views (one slot map per team / age group).
-$formation_by_category = [];
+// Build pool: full list of available players, both for "All squad" and per
+// category. The JS does the auto-assignment per formation and the bench
+// computation, so PHP only needs to ship the raw payload (one player per
+// roster row, with the fields above).
+$formation_pool = ['all' => []];
 $formation_categories = [];
 foreach ($rosterPorCategoria as $cid => $cat) {
     if (empty($cat['jugadores'])) {
-        continue; // skip categories with no active players
+        continue;
     }
     $key = (string) $cid;
-    $formation_by_category[$key] = $buildFormationSlots($cat['jugadores']);
+    $formation_pool[$key] = [];
+    foreach ($cat['jugadores'] as $j) {
+        $row = $fpRow($j);
+        $formation_pool[$key][]  = $row;
+        $formation_pool['all'][] = $row;
+    }
     $formation_categories[] = [
         'id'    => $key,
         'name'  => $cat['nombre'] ?? ('Cat ' . $cid),

@@ -1034,6 +1034,143 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   text-transform: uppercase;
   color: var(--vcf-gray);
 }
+
+.vfv-assigned__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.vfv-assigned--empty {
+  color: var(--vcf-gray);
+  font-size: 12px;
+  justify-content: space-between;
+}
+.vfv-assigned__sub {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--vcf-orange);
+  background: transparent;
+  color: var(--vcf-orange);
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.vfv-assigned__sub:hover,
+.vfv-assigned__sub:focus-visible {
+  background: var(--vcf-orange);
+  color: #fff;
+  outline: none;
+}
+
+/* ── Bench / Substitutes ── */
+.vfv-bench {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--vcf-border);
+}
+.vfv-bench__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.vfv-bench__title {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--vcf-orange);
+}
+.vfv-bench__hint {
+  font-size: 11px;
+  color: var(--vcf-gray);
+  font-style: italic;
+}
+.vfv-bench__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 6px;
+}
+.vfv-bench__chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #0f0f0f;
+  border: 1px solid var(--vcf-border2);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition);
+  width: 100%;
+  color: var(--vcf-offwhite);
+}
+.vfv-bench__chip:hover,
+.vfv-bench__chip:focus-visible {
+  border-color: var(--vcf-orange);
+  background: rgba(255, 107, 0, 0.08);
+  outline: none;
+}
+.vfv-bench__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 107, 0, 0.5);
+  background: #1a1a1a;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.vfv-bench__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.vfv-bench__avatar-fb {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--vcf-orange);
+  letter-spacing: 0.04em;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+.vfv-bench__meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.vfv-bench__name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--vcf-offwhite);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vfv-bench__sub {
+  font-family: var(--font-display);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--vcf-gray);
+}
 .vfv-mini-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1096,6 +1233,13 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   display: flex;
   gap: 4px;
   margin-bottom: 16px;
+  /* Allow horizontal scroll on small screens (we now ship 7 formations). */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.vcf-formation__tabs::-webkit-scrollbar {
+  display: none;
 }
 .vcf-formation__tab {
   font-family: var(--font-display);
@@ -1106,8 +1250,11 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   border-radius: var(--radius-sm);
   border: 1px solid var(--vcf-border2);
   color: var(--vcf-gray);
+  background: transparent;
   transition: all var(--transition);
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .vcf-formation__tab.active,
 .vcf-formation__tab:hover {
@@ -1126,6 +1273,34 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 }
 .vcf-formation__controls .vcf-formation__tabs {
   margin-bottom: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.vcf-formation__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.vcf-formation__reset {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--vcf-border2);
+  border-radius: var(--radius-sm);
+  color: var(--vcf-gray);
+  cursor: pointer;
+  transition: all var(--transition);
+  padding: 0;
+}
+.vcf-formation__reset:hover,
+.vcf-formation__reset:focus-visible {
+  border-color: var(--vcf-orange);
+  color: var(--vcf-orange);
+  outline: none;
 }
 .vcf-formation__cat {
   display: flex;

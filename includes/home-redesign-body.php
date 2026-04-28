@@ -227,20 +227,29 @@ $vm_gps_url = !empty($sedes[0]['mapa_general_url']) ? $sedes[0]['mapa_general_ur
       <div class="vcf-formation__controls">
         <div class="vcf-formation__tabs" id="formation-tabs" role="tablist" aria-label="Formation">
           <button type="button" class="vcf-formation__tab active" data-f="433">4-3-3</button>
+          <button type="button" class="vcf-formation__tab" data-f="4231">4-2-3-1</button>
           <button type="button" class="vcf-formation__tab" data-f="442">4-4-2</button>
+          <button type="button" class="vcf-formation__tab" data-f="4141">4-1-4-1</button>
+          <button type="button" class="vcf-formation__tab" data-f="343">3-4-3</button>
           <button type="button" class="vcf-formation__tab" data-f="352">3-5-2</button>
+          <button type="button" class="vcf-formation__tab" data-f="532">5-3-2</button>
         </div>
-        <?php if (!empty($formation_categories)): ?>
-        <div class="vcf-formation__cat" role="group" aria-label="Squad / Category">
-          <label for="formation-cat" class="vcf-formation__cat-label">Squad</label>
-          <select id="formation-cat" class="vcf-formation__cat-select">
-            <option value="all">All squad</option>
-            <?php foreach ($formation_categories as $cat): ?>
-            <option value="<?= htmlspecialchars($cat['id']) ?>"><?= htmlspecialchars($cat['name']) ?> &middot; <?= (int) $cat['count'] ?> players</option>
-            <?php endforeach; ?>
-          </select>
+        <div class="vcf-formation__actions">
+          <?php if (!empty($formation_categories)): ?>
+          <div class="vcf-formation__cat" role="group" aria-label="Squad / Category">
+            <label for="formation-cat" class="vcf-formation__cat-label">Squad</label>
+            <select id="formation-cat" class="vcf-formation__cat-select">
+              <option value="all">All squad</option>
+              <?php foreach ($formation_categories as $cat): ?>
+              <option value="<?= htmlspecialchars($cat['id']) ?>"><?= htmlspecialchars($cat['name']) ?> &middot; <?= (int) $cat['count'] ?> players</option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <?php endif; ?>
+          <button type="button" class="vcf-formation__reset" id="formation-reset" title="Reset to default lineup">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 10 9 10"/></svg>
+          </button>
         </div>
-        <?php endif; ?>
       </div>
       <div class="vfv-grid">
         <div>
@@ -257,8 +266,15 @@ $vm_gps_url = !empty($sedes[0]['mapa_general_url']) ? $sedes[0]['mapa_general_ur
               <g id="vfv-lines" opacity="0.18"></g>
             </svg>
           </div>
-          <div class="vfv-strip-label">Assigned players — tap to highlight on pitch</div>
+          <div class="vfv-strip-label">Starting XI — tap a chip to highlight on pitch</div>
           <div class="vfv-strip" id="vfv-strip"></div>
+          <div class="vfv-bench" id="vfv-bench" hidden>
+            <div class="vfv-bench__head">
+              <span class="vfv-bench__title">Bench</span>
+              <span class="vfv-bench__hint" id="vfv-bench-hint">Pick a position on the pitch to substitute</span>
+            </div>
+            <div class="vfv-bench__list" id="vfv-bench-list"></div>
+          </div>
         </div>
         <div class="vfv-panel">
           <div class="vfv-detail" id="vfv-detail">
@@ -286,8 +302,7 @@ $vm_gps_url = !empty($sedes[0]['mapa_general_url']) ? $sedes[0]['mapa_general_ur
 </section>
 <script type="application/json" id="vfv-formation-data"><?php
 echo json_encode([
-    'players'    => $formation_players,
-    'byCategory' => $formation_by_category ?? [],
+    'pool'       => $formation_pool ?? ['all' => []],
     'categories' => $formation_categories ?? [],
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP);
 ?></script>
