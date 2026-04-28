@@ -248,7 +248,7 @@ $use_local_swiper_css = file_exists($vendor_root . '/swiper/swiper-bundle.min.cs
     <?php endif; ?>
     <link rel="stylesheet" href="<?= $base ?>/assets/css/style.css?v=33">
     <?php if ((!empty($vcf_public_redesign) && !$is_admin) || !empty($is_admin)): ?>
-    <link rel="stylesheet" href="<?= $base ?>/assets/css/vcf-style.css?v=20">
+    <link rel="stylesheet" href="<?= $base ?>/assets/css/vcf-style.css?v=21">
     <?php endif; ?>
     <?php if (isset($reels) && count($reels) > 0 && empty($vcf_public_redesign)): ?><link rel="stylesheet" href="<?= $base ?>/assets/css/reels-carousel.css?v=2"><?php endif; ?>
     <?php if (!empty($is_admin)): ?><link rel="stylesheet" href="<?= $base ?>/assets/css/admin.css?v=4"><?php endif; ?>
