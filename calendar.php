@@ -7,7 +7,20 @@
  *   calendar.php?id=1         — single match export chooser
  *   calendar.php?id=1&format=ics — .ics download
  */
+
+// Skip the page cache for the .ics download — it has its own Content-Type
+// (text/calendar) and download semantics that don't fit the HTML cache.
+$_calendar_is_ics = (($_GET['format'] ?? '') === 'ics');
+if (!$_calendar_is_ics) {
+    require __DIR__ . '/includes/page_cache.php';
+    if (vcf_page_cache_try_serve(120)) {
+        exit;
+    }
+}
 require __DIR__ . '/config/database.php';
+if (!$_calendar_is_ics) {
+    vcf_page_cache_start(120);
+}
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 

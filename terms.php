@@ -1,4 +1,10 @@
 <?php
+require __DIR__ . '/includes/page_cache.php';
+if (vcf_page_cache_try_serve(600)) {
+    exit;
+}
+vcf_page_cache_start(600);
+
 $page_title = 'Terms of Use - VCF Academy Houston';
 $page_description = 'Terms of use for the VCF Academy Houston website. Read the rules and disclaimers that apply when using this site.';
 require __DIR__ . '/includes/header.php';

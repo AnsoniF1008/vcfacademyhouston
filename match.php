@@ -3,13 +3,18 @@
  * Match detail page.
  * Usage: match.php?id=1
  */
-require __DIR__ . '/config/database.php';
-
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 if ($id <= 0) {
     header('Location: index.php#tournaments');
     exit;
 }
+
+require __DIR__ . '/includes/page_cache.php';
+if (vcf_page_cache_try_serve(120)) {
+    exit;
+}
+require __DIR__ . '/config/database.php';
+vcf_page_cache_start(120);
 
 // Load match data
 $match = null;

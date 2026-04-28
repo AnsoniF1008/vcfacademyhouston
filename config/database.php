@@ -47,7 +47,30 @@ try {
     if (php_sapi_name() === 'cli') {
         throw $e;
     }
+
+    // ── Stale-if-error fallback ────────────────────────────────────────
+    // Hostinger's shared plan caps each MySQL user at 500 connections per
+    // hour. When that ceiling is hit (or any other DB outage occurs) we
+    // would normally render a hard error page. Instead, try to serve the
+    // last good cached version of this URL — better to show stale data
+    // for a few minutes than break the site for every visitor.
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
+        $pageCacheFile = __DIR__ . '/../includes/page_cache.php';
+        if (is_file($pageCacheFile)) {
+            require_once $pageCacheFile;
+            if (function_exists('vcf_page_cache_try_serve_stale') && vcf_page_cache_try_serve_stale(3600)) {
+                exit;
+            }
+        }
+    }
+
     http_response_code(500);
+    // Make sure browsers (and Cloudflare-style proxies) don't cache the
+    // error page. Otherwise a user that hit the error once will keep
+    // seeing it locally even after MySQL recovers.
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Expires: 0');
     ?>
     <!DOCTYPE html>
     <html lang="en">
