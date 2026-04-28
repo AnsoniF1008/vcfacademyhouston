@@ -747,6 +747,29 @@ function vcfAnimateRadar(radarWrap, radarPoly, pointsStr) {
             });
         });
 
+        // Live results polling.
+        // Runs every 30s and pauses when the tab is hidden — users that
+        // leave the page open in background no longer beat MySQL with a
+        // request every few seconds.
+        var POLL_MS = 30000;
+        var pollTimer = null;
+        function startPolling() {
+          if (pollTimer) return;
+          pollTimer = setInterval(updateStarResults, POLL_MS);
+        }
+        function stopPolling() {
+          if (!pollTimer) return;
+          clearInterval(pollTimer);
+          pollTimer = null;
+        }
+        document.addEventListener('visibilitychange', function () {
+          if (document.hidden) {
+            stopPolling();
+          } else {
+            updateStarResults();
+            startPolling();
+          }
+        });
         updateStarResults();
-        setInterval(updateStarResults, 5000);
+        if (!document.hidden) startPolling();
     })();

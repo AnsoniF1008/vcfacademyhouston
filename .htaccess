@@ -58,3 +58,14 @@ ErrorDocument 404 /404.php
         Deny from all
     </IfModule>
 </FilesMatch>
+
+# ── Block aggressive crawlers/scrapers ────────────────────────────────
+# These bots crawl with very high frequency on shared hosting and
+# regularly drive sites past the per-user MySQL connection limits without
+# providing any traffic value (they don't drive users to vcfacademyhouston.com).
+# Real search engines (Google, Bing, DuckDuckGo, Yandex) are NOT blocked.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTP_USER_AGENT} (AhrefsBot|SemrushBot|MJ12bot|DotBot|PetalBot|Bytespider|DataForSeoBot|BLEXBot|MegaIndex|SeekportBot|serpstatbot|Barkrowler|ZoominfoBot|VelenPublicWebCrawler|YisouSpider|sogou|Sogou) [NC]
+    RewriteRule .* - [F,L]
+</IfModule>

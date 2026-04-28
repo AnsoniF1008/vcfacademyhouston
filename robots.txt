@@ -1,4 +1,63 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /cache/
+Disallow: /scripts/
+Disallow: /sql/
+
+# Aggressive SEO/scraper crawlers — they pound shared hosting with
+# little upside for vcfacademyhouston.com. .htaccess blocks them at
+# the server level too; this is for the well-behaved ones.
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: MegaIndex
+Disallow: /
+
+User-agent: SeekportBot
+Disallow: /
+
+User-agent: serpstatbot
+Disallow: /
+
+User-agent: Barkrowler
+Disallow: /
+
+User-agent: ZoominfoBot
+Disallow: /
+
+User-agent: VelenPublicWebCrawler
+Disallow: /
+
+User-agent: YisouSpider
+Disallow: /
+
+User-agent: sogou
+Disallow: /
+
+User-agent: Sogou
+Disallow: /
 
 Sitemap: https://vcfacademyhouston.com/sitemap.php

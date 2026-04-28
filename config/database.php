@@ -34,12 +34,22 @@ if (file_exists(__DIR__ . '/database.local.php')) {
 $usingRemote = !in_array($DB_HOST ?? '', ['localhost', '127.0.0.1'], true);
 $dsn = "mysql:host={$DB_HOST};dbname={$DB_NAME};charset=utf8mb4";
 
+// Persistent connections are safe for our use (no transactions, no
+// session-state queries) and cut connection ATTEMPTS dramatically — the
+// metric Hostinger's `max_connections_per_hour` cap actually counts.
+// A handful of PHP-FPM workers will share a few persistent sockets
+// instead of dialing MySQL on every request. We disable persistence in
+// CLI scripts and on local dev to avoid surprising behaviour during
+// debugging.
+$persistentSafe = (php_sapi_name() !== 'cli') && $usingRemote;
+
 $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     PDO::ATTR_EMULATE_PREPARES   => false,
     // Reasonable connect timeout: don't hang for ages if MySQL is down.
     PDO::ATTR_TIMEOUT            => 4,
+    PDO::ATTR_PERSISTENT         => $persistentSafe,
 ];
 
 // ── Circuit breaker ───────────────────────────────────────────────────
@@ -72,6 +82,17 @@ try {
         throw new PDOException('Circuit breaker open: skipping connection attempt to ' . $DB_HOST);
     }
     $pdo = new PDO($dsn, $DB_USER, $DB_PASS, $options);
+    // Persistent connections survive across requests, so if a previous
+    // request's script crashed mid-transaction (PHP fatal, browser
+    // disconnect, timeout) we may inherit a "transaction-in-progress"
+    // state. Roll it back so the new request starts clean.
+    if ($persistentSafe && $pdo->inTransaction()) {
+        try {
+            $pdo->rollBack();
+        } catch (PDOException $rbErr) {
+            // Already rolled back or connection in a bad state — nothing to do.
+        }
+    }
     // Successful connection → clear any prior breaker state.
     if (is_file($breakerFile)) {
         @unlink($breakerFile);

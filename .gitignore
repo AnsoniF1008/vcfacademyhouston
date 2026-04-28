@@ -7,6 +7,10 @@ assets/uploads/*
 cache/page/*
 !cache/page/.gitkeep
 !cache/page/.htaccess
+# API responses cache (e.g. /api/star-results.php → /cache/api/star_results_<id>.json)
+cache/api/*
+!cache/api/.gitkeep
+!cache/api/.htaccess
 # Circuit breaker state file (managed at runtime by config/database.php)
 cache/db_blocked_until.txt
 !cache/.htaccess
