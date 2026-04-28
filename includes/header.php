@@ -1,12 +1,28 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_set_cookie_params([
-        'lifetime' => 0,
-        'path'     => '/',
-        'secure'   => true,
-        'httponly' => true,
-        'samesite' => 'Strict',
-    ]);
+$script = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+$is_admin = (strpos($script, '/admin/') !== false);
+
+// Only start a session when needed. Unconditional session_start() on public pages
+// sets PHPSESSID on first visit and makes includes/page_cache.php skip cache for
+// all returning visitors (vcf_page_cache_should_skip).
+$vcf_needs_session = $is_admin;
+if (!$vcf_needs_session) {
+    $sn = session_name();
+    if ($sn === '') {
+        $sn = 'PHPSESSID';
+    }
+    $vcf_needs_session = !empty($_COOKIE[$sn]);
+}
+if (session_status() === PHP_SESSION_NONE && $vcf_needs_session) {
+    if (!headers_sent()) {
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path'     => '/',
+            'secure'   => true,
+            'httponly' => true,
+            'samesite' => 'Strict',
+        ]);
+    }
     session_start();
 }
 require_once __DIR__ . '/../config/site_loader.php';
@@ -23,8 +39,6 @@ if (!isset($body_class)) {
     $body_class = '';
 }
 $body_class = trim((string) $body_class);
-$script = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
-$is_admin = (strpos($script, '/admin/') !== false);
 $base = dirname($script);
 if ($is_admin) {
     $base = dirname($base);
@@ -64,7 +78,7 @@ if (!is_string($reqPath) || $reqPath === '') {
     $reqPath = '/';
 }
 $canonical_url = rtrim($origin, '/') . $reqPath;
-$show_back_admin = !$is_admin && !empty($_SESSION['admin_logged']);
+$show_back_admin = !$is_admin && session_status() === PHP_SESSION_ACTIVE && !empty($_SESSION['admin_logged']);
 $vendor_root = __DIR__ . '/../assets/vendor';
 $header_crest_file = null;
 if (file_exists(__DIR__ . '/../assets/img/vcf-crest.svg')) {
