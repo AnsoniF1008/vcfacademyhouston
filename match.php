@@ -41,7 +41,7 @@ try {
     $s = $pdo->prepare("
         SELECT g.minuto, g.tipo, r.nombre, r.apellido, r.dorsal
         FROM juego_goles g
-        LEFT JOIN roster r ON r.id = g.jugador_id
+        LEFT JOIN roster r ON r.id = g.roster_id
         WHERE g.juego_id = ?
         ORDER BY g.minuto ASC
     ");
@@ -88,7 +88,10 @@ $vcf_crest_file = file_exists(__DIR__ . '/assets/img/vcf-crest.png') ? 'vcf-cres
 
 $page_title = 'VCF Houston vs ' . $rival . ' — ' . date('M j, Y', $gameTs) . ' | VCF Academy Houston';
 $page_description = 'Match details: VCF Academy Houston vs ' . $rival . ' on ' . date('F j, Y', $gameTs) . '. ' . ($hasScore ? "Final score: $gv–$gr." : 'Upcoming match.');
-$og_image = $match['rival_logo_url'] ?: '';
+if (!empty($match['rival_logo_url'])) {
+    $page_og_image = $match['rival_logo_url'];
+    $page_og_image_alt = 'VCF Houston vs ' . $rival;
+}
 require __DIR__ . '/includes/header.php';
 ?>
 
@@ -208,7 +211,7 @@ require __DIR__ . '/includes/header.php';
         <?php if ($motm): ?>
         <div class="card mb-4" style="background:#111;border:1px solid rgba(232,119,34,0.3);border-radius:10px;padding:20px 24px;display:flex;align-items:center;gap:16px;">
             <?php if ($motm['foto_url']): ?>
-            <img src="<?= htmlspecialchars($motm['foto_url']) ?>" alt="MOTM" width="52" height="52" style="border-radius:50%;object-fit:cover;border:2px solid var(--vcf-orange);">
+            <img src="<?= htmlspecialchars($motm['foto_url']) ?>" alt="<?= htmlspecialchars($motm['nombre'] ?? 'Man of the Match') ?>" width="52" height="52" style="border-radius:50%;object-fit:cover;border:2px solid var(--vcf-orange);">
             <?php endif; ?>
             <div>
                 <div style="color:var(--vcf-orange);font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;">Man of the Match</div>

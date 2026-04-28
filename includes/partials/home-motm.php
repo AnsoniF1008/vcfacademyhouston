@@ -28,7 +28,7 @@ if (empty($motmOpen) && empty($motmWinner)) {
                 <div class="col-md-4">
                     <div class="motm-card">
                         <?php if (!empty($nom['foto_url'])): ?>
-                            <img src="<?= htmlspecialchars($base ?? '') ?>/<?= htmlspecialchars($nom['foto_url']) ?>" alt="" class="motm-card-photo" loading="lazy">
+                            <img src="<?= htmlspecialchars($base ?? '') ?>/<?= htmlspecialchars($nom['foto_url']) ?>" alt="<?= htmlspecialchars($nom['nombre']) ?>" class="motm-card-photo" loading="lazy">
                         <?php else: ?>
                             <div class="motm-card-photo motm-card-photo-placeholder"><i class="fas fa-user" aria-hidden="true"></i></div>
                         <?php endif; ?>
@@ -43,7 +43,7 @@ if (empty($motmOpen) && empty($motmWinner)) {
             <h2 class="vcf-section-title vcf-section-title-line">Man of the Match</h2>
             <div class="motm-winner-card">
                 <?php if (!empty($motmWinner['winner_foto'])): ?>
-                    <img src="<?= htmlspecialchars($base ?? '') ?>/<?= htmlspecialchars($motmWinner['winner_foto']) ?>" alt="" class="motm-winner-photo" loading="lazy">
+                    <img src="<?= htmlspecialchars($base ?? '') ?>/<?= htmlspecialchars($motmWinner['winner_foto']) ?>" alt="<?= htmlspecialchars($motmWinner['winner_nombre'] ?? 'Man of the Match') ?>" class="motm-winner-photo" loading="lazy">
                 <?php else: ?>
                     <div class="motm-winner-photo motm-winner-photo-placeholder"><i class="fas fa-trophy" aria-hidden="true"></i></div>
                 <?php endif; ?>

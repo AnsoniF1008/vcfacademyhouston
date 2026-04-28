@@ -144,7 +144,7 @@ $countFwd = count(array_filter($vrList, static function ($x) { return $x['__grou
                     <span class="vr-board__rank"><?= (int) $rank + 1 ?></span>
                     <div class="vr-board__av">
                         <?php if (!empty($p['photo'])): ?>
-                            <img src="<?= htmlspecialchars($b . '/' . ltrim($p['photo'], '/')) ?>" alt="" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'">
+                            <img src="<?= htmlspecialchars($b . '/' . ltrim($p['photo'], '/')) ?>" alt="<?= htmlspecialchars($p['name']) ?>" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'">
                             <span style="display:none"><?= htmlspecialchars($p['initials']) ?></span>
                         <?php else: ?>
                             <?= htmlspecialchars($p['initials']) ?>
@@ -190,7 +190,7 @@ $countFwd = count(array_filter($vrList, static function ($x) { return $x['__grou
                  aria-label="View <?= htmlspecialchars($j['__name_full'], ENT_QUOTES, 'UTF-8') ?> stats">
                 <div class="vr-card__photo">
                     <?php if (!empty($j['foto_url'])): ?>
-                        <img src="<?= htmlspecialchars($b . '/' . ltrim($j['foto_url'], '/')) ?>" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                        <img src="<?= htmlspecialchars($b . '/' . ltrim($j['foto_url'], '/')) ?>" alt="<?= htmlspecialchars($j['__name_full'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                         <div class="vr-card__initials" style="display:none"><?= htmlspecialchars($j['__initials']) ?></div>
                     <?php else: ?>
                         <div class="vr-card__initials"><?= htmlspecialchars($j['__initials']) ?></div>

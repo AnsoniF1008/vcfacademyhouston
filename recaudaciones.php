@@ -156,7 +156,7 @@ $suggestedAmounts = [
                     <p class="vcf-support__method-hint">Send to this email in your Zelle app:</p>
                     <div class="vcf-support__email-row">
                         <span class="vcf-support__email-text"><?= htmlspecialchars($zelleEmail) ?></span>
-                        <button type="button" class="vcf-support__copy-btn" data-vcf-copy="<?= htmlspecialchars($zelleEmail, ENT_QUOTES) ?>">Copy</button>
+                        <button type="button" class="vcf-support__copy-btn" data-vcf-copy="<?= htmlspecialchars($zelleEmail, ENT_QUOTES) ?>" aria-label="Copy Zelle email address to clipboard">Copy</button>
                     </div>
                 </div>
                 <?php endif; ?>

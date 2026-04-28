@@ -62,7 +62,7 @@
 
         <?php if (count($topScorers) > 0): ?>
         <div class="mt-4 mb-4">
-            <h3 class="stats-title">Top Scorers <span class="vcf-accent">(Pichichi)</span></h3>
+            <h3 class="stats-title">Top Scorers</h3>
             <div class="vcf-table-wrap">
                 <table class="vcf-table">
                     <thead>
@@ -95,9 +95,9 @@
                     <thead>
                         <tr>
                             <th>Date</th>
-                            <th>Local</th>
+                            <th>Home</th>
                             <th>Score</th>
-                            <th>Visitante</th>
+                            <th>Away</th>
                             <th>Info</th>
                         </tr>
                     </thead>
@@ -137,7 +137,7 @@
                                 <td>
                                     <span class="vcf-result-team">
                                         <?php if ($vcf_crest_file): ?>
-                                            <img src="<?= $base ?? '' ?>/assets/img/<?= $vcf_crest_file ?>" alt="" class="vcf-team-logo" width="28" height="28" loading="lazy">
+                                            <img src="<?= $base ?? '' ?>/assets/img/<?= $vcf_crest_file ?>" alt="VCF Houston" class="vcf-team-logo" width="28" height="28" loading="lazy">
                                         <?php else: ?>
                                             <span class="vcf-team-logo vcf-team-logo-placeholder" aria-hidden="true"><i class="fas fa-shield"></i></span>
                                         <?php endif; ?>
@@ -154,7 +154,7 @@
                                 <td>
                                     <span class="vcf-result-team">
                                         <?php if ($rivalLogoUrl): ?>
-                                            <img src="<?= htmlspecialchars($rivalLogoUrl) ?>" alt="" class="vcf-team-logo" width="28" height="28" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">
+                                            <img src="<?= htmlspecialchars($rivalLogoUrl) ?>" alt="<?= $rivalName ?>" class="vcf-team-logo" width="28" height="28" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">
                                             <span class="vcf-team-logo vcf-team-logo-placeholder" style="display:none;" aria-hidden="true"><i class="fas fa-shield"></i></span>
                                         <?php else: ?>
                                             <span class="vcf-team-logo vcf-team-logo-placeholder" aria-hidden="true"><i class="fas fa-shield"></i></span>
