@@ -155,6 +155,11 @@ function Push-FtpItem {
     } else {
         # No subir credenciales locales a producción
         if ($relativePath -eq 'config/deploy-credentials.php') { return }
+        # No subir database.local.php: producción ya tiene su propia copia con
+        # credenciales del panel de Hostinger. Sobrescribir es una mina de tiempo.
+        if ($relativePath -eq 'config/database.local.php') { return }
+        # No subir site.php: cada entorno tiene el suyo (p.ej. donations propias).
+        if ($relativePath -eq 'config/site.php') { return }
         # Excluir vídeos de reels (el usuario los sube desde el admin)
         if ($relativePath -match '^assets/uploads/reels/.*\.(mp4|webm|mov)$') { return }
         $parent = ConvertTo-RemotePath (Split-Path -Parent $relativePath)
