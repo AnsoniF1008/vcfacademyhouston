@@ -240,6 +240,9 @@ $use_local_swiper_css = file_exists($vendor_root . '/swiper/swiper-bundle.min.cs
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Hanken+Grotesk:wght@400;600;700&display=swap" rel="stylesheet" crossorigin>
+    <?php if (!empty($is_admin)): ?>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&display=swap" rel="stylesheet" crossorigin>
+    <?php endif; ?>
     <?php if (isset($hero_mobile_path) && !empty($hero_mobile_path) && isset($preload_image_path) && $preload_image_path !== ''): ?>
     <link rel="preload" as="image" href="<?= $base ?>/<?= htmlspecialchars($hero_mobile_path) ?>" media="(max-width: 768px)" fetchpriority="high">
     <link rel="preload" as="image" href="<?= $base ?>/<?= htmlspecialchars($preload_image_path) ?>" media="(min-width: 769px)" fetchpriority="high">
@@ -251,7 +254,7 @@ $use_local_swiper_css = file_exists($vendor_root . '/swiper/swiper-bundle.min.cs
     <link rel="stylesheet" href="<?= $base ?>/assets/css/vcf-style.css?v=19">
     <?php endif; ?>
     <?php if (isset($reels) && count($reels) > 0 && empty($vcf_public_redesign)): ?><link rel="stylesheet" href="<?= $base ?>/assets/css/reels-carousel.css?v=2"><?php endif; ?>
-    <?php if (!empty($is_admin)): ?><link rel="stylesheet" href="<?= $base ?>/assets/css/admin.css?v=2"><?php endif; ?>
+    <?php if (!empty($is_admin)): ?><link rel="stylesheet" href="<?= $base ?>/assets/css/admin.css?v=3"><?php endif; ?>
 </head>
 <body<?php if ($body_class !== ''): ?> class="<?= htmlspecialchars($body_class) ?>"<?php endif; ?>>
     <?php if (!empty($vcf_public_redesign) && !$is_admin): ?>
