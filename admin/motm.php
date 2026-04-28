@@ -3,6 +3,11 @@ require __DIR__ . '/includes/auth.php';
 require_permission('motm');
 require __DIR__ . '/includes/csrf.php';
 require __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/motm_close_expired.php';
+
+if (isset($pdo)) {
+    vcf_motm_close_expired($pdo);
+}
 
 $message = '';
 $messageType = '';

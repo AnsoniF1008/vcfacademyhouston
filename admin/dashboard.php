@@ -2,6 +2,11 @@
 require __DIR__ . '/includes/auth.php';
 require __DIR__ . '/includes/csrf.php';      // needed for the logout form token
 require_once __DIR__ . '/includes/breadcrumb.php';
+require_once __DIR__ . '/../includes/motm_close_expired.php';
+
+if (isset($pdo)) {
+    vcf_motm_close_expired($pdo);
+}
 
 // ── KPI queries ──────────────────────────────────────────────
 $kpi = [
