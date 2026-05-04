@@ -116,7 +116,7 @@
         <div class="reel-slider"></div>
       </div>
     </div>
-    <script src="<?= $vcf_base_safe ?>/assets/js/vcf-home.js?v=10" defer></script>
+    <script src="<?= $vcf_base_safe ?>/assets/js/vcf-home.js?v=13" defer></script>
     <?php endif; ?>
     <?php if (isset($reels) && count($reels) > 0 && empty($vcf_public_redesign)): ?><script src="<?= $vcf_base_safe ?>/assets/js/reels-carousel.js?v=1" defer></script><?php endif; ?>
 </body>

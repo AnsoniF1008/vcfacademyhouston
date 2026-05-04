@@ -371,9 +371,22 @@ $page_active = 'home';
 $star_section_visible = !empty($jugadorMes);
 $reels = [];
 try {
-    $reels = $pdo->query("SELECT id, video_url, caption, orden FROM match_reels ORDER BY orden ASC, id DESC")->fetchAll(PDO::FETCH_ASSOC);
+    $reels = $pdo->query(
+        'SELECT id, video_url, caption, orden, view_count, like_count FROM match_reels ORDER BY orden ASC, id DESC'
+    )->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    $reels = [];
+    try {
+        $reels = $pdo->query(
+            'SELECT id, video_url, caption, orden FROM match_reels ORDER BY orden ASC, id DESC'
+        )->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($reels as &$vcf_reel_row) {
+            $vcf_reel_row['view_count'] = 0;
+            $vcf_reel_row['like_count'] = 0;
+        }
+        unset($vcf_reel_row);
+    } catch (PDOException $e2) {
+        $reels = [];
+    }
 }
 $vcf_home_scripts = true;
 $vcf_nav_context_loaded = true;

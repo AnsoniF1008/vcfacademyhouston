@@ -319,7 +319,10 @@ echo json_encode([
 <?php require __DIR__ . '/partials/home-tournaments-stats.php'; ?>
 
 <?php if (!empty($reels) && is_array($reels) && count($reels) > 0): ?>
-<section id="reels" class="vcf-reels-section" aria-label="Match Reels">
+<?php
+$statsApiUrl = ($b === '' ? '' : $b) . '/api/reel-stats.php';
+?>
+<section id="reels" class="vcf-reels-section" aria-label="Match Reels" data-stats-api="<?= htmlspecialchars($statsApiUrl, ENT_QUOTES, 'UTF-8') ?>">
   <div class="vcf-reels-inner">
     <div class="vcf-reels-header">
       <span class="vcf-reels-header-bar" aria-hidden="true"></span>
@@ -346,7 +349,14 @@ echo json_encode([
           $badgeText = 'TRAINING';
       }
       ?>
-      <article class="vcf-reel-card" data-vcf-reel-card data-index="<?= (int) $i ?>">
+      <article
+        class="vcf-reel-card"
+        data-vcf-reel-card
+        data-index="<?= (int) $i ?>"
+        data-reel-id="<?= (int) ($r['id'] ?? 0) ?>"
+        data-view-count="<?= (int) ($r['view_count'] ?? 0) ?>"
+        data-like-count="<?= (int) ($r['like_count'] ?? 0) ?>"
+      >
         <video
           class="vcf-reel-media"
           src="<?= $videoUrl ?>"

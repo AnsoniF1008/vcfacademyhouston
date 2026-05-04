@@ -1050,6 +1050,7 @@
   (function () {
     var section = document.querySelector('.vcf-reels-section');
     var modal = document.getElementById('reelModal');
+    var scrollRoot = modal ? modal.querySelector('.reel-modal-content') : null;
     var slider = modal ? modal.querySelector('.reel-slider') : null;
     var closeBtn = modal ? modal.querySelector('.reel-close') : null;
 
@@ -1058,10 +1059,13 @@
     var cards = section.querySelectorAll('[data-vcf-reel-card]');
     if (!cards.length) return;
 
-    var LS_STATS = 'vcf_reel_stats_v1';
     var modalIo = null;
     var modalViewSession = null;
     var lastModalFocus = null;
+
+    var statsApiUrl = section.getAttribute('data-stats-api') || '';
+    var reelState = {};
+    var reelFingerprint = '';
 
     var reduceMotion =
       typeof window.matchMedia === 'function' &&
@@ -1070,39 +1074,99 @@
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-    function lsGet(key, fb) {
-      try {
-        var r = localStorage.getItem(key);
-        return r ? JSON.parse(r) : fb;
-      } catch (e) {
-        return fb;
-      }
-    }
-    function lsSet(key, val) {
-      try {
-        localStorage.setItem(key, JSON.stringify(val));
-      } catch (e) {}
-    }
-    function reelKey(url) {
-      return url || '';
-    }
-    function normalizeStats(raw) {
-      var o = raw && typeof raw === 'object' ? raw : {};
-      return {
-        views: Number(o.views) || 0,
-        likes: Number(o.likes) || 0,
-        liked: !!o.liked,
+    cards.forEach(function (card) {
+      var rid = card.getAttribute('data-reel-id');
+      if (!rid) return;
+      reelState[rid] = {
+        view_count: parseInt(card.getAttribute('data-view-count') || '0', 10),
+        like_count: parseInt(card.getAttribute('data-like-count') || '0', 10),
+        liked: false,
       };
+    });
+
+    function ensureReelFingerprint() {
+      if (reelFingerprint) return reelFingerprint;
+      try {
+        var k = 'vcf_reel_fp';
+        reelFingerprint = localStorage.getItem(k) || '';
+        if (!reelFingerprint || reelFingerprint.length < 16) {
+          reelFingerprint = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = (Math.random() * 16) | 0;
+            var v = c === 'x' ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+          });
+          localStorage.setItem(k, reelFingerprint);
+        }
+      } catch (e) {
+        reelFingerprint = 'anon-' + String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+      }
+      return reelFingerprint;
     }
-    function getStats(url) {
-      var bag = lsGet(LS_STATS, {});
-      return normalizeStats(bag[reelKey(url)]);
+
+    function getReelRow(id) {
+      id = String(id);
+      if (!reelState[id]) {
+        reelState[id] = { view_count: 0, like_count: 0, liked: false };
+      }
+      return reelState[id];
     }
-    function saveStats(url, st) {
-      var bag = lsGet(LS_STATS, {});
-      bag[reelKey(url)] = normalizeStats(st);
-      lsSet(LS_STATS, bag);
+
+    function syncReelStateFromServer() {
+      if (!statsApiUrl || typeof fetch !== 'function') {
+        return Promise.resolve();
+      }
+      var ids = [];
+      cards.forEach(function (c) {
+        var id = c.getAttribute('data-reel-id');
+        if (id) ids.push(parseInt(id, 10));
+      });
+      if (!ids.length) return Promise.resolve();
+
+      return fetch(statsApiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          action: 'state',
+          reel_ids: ids,
+          fingerprint: ensureReelFingerprint(),
+        }),
+      })
+        .then(function (r) {
+          return r.json();
+        })
+        .then(function (data) {
+          if (!data || !data.reels || typeof data.reels !== 'object') return;
+          Object.keys(data.reels).forEach(function (kid) {
+            var row = data.reels[kid];
+            var target = getReelRow(kid);
+            target.view_count = Number(row.view_count) || 0;
+            target.like_count = Number(row.like_count) || 0;
+            target.liked = !!row.liked;
+          });
+        })
+        .catch(function () {});
     }
+
+    function reelPost(body) {
+      if (!statsApiUrl || typeof fetch !== 'function') {
+        return Promise.reject(new Error('no_api'));
+      }
+      var payload = {};
+      Object.keys(body).forEach(function (k) {
+        payload[k] = body[k];
+      });
+      payload.fingerprint = ensureReelFingerprint();
+      return fetch(statsApiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify(payload),
+      }).then(function (r) {
+        return r.json();
+      });
+    }
+
     function formatCompact(n) {
       n = Number(n) || 0;
       if (n < 1000) return String(Math.round(n));
@@ -1139,8 +1203,8 @@
       });
     }
 
-    function buildModalRail(url, item, video) {
-      var st = getStats(url);
+    function buildModalRail(reelId, item, video) {
+      var st = getReelRow(reelId);
 
       var rail = document.createElement('div');
       rail.className = 'reel-item-rail';
@@ -1156,7 +1220,7 @@
 
       var likeCountEl = document.createElement('span');
       likeCountEl.className = 'reel-like-count';
-      likeCountEl.textContent = formatCompact(st.likes);
+      likeCountEl.textContent = formatCompact(st.like_count);
 
       var btnSound = document.createElement('button');
       btnSound.type = 'button';
@@ -1171,27 +1235,30 @@
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 9a3 3 0 100 6 3 3 0 000-6zm0 8c-4.08 0-7.63-2.45-9.29-6 1.66-3.55 5.21-6 9.29-6s7.63 2.45 9.29 6c-1.66 3.55-5.21 6-9.29 6z"/></svg>';
       var viewsNum = document.createElement('span');
       viewsNum.className = 'reel-views-num';
-      viewsNum.textContent = formatCompact(st.views);
+      viewsNum.textContent = formatCompact(st.view_count);
       viewsRow.appendChild(viewsNum);
 
       btnLike.addEventListener('click', function (e) {
         e.stopPropagation();
-        var cur = getStats(url);
-        if (cur.liked) {
-          cur.liked = false;
-          cur.likes = Math.max(0, (Number(cur.likes) || 0) - 1);
-        } else {
-          cur.liked = true;
-          cur.likes = (Number(cur.likes) || 0) + 1;
-          btnLike.classList.add('reel-like--pop');
-          window.setTimeout(function () {
-            btnLike.classList.remove('reel-like--pop');
-          }, 480);
-        }
-        saveStats(url, cur);
-        btnLike.classList.toggle('is-liked', cur.liked);
-        btnLike.setAttribute('aria-pressed', cur.liked ? 'true' : 'false');
-        likeCountEl.textContent = formatCompact(cur.likes);
+        var ridNum = parseInt(reelId, 10);
+        if (!ridNum || !statsApiUrl) return;
+        reelPost({ action: 'like_toggle', reel_id: ridNum })
+          .then(function (data) {
+            if (!data || data.error) return;
+            var row = getReelRow(reelId);
+            row.like_count = Number(data.like_count) || row.like_count;
+            row.liked = !!data.liked;
+            likeCountEl.textContent = formatCompact(row.like_count);
+            btnLike.classList.toggle('is-liked', row.liked);
+            btnLike.setAttribute('aria-pressed', row.liked ? 'true' : 'false');
+            if (row.liked) {
+              btnLike.classList.add('reel-like--pop');
+              window.setTimeout(function () {
+                btnLike.classList.remove('reel-like--pop');
+              }, 480);
+            }
+          })
+          .catch(function () {});
       });
 
       btnSound.addEventListener('click', function (e) {
@@ -1220,7 +1287,7 @@
           entries.forEach(function (entry) {
             var video = entry.target;
             var item = video.closest('.reel-item');
-            var url = item ? item.getAttribute('data-reel-src') || '' : '';
+            var reelIdStr = item ? item.getAttribute('data-reel-id') || '' : '';
 
             if (!entry.isIntersecting) {
               video.pause();
@@ -1254,17 +1321,29 @@
             }
             video.play().catch(function () {});
 
-            if (url && modalViewSession && !modalViewSession.has(url)) {
-              modalViewSession.add(url);
-              var st = getStats(url);
-              st.views = (Number(st.views) || 0) + 1;
-              saveStats(url, st);
-              var vn = item.__viewsNum;
-              if (vn) vn.textContent = formatCompact(st.views);
+            if (
+              reelIdStr &&
+              modalViewSession &&
+              !modalViewSession.has(reelIdStr)
+            ) {
+              modalViewSession.add(reelIdStr);
+              var ridNum = parseInt(reelIdStr, 10);
+              if (statsApiUrl && ridNum) {
+                reelPost({ action: 'view', reel_id: ridNum })
+                  .then(function (data) {
+                    if (!data || data.error) return;
+                    var row = getReelRow(reelIdStr);
+                    row.view_count =
+                      Number(data.view_count) || row.view_count;
+                    var vn = item.__viewsNum;
+                    if (vn) vn.textContent = formatCompact(row.view_count);
+                  })
+                  .catch(function () {});
+              }
             }
           });
         },
-        { root: slider, threshold: 0.62 }
+        { root: scrollRoot || null, threshold: 0.62 }
       );
 
       vids.forEach(function (v) {
@@ -1282,66 +1361,75 @@
       disconnectModalIo();
       modalViewSession = new Set();
 
-      slider.innerHTML = '';
+      function buildSliderAndShowModal() {
+        slider.innerHTML = '';
 
-      cards.forEach(function (card, i) {
-        var srcVideo = card.querySelector('video.vcf-reel-media');
-        var url = getVideoUrl(srcVideo);
-        var label = (srcVideo && srcVideo.getAttribute('aria-label')) || 'Reel';
-        var badgeEl = card.querySelector('.vcf-reel-badge');
-        var badgeText = badgeEl ? badgeEl.textContent.trim() : 'HIGHLIGHT';
+        cards.forEach(function (card, i) {
+          var reelId = card.getAttribute('data-reel-id') || '';
+          var srcVideo = card.querySelector('video.vcf-reel-media');
+          var url = getVideoUrl(srcVideo);
+          var label =
+            (srcVideo && srcVideo.getAttribute('aria-label')) || 'Reel';
+          var badgeEl = card.querySelector('.vcf-reel-badge');
+          var badgeText = badgeEl ? badgeEl.textContent.trim() : 'HIGHLIGHT';
 
-        var item = document.createElement('div');
-        item.className = 'reel-item';
-        item.setAttribute('data-reel-src', url);
+          var item = document.createElement('div');
+          item.className = 'reel-item';
+          item.setAttribute('data-reel-src', url);
+          if (reelId) item.setAttribute('data-reel-id', reelId);
 
-        var media = document.createElement('div');
-        media.className = 'reel-item-media';
+          var media = document.createElement('div');
+          media.className = 'reel-item-media';
 
-        var video = document.createElement('video');
-        video.className = 'reel-modal-video';
-        video.setAttribute('playsinline', '');
-        video.setAttribute('muted', '');
-        video.loop = true;
-        video.setAttribute('preload', 'metadata');
-        video.setAttribute('aria-label', label);
-        if (url) video.setAttribute('src', url);
+          var video = document.createElement('video');
+          video.className = 'reel-modal-video';
+          video.setAttribute('playsinline', '');
+          video.setAttribute('muted', '');
+          video.loop = true;
+          video.setAttribute('preload', 'metadata');
+          video.setAttribute('aria-label', label);
+          if (url) video.setAttribute('src', url);
 
-        media.appendChild(video);
-        item.appendChild(media);
+          media.appendChild(video);
+          item.appendChild(media);
 
-        var info = document.createElement('div');
-        info.className = 'reel-info';
-        var tag = document.createElement('span');
-        tag.className = 'reel-tag';
-        tag.textContent = badgeText;
-        info.appendChild(tag);
-        var cap = document.createElement('span');
-        cap.className = 'reel-caption';
-        cap.textContent = label;
-        info.appendChild(cap);
-        item.appendChild(info);
+          var info = document.createElement('div');
+          info.className = 'reel-info';
+          var tag = document.createElement('span');
+          tag.className = 'reel-tag';
+          tag.textContent = badgeText;
+          info.appendChild(tag);
+          var cap = document.createElement('span');
+          cap.className = 'reel-caption';
+          cap.textContent = label;
+          info.appendChild(cap);
+          item.appendChild(info);
 
-        item.__viewsNum = buildModalRail(url, item, video);
+          item.__viewsNum = buildModalRail(reelId, item, video);
 
-        slider.appendChild(item);
-      });
+          slider.appendChild(item);
+        });
 
-      modal.removeAttribute('hidden');
-      modal.classList.add('active');
-      modal.setAttribute('aria-hidden', 'false');
-      document.body.classList.add('reel-modal-open');
+        modal.removeAttribute('hidden');
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('reel-modal-open');
 
-      window.requestAnimationFrame(function () {
-        setupModalObserver();
-        var items = slider.querySelectorAll('.reel-item');
-        var behave = reduceMotion ? 'auto' : 'smooth';
-        var ix = parseInt(startIndex, 10) || 0;
-        if (items[ix]) {
-          items[ix].scrollIntoView({ behavior: behave, block: 'start' });
-        }
-        closeBtn.focus();
-      });
+        window.requestAnimationFrame(function () {
+          setupModalObserver();
+          var items = slider.querySelectorAll('.reel-item');
+          var behave = reduceMotion ? 'auto' : 'smooth';
+          var ix = parseInt(startIndex, 10) || 0;
+          if (items[ix]) {
+            items[ix].scrollIntoView({ behavior: behave, block: 'start' });
+          }
+          closeBtn.focus();
+        });
+      }
+
+      syncReelStateFromServer()
+        .then(buildSliderAndShowModal)
+        .catch(buildSliderAndShowModal);
     }
 
     function closeReelModal() {
@@ -1378,12 +1466,18 @@
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         var dy = reduceMotion ? window.innerHeight : window.innerHeight * 0.92;
-        slider.scrollBy({ top: dy, behavior: reduceMotion ? 'auto' : 'smooth' });
+        var scroller = scrollRoot || slider;
+        if (scroller && typeof scroller.scrollBy === 'function') {
+          scroller.scrollBy({ top: dy, behavior: reduceMotion ? 'auto' : 'smooth' });
+        }
       }
       if (e.key === 'ArrowUp') {
         e.preventDefault();
         var up = reduceMotion ? window.innerHeight : window.innerHeight * 0.92;
-        slider.scrollBy({ top: -up, behavior: reduceMotion ? 'auto' : 'smooth' });
+        var scrollerUp = scrollRoot || slider;
+        if (scrollerUp && typeof scrollerUp.scrollBy === 'function') {
+          scrollerUp.scrollBy({ top: -up, behavior: reduceMotion ? 'auto' : 'smooth' });
+        }
       }
     }
 
@@ -1418,15 +1512,56 @@
       badge.classList.add('vcf-reel-badge--' + type);
     }
 
+    function bindGridVideoErrorRetry(video) {
+      if (!video || video.dataset.vcfReelRetryBound) return;
+      video.dataset.vcfReelRetryBound = '1';
+      video.addEventListener('error', function () {
+        if (video.dataset.vcfReelRetried) return;
+        var canonical =
+          video.dataset.vcfReelCanonical ||
+          video.getAttribute('src') ||
+          '';
+        if (!canonical || canonical.indexOf('_vcf=') !== -1) return;
+        video.dataset.vcfReelRetried = '1';
+        var sep = canonical.indexOf('?') === -1 ? '?' : '&';
+        var retryUrl = canonical + sep + '_vcf=' + Date.now();
+        try {
+          video.pause();
+        } catch (e) {}
+        video.removeAttribute('src');
+        try {
+          video.load();
+        } catch (e2) {}
+        video.setAttribute('preload', 'metadata');
+        video.setAttribute('src', retryUrl);
+        try {
+          video.load();
+        } catch (e3) {}
+      });
+    }
+
     function activateLazyVideo(video) {
       if (!video) return;
-      var url = video.dataset.vcfReelSrc;
-      if (!url || video.getAttribute('src')) return;
-      video.setAttribute('src', url);
-      delete video.dataset.vcfReelSrc;
-      try {
-        video.load();
-      } catch (e) {}
+      var pending = video.dataset.vcfReelSrc;
+      var existing = video.getAttribute('src');
+
+      if (pending && !existing) {
+        video.setAttribute('src', pending);
+        delete video.dataset.vcfReelSrc;
+        video.setAttribute('preload', 'metadata');
+        try {
+          video.load();
+        } catch (e) {}
+        bindGridVideoErrorRetry(video);
+        return;
+      }
+
+      if (existing) {
+        if (!video.dataset.vcfReelCanonical) {
+          video.dataset.vcfReelCanonical = existing;
+        }
+        bindGridVideoErrorRetry(video);
+      }
     }
 
     function prepareLazyVideos() {
@@ -1437,11 +1572,9 @@
         var url = video.getAttribute('src');
         if (!url) return;
         video.dataset.vcfReelSrc = url;
+        video.dataset.vcfReelCanonical = url;
         video.removeAttribute('src');
         video.setAttribute('preload', 'none');
-        try {
-          video.load();
-        } catch (e) {}
       });
     }
 
