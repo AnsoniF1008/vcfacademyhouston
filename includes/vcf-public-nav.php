@@ -51,19 +51,23 @@ if ($vcf_nav_crest === null && file_exists(__DIR__ . '/../assets/img/vfc-crest.s
 <header class="vcf-nav" id="vcf-nav">
   <div class="vcf-nav__inner">
     <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php" class="vcf-nav__logo" aria-label="VCF Academy Houston — Home">
-      <?php if ($vcf_nav_crest): ?>
-      <img class="vcf-nav__crest vcf-logo-anim--premium" src="<?= htmlspecialchars($base) ?>/assets/img/<?= htmlspecialchars($vcf_nav_crest) ?><?= $vcf_nav_crest_qs ?>" alt="Valencia CF" width="44" height="58" loading="eager" decoding="async">
-      <?php else: ?>
-      <div class="vcf-nav__flag" aria-hidden="true">
-        <span class="f1"></span>
-        <span class="f2"></span>
-        <span class="f3"></span>
-      </div>
-      <?php endif; ?>
-      <div class="vcf-nav__text">
-        <span class="t1">VCF Academy</span>
-        <span class="t2">Houston &middot; Official</span>
-      </div>
+      <span class="vcf-nav__logo-body">
+        <span class="vcf-nav__logo-tilt">
+          <?php if ($vcf_nav_crest): ?>
+          <img class="vcf-nav__crest" src="<?= htmlspecialchars($base) ?>/assets/img/<?= htmlspecialchars($vcf_nav_crest) ?><?= $vcf_nav_crest_qs ?>" alt="Valencia CF" width="44" height="58" loading="eager" decoding="async">
+          <?php else: ?>
+          <div class="vcf-nav__flag" aria-hidden="true">
+            <span class="f1"></span>
+            <span class="f2"></span>
+            <span class="f3"></span>
+          </div>
+          <?php endif; ?>
+          <div class="vcf-nav__text">
+            <span class="t1">VCF Academy</span>
+            <span class="t2">Houston &middot; Official</span>
+          </div>
+        </span>
+      </span>
     </a>
 
     <nav class="vcf-nav__links">
@@ -130,5 +134,35 @@ if ($vcf_nav_crest === null && file_exists(__DIR__ . '/../assets/img/vfc-crest.s
       if (!e.target.closest('#vcf-nav')) m.classList.remove('open');
     });
   }
+})();
+(function(){
+  var logo = document.querySelector('#vcf-nav .vcf-nav__logo');
+  if (!logo || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var maxX = 8;
+  var maxY = 11;
+  var pending = false;
+  var evLast = null;
+  logo.addEventListener('mousemove', function(e){ evLast = e; if (pending) return; pending = true; requestAnimationFrame(function(){
+    pending = false;
+    var ev = evLast;
+    if (!ev) return;
+    var r = logo.getBoundingClientRect();
+    var w = Math.max(r.width, 1);
+    var h = Math.max(r.height, 1);
+    var px = (ev.clientX - r.left) / w;
+    var py = (ev.clientY - r.top) / h;
+    var nx = px * 2 - 1;
+    var ny = py * 2 - 1;
+    logo.style.setProperty('--tilt-x', (ny * -maxY).toFixed(2) + 'deg');
+    logo.style.setProperty('--tilt-y', (nx * maxX).toFixed(2) + 'deg');
+    logo.style.setProperty('--glow-x', (px * 100).toFixed(2) + '%');
+    logo.style.setProperty('--glow-y', (py * 100).toFixed(2) + '%');
+  }); });
+  logo.addEventListener('mouseleave', function(){
+    logo.style.setProperty('--tilt-x', '0deg');
+    logo.style.setProperty('--tilt-y', '0deg');
+    logo.style.setProperty('--glow-x', '50%');
+    logo.style.setProperty('--glow-y', '50%');
+  });
 })();
 </script>

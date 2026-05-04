@@ -2,6 +2,8 @@
 
 Responsive landing page for the VCF Academy Houston youth soccer academy, inspired by the official Valencia CF aesthetic.
 
+**Documentación completa del sistema (arquitectura, panel admin, APIs, BD, deploy):** [docs/MANUAL-DEL-SISTEMA.md](docs/MANUAL-DEL-SISTEMA.md) (español).
+
 ## Stack
 
 - **PHP 8.x** with PDO (prepared statements)

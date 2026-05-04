@@ -1046,65 +1046,556 @@
     }
   })();
 
-  /* Reels: entrance animation + hover/tap play */
+  /* Match reels: grid + TikTok fullscreen modal (lazy src, LS likes/views, sound rail) */
   (function () {
-    var cards = document.querySelectorAll('[data-vcf-reel-card]');
+    var section = document.querySelector('.vcf-reels-section');
+    var modal = document.getElementById('reelModal');
+    var slider = modal ? modal.querySelector('.reel-slider') : null;
+    var closeBtn = modal ? modal.querySelector('.reel-close') : null;
+
+    if (!section) return;
+
+    var cards = section.querySelectorAll('[data-vcf-reel-card]');
     if (!cards.length) return;
 
-    function initReelAnimations() {
+    var LS_STATS = 'vcf_reel_stats_v1';
+    var modalIo = null;
+    var modalViewSession = null;
+    var lastModalFocus = null;
+
+    var reduceMotion =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var hoverPlays =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+    function lsGet(key, fb) {
+      try {
+        var r = localStorage.getItem(key);
+        return r ? JSON.parse(r) : fb;
+      } catch (e) {
+        return fb;
+      }
+    }
+    function lsSet(key, val) {
+      try {
+        localStorage.setItem(key, JSON.stringify(val));
+      } catch (e) {}
+    }
+    function reelKey(url) {
+      return url || '';
+    }
+    function normalizeStats(raw) {
+      var o = raw && typeof raw === 'object' ? raw : {};
+      return {
+        views: Number(o.views) || 0,
+        likes: Number(o.likes) || 0,
+        liked: !!o.liked,
+      };
+    }
+    function getStats(url) {
+      var bag = lsGet(LS_STATS, {});
+      return normalizeStats(bag[reelKey(url)]);
+    }
+    function saveStats(url, st) {
+      var bag = lsGet(LS_STATS, {});
+      bag[reelKey(url)] = normalizeStats(st);
+      lsSet(LS_STATS, bag);
+    }
+    function formatCompact(n) {
+      n = Number(n) || 0;
+      if (n < 1000) return String(Math.round(n));
+      if (n < 10000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+      return Math.round(n / 1000) + 'k';
+    }
+
+    function disconnectModalIo() {
+      if (modalIo) {
+        modalIo.disconnect();
+        modalIo = null;
+      }
+    }
+
+    function getVideoUrl(video) {
+      if (!video) return '';
+      return video.getAttribute('src') || video.dataset.vcfReelSrc || '';
+    }
+
+    function pauseAllGridVideos() {
+      cards.forEach(function (card) {
+        var v = card.querySelector('video.vcf-reel-media');
+        if (!v) return;
+        v.pause();
+        try {
+          v.currentTime = 0;
+        } catch (e) {}
+      });
+    }
+
+    function ensureAllReelSources() {
+      cards.forEach(function (card) {
+        activateLazyVideo(card.querySelector('video.vcf-reel-media'));
+      });
+    }
+
+    function buildModalRail(url, item, video) {
+      var st = getStats(url);
+
+      var rail = document.createElement('div');
+      rail.className = 'reel-item-rail';
+
+      var btnLike = document.createElement('button');
+      btnLike.type = 'button';
+      btnLike.className = 'reel-like';
+      btnLike.setAttribute('aria-label', 'Like');
+      btnLike.setAttribute('aria-pressed', st.liked ? 'true' : 'false');
+      if (st.liked) btnLike.classList.add('is-liked');
+      btnLike.innerHTML =
+        '<svg class="reel-like-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6 4 4 6.5 4c1.74 0 3.41 1.01 4.22 2.44C11.09 5.01 12.76 4 14.5 4 17 4 19 6 19 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
+
+      var likeCountEl = document.createElement('span');
+      likeCountEl.className = 'reel-like-count';
+      likeCountEl.textContent = formatCompact(st.likes);
+
+      var btnSound = document.createElement('button');
+      btnSound.type = 'button';
+      btnSound.className = 'reel-sound';
+      btnSound.setAttribute('aria-label', 'Sound off');
+      btnSound.innerHTML =
+        '<svg class="reel-sound-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 10v4h4l5 5V5L7 10H3zm13.5 2A4.5 4.5 0 0014 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
+
+      var viewsRow = document.createElement('div');
+      viewsRow.className = 'reel-views';
+      viewsRow.innerHTML =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 9a3 3 0 100 6 3 3 0 000-6zm0 8c-4.08 0-7.63-2.45-9.29-6 1.66-3.55 5.21-6 9.29-6s7.63 2.45 9.29 6c-1.66 3.55-5.21 6-9.29 6z"/></svg>';
+      var viewsNum = document.createElement('span');
+      viewsNum.className = 'reel-views-num';
+      viewsNum.textContent = formatCompact(st.views);
+      viewsRow.appendChild(viewsNum);
+
+      btnLike.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var cur = getStats(url);
+        if (cur.liked) {
+          cur.liked = false;
+          cur.likes = Math.max(0, (Number(cur.likes) || 0) - 1);
+        } else {
+          cur.liked = true;
+          cur.likes = (Number(cur.likes) || 0) + 1;
+          btnLike.classList.add('reel-like--pop');
+          window.setTimeout(function () {
+            btnLike.classList.remove('reel-like--pop');
+          }, 480);
+        }
+        saveStats(url, cur);
+        btnLike.classList.toggle('is-liked', cur.liked);
+        btnLike.setAttribute('aria-pressed', cur.liked ? 'true' : 'false');
+        likeCountEl.textContent = formatCompact(cur.likes);
+      });
+
+      btnSound.addEventListener('click', function (e) {
+        e.stopPropagation();
+        video.muted = !video.muted;
+        btnSound.classList.toggle('is-unmuted', !video.muted);
+        btnSound.setAttribute('aria-label', video.muted ? 'Sound off' : 'Sound on');
+      });
+
+      rail.appendChild(btnLike);
+      rail.appendChild(likeCountEl);
+      rail.appendChild(btnSound);
+      rail.appendChild(viewsRow);
+      item.appendChild(rail);
+
+      return viewsNum;
+    }
+
+    function setupModalObserver() {
+      disconnectModalIo();
+      if (!slider || typeof IntersectionObserver === 'undefined') return;
+
+      var vids = slider.querySelectorAll('video.reel-modal-video');
+      modalIo = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            var video = entry.target;
+            var item = video.closest('.reel-item');
+            var url = item ? item.getAttribute('data-reel-src') || '' : '';
+
+            if (!entry.isIntersecting) {
+              video.pause();
+              try {
+                video.currentTime = 0;
+              } catch (e) {}
+              return;
+            }
+
+            vids.forEach(function (v) {
+              if (v !== video) {
+                v.pause();
+                try {
+                  v.currentTime = 0;
+                } catch (e) {}
+                v.muted = true;
+                var it = v.closest('.reel-item');
+                var sb = it && it.querySelector('.reel-sound');
+                if (sb) {
+                  sb.classList.remove('is-unmuted');
+                  sb.setAttribute('aria-label', 'Sound off');
+                }
+              }
+            });
+
+            video.muted = true;
+            var sb2 = item && item.querySelector('.reel-sound');
+            if (sb2) {
+              sb2.classList.remove('is-unmuted');
+              sb2.setAttribute('aria-label', 'Sound off');
+            }
+            video.play().catch(function () {});
+
+            if (url && modalViewSession && !modalViewSession.has(url)) {
+              modalViewSession.add(url);
+              var st = getStats(url);
+              st.views = (Number(st.views) || 0) + 1;
+              saveStats(url, st);
+              var vn = item.__viewsNum;
+              if (vn) vn.textContent = formatCompact(st.views);
+            }
+          });
+        },
+        { root: slider, threshold: 0.62 }
+      );
+
+      vids.forEach(function (v) {
+        modalIo.observe(v);
+      });
+    }
+
+    function openReelModal(startIndex) {
+      if (!modal || !slider || !closeBtn) return;
+
+      ensureAllReelSources();
+
+      lastModalFocus = document.activeElement;
+      pauseAllGridVideos();
+      disconnectModalIo();
+      modalViewSession = new Set();
+
+      slider.innerHTML = '';
+
+      cards.forEach(function (card, i) {
+        var srcVideo = card.querySelector('video.vcf-reel-media');
+        var url = getVideoUrl(srcVideo);
+        var label = (srcVideo && srcVideo.getAttribute('aria-label')) || 'Reel';
+        var badgeEl = card.querySelector('.vcf-reel-badge');
+        var badgeText = badgeEl ? badgeEl.textContent.trim() : 'HIGHLIGHT';
+
+        var item = document.createElement('div');
+        item.className = 'reel-item';
+        item.setAttribute('data-reel-src', url);
+
+        var media = document.createElement('div');
+        media.className = 'reel-item-media';
+
+        var video = document.createElement('video');
+        video.className = 'reel-modal-video';
+        video.setAttribute('playsinline', '');
+        video.setAttribute('muted', '');
+        video.loop = true;
+        video.setAttribute('preload', 'metadata');
+        video.setAttribute('aria-label', label);
+        if (url) video.setAttribute('src', url);
+
+        media.appendChild(video);
+        item.appendChild(media);
+
+        var info = document.createElement('div');
+        info.className = 'reel-info';
+        var tag = document.createElement('span');
+        tag.className = 'reel-tag';
+        tag.textContent = badgeText;
+        info.appendChild(tag);
+        var cap = document.createElement('span');
+        cap.className = 'reel-caption';
+        cap.textContent = label;
+        info.appendChild(cap);
+        item.appendChild(info);
+
+        item.__viewsNum = buildModalRail(url, item, video);
+
+        slider.appendChild(item);
+      });
+
+      modal.removeAttribute('hidden');
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('reel-modal-open');
+
+      window.requestAnimationFrame(function () {
+        setupModalObserver();
+        var items = slider.querySelectorAll('.reel-item');
+        var behave = reduceMotion ? 'auto' : 'smooth';
+        var ix = parseInt(startIndex, 10) || 0;
+        if (items[ix]) {
+          items[ix].scrollIntoView({ behavior: behave, block: 'start' });
+        }
+        closeBtn.focus();
+      });
+    }
+
+    function closeReelModal() {
+      if (!modal || !slider) return;
+      disconnectModalIo();
+      slider.querySelectorAll('video').forEach(function (v) {
+        v.pause();
+        v.removeAttribute('src');
+        try {
+          v.load();
+        } catch (e) {}
+      });
+      slider.innerHTML = '';
+      modal.classList.remove('active');
+      modal.setAttribute('hidden', '');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('reel-modal-open');
+      modalViewSession = null;
+      if (lastModalFocus && typeof lastModalFocus.focus === 'function') {
+        try {
+          lastModalFocus.focus();
+        } catch (e2) {}
+      }
+      lastModalFocus = null;
+    }
+
+    function onModalDocKeydown(e) {
+      if (!modal || !modal.classList.contains('active')) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeReelModal();
+        return;
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        var dy = reduceMotion ? window.innerHeight : window.innerHeight * 0.92;
+        slider.scrollBy({ top: dy, behavior: reduceMotion ? 'auto' : 'smooth' });
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        var up = reduceMotion ? window.innerHeight : window.innerHeight * 0.92;
+        slider.scrollBy({ top: -up, behavior: reduceMotion ? 'auto' : 'smooth' });
+      }
+    }
+
+    function initModalChrome() {
+      if (!modal || !slider || !closeBtn) return;
+      modal.setAttribute('aria-hidden', 'true');
+      closeBtn.addEventListener('click', closeReelModal);
+      document.addEventListener('keydown', onModalDocKeydown);
+    }
+
+    function syncBadgeFromAria(card) {
+      var video = card.querySelector('video.vcf-reel-media');
+      var badge = card.querySelector('.vcf-reel-badge');
+      if (!video || !badge) return;
+      var raw = video.getAttribute('aria-label') || '';
+      var lower = raw.toLowerCase();
+      var type = 'highlight';
+      var text = 'HIGHLIGHT';
+      if (/golazo|\bgol\b|goal|scorer/.test(lower)) {
+        type = 'golazo';
+        text = 'GOLAZO';
+      } else if (/train|entren|practice/.test(lower)) {
+        type = 'entrenamiento';
+        text = 'TRAINING';
+      }
+      badge.textContent = text;
+      badge.classList.remove(
+        'vcf-reel-badge--highlight',
+        'vcf-reel-badge--golazo',
+        'vcf-reel-badge--entrenamiento'
+      );
+      badge.classList.add('vcf-reel-badge--' + type);
+    }
+
+    function activateLazyVideo(video) {
+      if (!video) return;
+      var url = video.dataset.vcfReelSrc;
+      if (!url || video.getAttribute('src')) return;
+      video.setAttribute('src', url);
+      delete video.dataset.vcfReelSrc;
+      try {
+        video.load();
+      } catch (e) {}
+    }
+
+    function prepareLazyVideos() {
+      if (reduceMotion) return;
+      cards.forEach(function (card) {
+        var video = card.querySelector('video.vcf-reel-media');
+        if (!video) return;
+        var url = video.getAttribute('src');
+        if (!url) return;
+        video.dataset.vcfReelSrc = url;
+        video.removeAttribute('src');
+        video.setAttribute('preload', 'none');
+        try {
+          video.load();
+        } catch (e) {}
+      });
+    }
+
+    function initLazyObserver() {
+      if (reduceMotion || typeof IntersectionObserver === 'undefined') {
+        cards.forEach(function (card) {
+          activateLazyVideo(card.querySelector('video.vcf-reel-media'));
+        });
+        return;
+      }
+      var io = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            var v = entry.target.querySelector('video.vcf-reel-media');
+            if (v) activateLazyVideo(v);
+            io.unobserve(entry.target);
+          });
+        },
+        { rootMargin: '140px 0px', threshold: 0.02 }
+      );
+      cards.forEach(function (card) {
+        io.observe(card);
+      });
+    }
+
+    function initSectionHeaderReveal() {
+      if (reduceMotion) {
+        section.classList.add('is-vcf-reels-active');
+        return;
+      }
+      if (typeof IntersectionObserver === 'undefined') {
+        section.classList.add('is-vcf-reels-active');
+        return;
+      }
+      var once = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            section.classList.add('is-vcf-reels-active');
+            once.disconnect();
+          });
+        },
+        { threshold: 0.08, rootMargin: '0px 0px -10% 0px' }
+      );
+      once.observe(section);
+    }
+
+    function initEntrance() {
       if (typeof IntersectionObserver === 'undefined') {
         cards.forEach(function (card) {
           card.classList.add('vcf-reel-visible');
         });
         return;
       }
-
-      var observer = new IntersectionObserver(
+      var staggerMs = reduceMotion ? 0 : 52;
+      var obs = new IntersectionObserver(
         function (entries) {
           entries.forEach(function (entry) {
             if (!entry.isIntersecting) return;
             var card = entry.target;
             var idx = parseInt(card.getAttribute('data-index') || '0', 10);
-            setTimeout(function () {
+            window.setTimeout(function () {
               card.classList.add('vcf-reel-visible');
-            }, idx * 60);
-            observer.unobserve(card);
+            }, idx * staggerMs);
+            obs.unobserve(card);
           });
         },
-        { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+        { threshold: 0.1, rootMargin: '0px 0px -32px 0px' }
       );
-
       cards.forEach(function (card) {
-        observer.observe(card);
+        obs.observe(card);
+      });
+    }
+
+    function initViewportPause() {
+      if (typeof IntersectionObserver === 'undefined') return;
+      var vp = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            var video = entry.target.querySelector('video.vcf-reel-media');
+            if (!video || video.paused) return;
+            if (!entry.isIntersecting) {
+              video.pause();
+              try {
+                video.currentTime = 0;
+              } catch (e) {}
+            }
+          });
+        },
+        { threshold: 0.06, rootMargin: '24px 0px' }
+      );
+      cards.forEach(function (card) {
+        vp.observe(card);
       });
     }
 
     function initVideoInteraction() {
       cards.forEach(function (card) {
+        if (!card.hasAttribute('tabindex')) card.setAttribute('tabindex', '0');
+
         var video = card.querySelector('video.vcf-reel-media');
         if (!video) return;
 
-        card.addEventListener('mouseenter', function () {
-          video.play().catch(function () {});
+        syncBadgeFromAria(card);
+
+        card.addEventListener('keydown', function (e) {
+          if (e.key !== 'Enter' && e.key !== ' ') return;
+          e.preventDefault();
+          card.click();
         });
 
-        card.addEventListener('mouseleave', function () {
-          video.pause();
-          video.currentTime = 0;
-        });
+        if (hoverPlays) {
+          card.addEventListener('mouseenter', function () {
+            activateLazyVideo(video);
+            video.play().catch(function () {});
+          });
 
-        card.addEventListener('click', function () {
+          card.addEventListener('mouseleave', function () {
+            video.pause();
+            try {
+              video.currentTime = 0;
+            } catch (e) {}
+          });
+        }
+
+        card.addEventListener('click', function (e) {
+          if (modal && slider && closeBtn) {
+            e.preventDefault();
+            var ix = parseInt(card.getAttribute('data-index') || '0', 10);
+            openReelModal(ix);
+            return;
+          }
+          activateLazyVideo(video);
           if (video.paused) {
             video.play().catch(function () {});
           } else {
             video.pause();
-            video.currentTime = 0;
+            try {
+              video.currentTime = 0;
+            } catch (err) {}
           }
         });
       });
     }
 
-    initReelAnimations();
+    initModalChrome();
+    prepareLazyVideos();
+    initLazyObserver();
+    initSectionHeaderReveal();
+    initEntrance();
+    initViewportPause();
     initVideoInteraction();
   })();
+
+
 })();

@@ -110,7 +110,13 @@
     <?php endif; ?>
     <script src="<?= $vcf_base_safe ?>/assets/js/main.js?v=13" defer></script>
     <?php if (!empty($vcf_public_redesign) && empty($is_admin) && !empty($vcf_home_scripts)): ?>
-    <script src="<?= $vcf_base_safe ?>/assets/js/vcf-home.js?v=8" defer></script>
+    <div id="reelModal" class="reel-modal" role="dialog" aria-modal="true" aria-label="Match reels fullscreen" hidden>
+      <div class="reel-modal-content">
+        <button type="button" class="reel-close" aria-label="Close">&times;</button>
+        <div class="reel-slider"></div>
+      </div>
+    </div>
+    <script src="<?= $vcf_base_safe ?>/assets/js/vcf-home.js?v=10" defer></script>
     <?php endif; ?>
     <?php if (isset($reels) && count($reels) > 0 && empty($vcf_public_redesign)): ?><script src="<?= $vcf_base_safe ?>/assets/js/reels-carousel.js?v=1" defer></script><?php endif; ?>
 </body>
