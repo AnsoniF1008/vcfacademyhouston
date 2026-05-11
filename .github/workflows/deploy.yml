@@ -13,16 +13,19 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     name: Deploy via FTP
-    timeout-minutes: 20
+    timeout-minutes: 30
+    # Use Node.js 24 for JS-based actions before the platform default flip (Jun 2026).
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Deploy to Hostinger via FTP (attempt 1)
         id: deploy_1
         continue-on-error: true
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
@@ -30,6 +33,9 @@ jobs:
           local-dir: ./
           # Raíz FTP = public_html (Hostinger). Usar / evita /public_html/public_html/ en el servidor.
           server-dir: /
+          # Default 30s is often too short from GitHub → Hostinger ("Timeout control socket").
+          timeout: 180000
+          log-level: minimal
           exclude: |
             **/.git*
             **/.git*/**
@@ -53,14 +59,14 @@ jobs:
         if: steps.deploy_1.outcome == 'failure'
         run: |
           echo "Attempt 1 failed. Hostinger sometimes throttles FTP after rapid"
-          echo "successive logins; waiting 30s before retrying."
-          sleep 30
+          echo "successive logins; waiting 45s before retrying."
+          sleep 45
 
       - name: Deploy to Hostinger via FTP (attempt 2)
         id: deploy_2
         if: steps.deploy_1.outcome == 'failure'
         continue-on-error: true
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
@@ -68,6 +74,8 @@ jobs:
           local-dir: ./
           # Raíz FTP = public_html (Hostinger). Usar / evita /public_html/public_html/ en el servidor.
           server-dir: /
+          timeout: 180000
+          log-level: minimal
           exclude: |
             **/.git*
             **/.git*/**
@@ -90,14 +98,14 @@ jobs:
       - name: Wait before retry 3
         if: steps.deploy_1.outcome == 'failure' && steps.deploy_2.outcome == 'failure'
         run: |
-          echo "Attempt 2 also failed. Backing off 60s before final attempt."
-          sleep 60
+          echo "Attempt 2 also failed. Backing off 90s before final attempt."
+          sleep 90
 
       - name: Deploy to Hostinger via FTP (attempt 3)
         id: deploy_3
         if: steps.deploy_1.outcome == 'failure' && steps.deploy_2.outcome == 'failure'
         continue-on-error: true
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
@@ -105,6 +113,8 @@ jobs:
           local-dir: ./
           # Raíz FTP = public_html (Hostinger). Usar / evita /public_html/public_html/ en el servidor.
           server-dir: /
+          timeout: 180000
+          log-level: minimal
           exclude: |
             **/.git*
             **/.git*/**
