@@ -181,9 +181,9 @@ try {
             </ul>
             <?php elseif ($isBreakerOpen): ?>
             <h2>Causa: circuit breaker activo</h2>
-            <p>Una conexión falló hace pocos segundos. Para no machacar a MySQL, el sistema deja de intentar conectar durante 90 segundos.</p>
+            <p>Una conexión falló hace pocos segundos. Para no machacar a MySQL, el sistema deja de intentar conectar durante unos 120 segundos.</p>
             <ul>
-                <li>Espera ~90s y recarga.</li>
+                <li>Espera ~2 minutos y recarga.</li>
                 <li>Para forzar el reseteo manualmente: borra <code>cache/db_blocked_until.txt</code> en el proyecto.</li>
             </ul>
             <?php else: ?>
