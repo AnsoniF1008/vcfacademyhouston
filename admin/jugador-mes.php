@@ -119,7 +119,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $ext = in_array($ext,['jpg','png','webp'],true)?$ext:'jpg';
                         $filename = 'star-' . uniqid() . '.' . $ext;
                         $path     = $uploadDir . $filename;
-                        if (move_uploaded_file($_FILES['foto']['tmp_name'], $path)) { $foto_url = 'assets/uploads/' . $filename; }
+                        if (move_uploaded_file($_FILES['foto']['tmp_name'], $path)) {
+                            // Best-effort WebP optimization (silently no-ops if GD is missing
+                            // or the source is already smaller than the re-encode).
+                            $optimized = vcf_optimize_to_webp($path, 1200, 82);
+                            if ($optimized !== null && is_file($optimized)) {
+                                $filename = basename($optimized);
+                            }
+                            $foto_url = 'assets/uploads/' . $filename;
+                        }
                     }
                 }
             }

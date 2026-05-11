@@ -2,11 +2,18 @@
 // ── Session hardening ──────────────────────────────────────────────────────
 // Cookie params MUST be set before session_start(). Centralising them here
 // ensures every admin page (not just the login form) uses Secure/HttpOnly/Strict.
+//
+// Distinct session name `vcf_admin_sess` (separate from the default PHPSESSID)
+// keeps admin cookies out of the public site's cookie jar. Otherwise any
+// visitor who had ever opened /admin/ would carry the PHPSESSID cookie back
+// to the public pages, where header.php would see it and skip the page cache
+// for every subsequent request — quietly destroying the cache hit ratio.
 if (session_status() === PHP_SESSION_NONE) {
     if (!headers_sent()) {
+        session_name('vcf_admin_sess');
         session_set_cookie_params([
             'lifetime' => 0,
-            'path'     => '/',
+            'path'     => '/admin/',
             'secure'   => true,
             'httponly' => true,
             'samesite' => 'Strict',
@@ -120,4 +127,34 @@ function admin_log(string $action, ?string $details = null): void {
     } catch (PDOException $e) {
         error_log('admin_log: ' . $e->getMessage());
     }
+}
+
+// ── Auto-invalidate the public page/API cache on any admin POST ─────────────
+// When admins save changes to roster, juegos, MOTM, hero, etc. the public site
+// would otherwise keep serving cached HTML/JSON for up to 15-20 minutes (the
+// page_cache TTLs). Wiping both caches on every successful admin POST guarantees
+// visitors see the change immediately, without forcing admins to remember the
+// "Clear cache" button.
+//
+// Scope: admin POST only (login form excluded — handled separately). GETs do
+// not invalidate. Read-only admin pages (dashboard, activity-log) only see GETs
+// so this is a no-op for them.
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+    register_shutdown_function(function (): void {
+        // Only run on responses that look successful (2xx/3xx). Errors and
+        // CSRF/validation failures (handlers usually fall through to re-render
+        // the form with a 200) are fine to invalidate too — worst case we
+        // regenerate a couple of cache entries unnecessarily.
+        $code = function_exists('http_response_code') ? (int) http_response_code() : 200;
+        if ($code >= 400) {
+            return;
+        }
+        $pageCacheFile = __DIR__ . '/../../includes/page_cache.php';
+        if (is_file($pageCacheFile)) {
+            require_once $pageCacheFile;
+            if (function_exists('vcf_public_cache_clear')) {
+                @vcf_public_cache_clear();
+            }
+        }
+    });
 }

@@ -1,7 +1,11 @@
 <?php
+// Distinct session name and path=/admin/ keep admin cookies out of the
+// public site's cookie jar (otherwise the public page_cache skips every
+// returning admin's visits — see admin/includes/auth.php for details).
+session_name('vcf_admin_sess');
 session_set_cookie_params([
     'lifetime' => 0,
-    'path'     => '/',
+    'path'     => '/admin/',
     'secure'   => true,
     'httponly' => true,
     'samesite' => 'Strict',

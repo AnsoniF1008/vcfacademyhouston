@@ -117,6 +117,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         } else {
                             $path = $uploadDir . $filename;
                             if (move_uploaded_file($_FILES['foto']['tmp_name'], $path)) {
+                                // Best-effort: resize >1200px down, re-encode to WebP if it
+                                // produces a smaller file. On failure (GD missing, source
+                                // already small, encode error) keep the original upload.
+                                $optimized = vcf_optimize_to_webp($path, 1200, 82);
+                                if ($optimized !== null && is_file($optimized)) {
+                                    $filename = basename($optimized);
+                                }
                                 $foto_url = 'assets/uploads/' . $filename;
                             }
                         }

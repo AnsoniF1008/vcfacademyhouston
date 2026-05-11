@@ -1,6 +1,17 @@
 <?php
 // Logout must be POST to prevent CSRF logout via <img>, <link> or plain GET links.
+// Must match the session name used in admin/index.php and admin/includes/auth.php
+// so that destroying the session and clearing the cookie actually targets the
+// admin session (vcf_admin_sess), not a default PHPSESSID.
 if (session_status() === PHP_SESSION_NONE) {
+    session_name('vcf_admin_sess');
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => '/admin/',
+        'secure'   => true,
+        'httponly' => true,
+        'samesite' => 'Strict',
+    ]);
     session_start();
 }
 

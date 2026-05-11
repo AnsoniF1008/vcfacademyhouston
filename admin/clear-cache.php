@@ -1,11 +1,9 @@
 <?php
 /**
- * Admin: wipe the public page cache.
+ * Admin: wipe public page HTML cache and API JSON cache (roster-player, etc.).
  *
- * The public site caches rendered HTML for 60 seconds to relieve pressure
- * on the shared MySQL host. After saving content (hero, roster, MOTM,
- * donations, etc.) admins can hit this endpoint to flush the cache and
- * see their changes immediately instead of waiting up to a minute.
+ * TTLs on the public site reduce MySQL load; this button flushes immediately.
+ * POST saves also auto-invalidate (see admin/includes/auth.php).
  */
 require __DIR__ . '/includes/auth.php';
 require __DIR__ . '/includes/csrf.php';
@@ -21,7 +19,7 @@ if (!csrf_verify()) {
     exit;
 }
 
-$count = vcf_page_cache_clear();
-admin_log('clear_page_cache', sprintf('Removed %d cached pages.', $count));
+$count = vcf_public_cache_clear();
+admin_log('clear_public_cache', sprintf('Removed %d cached page/API files.', $count));
 header('Location: dashboard.php?cache_cleared=' . (int) $count);
 exit;

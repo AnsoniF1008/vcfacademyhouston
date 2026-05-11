@@ -199,3 +199,39 @@ if (!function_exists('vcf_page_cache_clear')) {
         return $count;
     }
 }
+
+if (!function_exists('vcf_api_cache_clear')) {
+    /**
+     * Wipe every cached API JSON response. Called from admin handlers that
+     * modify data exposed through the public APIs (roster, star results, etc.).
+     */
+    function vcf_api_cache_clear(): int
+    {
+        $dir = __DIR__ . '/../cache/api';
+        if (!is_dir($dir)) {
+            return 0;
+        }
+        $count = 0;
+        $files = glob($dir . '/*.json') ?: [];
+        foreach ($files as $f) {
+            if (@unlink($f)) {
+                $count++;
+            }
+        }
+        return $count;
+    }
+}
+
+if (!function_exists('vcf_public_cache_clear')) {
+    /**
+     * Convenience: clear BOTH page HTML cache AND API JSON cache in one call.
+     * Use from admin POST handlers after saving/deleting/editing public content
+     * so visitors see the change immediately instead of waiting for TTL expiry.
+     *
+     * Returns the combined count of removed cache files (informational only).
+     */
+    function vcf_public_cache_clear(): int
+    {
+        return vcf_page_cache_clear() + vcf_api_cache_clear();
+    }
+}

@@ -91,7 +91,7 @@ if (file_exists(__DIR__ . '/../assets/img/vcf-crest.svg')) {
 $vcf_public_base = rtrim($origin, '/') . ($base === '' ? '' : $base);
 $vcf_home_url = $vcf_public_base . '/';
 $crestForLogo = $header_crest_file ?: 'favicon.svg';
-$vcf_crest_version_qs = ($crestForLogo === 'vcf-crest.png') ? '?v=20260401' : '';
+$vcf_crest_version_qs = ($crestForLogo === 'vcf-crest.png') ? '?v=20260511' : '';
 $vcf_logo_url = $vcf_public_base . '/assets/img/' . $crestForLogo;
 
 /**
@@ -162,11 +162,11 @@ $use_local_swiper_css = file_exists($vendor_root . '/swiper/swiper-bundle.min.cs
     $vcf_has_favicon_png = is_file($vcf_favicon_png);
     ?>
     <?php if ($vcf_has_favicon_png): ?>
-    <link rel="icon" type="image/png" sizes="48x48" href="<?= $base ?>/assets/img/vcf-crest.png?v=20260401">
-    <link rel="shortcut icon" type="image/png" href="<?= $base ?>/assets/img/vcf-crest.png?v=20260401">
+    <link rel="icon" type="image/png" sizes="48x48" href="<?= $base ?>/assets/img/vcf-crest.png?v=20260511">
+    <link rel="shortcut icon" type="image/png" href="<?= $base ?>/assets/img/vcf-crest.png?v=20260511">
     <?php endif; ?>
     <link rel="icon" href="<?= $base ?>/assets/img/favicon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" sizes="180x180" href="<?= $base ?>/assets/img/<?= $vcf_has_favicon_png ? 'vcf-crest.png?v=20260401' : 'favicon.svg' ?>">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?= $base ?>/assets/img/<?= $vcf_has_favicon_png ? 'vcf-crest.png?v=20260511' : 'favicon.svg' ?>">
     <meta name="theme-color" content="#080808">
     <meta name="geo.region" content="US-TX">
     <meta name="geo.placename" content="Houston, Katy">

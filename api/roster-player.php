@@ -2,9 +2,13 @@
 /**
  * Returns JSON for a roster player: info + stats + skills (for player card modal).
  * GET ?id=roster_id
+ *
+ * Cache: payload cached on disk for 60s per roster id to prevent the player-card
+ * modal from opening 5 connections to MySQL on every click. Admin can clear
+ * the cache from the dashboard if a stats change must show immediately.
  */
 header('Content-Type: application/json');
-header('Cache-Control: no-store');
+header('Cache-Control: public, max-age=60');
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 if ($id <= 0) {
@@ -12,6 +16,19 @@ if ($id <= 0) {
     echo json_encode(['error' => 'invalid']);
     exit;
 }
+
+$cacheDir  = __DIR__ . '/../cache/api';
+$cacheFile = $cacheDir . '/roster_player_' . $id . '.json';
+$cacheTtl  = 60; // seconds
+if (is_file($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTtl) {
+    $cached = @file_get_contents($cacheFile);
+    if ($cached !== false && $cached !== '') {
+        header('X-Cache: HIT');
+        echo $cached;
+        exit;
+    }
+}
+header('X-Cache: MISS');
 
 require __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/roster_i18n.php';
@@ -86,11 +103,19 @@ try {
 
     $player['posicion_display'] = vcf_roster_position_en($player['posicion'] ?? null, $hasSubPosicion ? ($player['sub_posicion'] ?? null) : null);
 
-    echo json_encode([
+    $json = json_encode([
         'player' => $player,
         'stats' => $stats,
         'skills' => $skills,
     ]);
+
+    // Persist to cache so the next 60s of clicks don't touch MySQL.
+    if (!is_dir($cacheDir)) {
+        @mkdir($cacheDir, 0775, true);
+    }
+    @file_put_contents($cacheFile, $json, LOCK_EX);
+
+    echo $json;
 } catch (PDOException $e) {
     error_log('roster-player API: ' . $e->getMessage());
     http_response_code(500);

@@ -10,7 +10,7 @@ $vcf_base_url = ($base === '' ? '/' : $base . '/');
 $navMotm = !empty($motmOpen) || !empty($motmWinner);
 $navStar = !empty($star_section_visible);
 $vcf_nav_crest = $header_crest_file ?? null;
-$vcf_nav_crest_qs = ($vcf_nav_crest === 'vcf-crest.png') ? '?v=20260401' : '';
+$vcf_nav_crest_qs = ($vcf_nav_crest === 'vcf-crest.png') ? '?v=20260511' : '';
 if ($vcf_nav_crest === null && file_exists(__DIR__ . '/../assets/img/vfc-crest.svg')) {
     $vcf_nav_crest = 'vfc-crest.svg';
 }
