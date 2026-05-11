@@ -66,7 +66,7 @@ $options = [
 // request probes again. If it succeeds, the breaker resets; if not, the
 // timestamp slides forward.
 $breakerFile = __DIR__ . '/../cache/db_blocked_until.txt';
-$breakerWindow = 90; // seconds the breaker stays open after a failure.
+$breakerWindow = 120; // seconds the breaker stays open after a failure.
 $breakerOpen = false;
 if (php_sapi_name() !== 'cli' && is_file($breakerFile)) {
     $blockedUntil = (int) @file_get_contents($breakerFile);
@@ -98,7 +98,13 @@ try {
         @unlink($breakerFile);
     }
 } catch (PDOException $e) {
-    error_log('Database connection failed: ' . $e->getMessage());
+    $errMsg = $e->getMessage();
+    // Tag rate-limit failures explicitly so they're easy to grep in logs.
+    if (strpos($errMsg, 'max_connections_per_hour') !== false || strpos($errMsg, '1226') !== false) {
+        error_log('Database connection failed (HOSTINGER RATE LIMIT / 1226 max_connections_per_hour): ' . $errMsg);
+    } else {
+        error_log('Database connection failed: ' . $errMsg);
+    }
     // Trip the breaker (only on real failures, not on every short-circuit).
     if (!$breakerOpen) {
         @file_put_contents($breakerFile, (string) (time() + $breakerWindow), LOCK_EX);

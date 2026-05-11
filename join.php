@@ -1,5 +1,12 @@
 <?php
+require __DIR__ . '/includes/page_cache.php';
+// Public join form. Content only changes when admin updates categorias/horarios
+// (rare). Cache for 15 min — POST submissions bypass cache automatically.
+if (vcf_page_cache_try_serve(900)) {
+    exit;
+}
 require __DIR__ . '/config/database.php';
+vcf_page_cache_start(900);
 
 $categorias = [];
 try {

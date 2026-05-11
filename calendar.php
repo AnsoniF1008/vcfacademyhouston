@@ -13,13 +13,13 @@
 $_calendar_is_ics = (($_GET['format'] ?? '') === 'ics');
 if (!$_calendar_is_ics) {
     require __DIR__ . '/includes/page_cache.php';
-    if (vcf_page_cache_try_serve(600)) {
+    if (vcf_page_cache_try_serve(1200)) {
         exit;
     }
 }
 require __DIR__ . '/config/database.php';
 if (!$_calendar_is_ics) {
-    vcf_page_cache_start(600);
+    vcf_page_cache_start(1200);
 }
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
