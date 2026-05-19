@@ -32,6 +32,8 @@ if ($vcf_nav_crest === null && file_exists(__DIR__ . '/../assets/img/vfc-crest.s
       <?php endif; ?>
       <div class="vcf-topbar__sep"></div>
       <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php#tournaments" class="<?= $page_active === 'tournaments' ? 'active' : '' ?>">Tournaments</a>
+      <div class="vcf-topbar__sep"></div>
+      <a href="<?= htmlspecialchars($vcf_base_url) ?>news.php" class="<?= ($page_active ?? '') === 'news' ? 'active' : '' ?>">News</a>
       <?php if ($navStar): ?>
       <div class="vcf-topbar__sep"></div>
       <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php#star">Star</a>
@@ -79,6 +81,7 @@ if ($vcf_nav_crest === null && file_exists(__DIR__ . '/../assets/img/vfc-crest.s
       <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php#motm">MOTM</a>
       <?php endif; ?>
       <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php#tournaments" class="<?= $page_active === 'tournaments' ? 'active' : '' ?>">Tournaments</a>
+      <a href="<?= htmlspecialchars($vcf_base_url) ?>news.php" class="<?= ($page_active ?? '') === 'news' ? 'active' : '' ?>">News</a>
       <?php if ($navStar): ?>
       <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php#star">Star</a>
       <?php endif; ?>
@@ -109,6 +112,7 @@ if ($vcf_nav_crest === null && file_exists(__DIR__ . '/../assets/img/vfc-crest.s
     <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php#motm">MOTM</a>
     <?php endif; ?>
     <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php#tournaments">Tournaments</a>
+    <a href="<?= htmlspecialchars($vcf_base_url) ?>news.php">News</a>
     <?php if ($navStar): ?>
     <a href="<?= htmlspecialchars($vcf_base_url) ?>index.php#star">Star</a>
     <?php endif; ?>

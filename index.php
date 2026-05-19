@@ -466,6 +466,9 @@ try {
         $reels = [];
     }
 }
+require_once __DIR__ . '/includes/noticias_helper.php';
+$ultimasNoticias = vcf_noticias_ultimas($pdo, 3);
+
 $vcf_home_scripts = true;
 $vcf_nav_context_loaded = true;
 require __DIR__ . '/includes/header.php';

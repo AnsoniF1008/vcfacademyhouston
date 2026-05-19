@@ -186,6 +186,19 @@ require __DIR__ . '/../includes/header.php';
             </a>
         </div>
         <?php endif; ?>
+        <?php if (admin_can('noticias')): ?>
+        <div class="col-md-4">
+            <a href="noticias.php" class="text-decoration-none">
+                <div class="card bg-dark border border-secondary border-2 rounded-3 h-100 admin-card hover-orange">
+                    <div class="card-body">
+                        <i class="far fa-newspaper fa-2x mb-2"></i>
+                        <h5 class="card-title text-white">News</h5>
+                        <p class="card-text text-muted small">Publish articles, match recaps and academy updates.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <?php endif; ?>
         <?php if (admin_can('categorias')): ?>
         <div class="col-md-4">
             <a href="categorias.php" class="text-decoration-none">

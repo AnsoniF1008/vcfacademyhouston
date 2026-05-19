@@ -318,6 +318,8 @@ echo json_encode([
 
 <?php require __DIR__ . '/partials/home-tournaments-stats.php'; ?>
 
+<?php require __DIR__ . '/partials/home-news-section.php'; ?>
+
 <?php if (!empty($reels) && is_array($reels) && count($reels) > 0): ?>
 <?php
 $statsApiUrl = ($b === '' ? '' : $b) . '/api/reel-stats.php';

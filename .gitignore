@@ -2,6 +2,9 @@
 assets/uploads/*
 !assets/uploads/.gitkeep
 !assets/uploads/.htaccess
+!assets/uploads/noticias/
+assets/uploads/noticias/*
+!assets/uploads/noticias/.gitkeep
 
 # Page cache (HTML snapshots, regenerated automatically)
 cache/page/*

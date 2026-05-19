@@ -91,7 +91,7 @@ function admin_can(string $permission): bool {
         'editor_coach' => [
             'dashboard', 'jugador_mes', 'roster_edit', 'roster_stats',
             'juegos', 'juegos_delete', 'motm', 'torneos', 'categorias', 'sedes',
-            'hero_slider', 'match_reels', 'change_own_password', 'activity_log_view',
+            'hero_slider', 'match_reels', 'noticias', 'change_own_password', 'activity_log_view',
             'inscripciones_view', 'contact_messages_view', 'support_donations',
         ],
         'staff_campo' => [
