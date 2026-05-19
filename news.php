@@ -62,7 +62,11 @@ if ($slug) {
     $page_title       = htmlspecialchars($noticiaDetalle['titulo']) . ' | VCF Academy Houston';
     $page_description = $noticiaDetalle['meta_description']
         ?? mb_strimwidth($noticiaDetalle['resumen'] ?? '', 0, 160, '...');
-    $page_og_image    = vcf_noticia_imagen_url($noticiaDetalle['imagen_destacada'], $base ?? '');
+    $page_og_image    = vcf_noticia_imagen_url(
+        $noticiaDetalle['imagen_destacada'],
+        $base ?? '',
+        $noticiaDetalle['categoria_slug'] ?? null
+    );
 } else {
     // MODO LISTADO
     $listado = vcf_noticias_listar($pdo, $paginaActual, 9, $categoriaSlug);
@@ -91,7 +95,7 @@ require __DIR__ . '/includes/header.php';
         <!-- Hero con imagen destacada -->
         <?php if (!empty($noticiaDetalle['imagen_destacada'])): ?>
             <div class="news-detail-hero"
-                 style="background-image: url('<?= htmlspecialchars(vcf_noticia_imagen_url($noticiaDetalle['imagen_destacada'], $base ?? '')) ?>');">
+                 style="background-image: url('<?= htmlspecialchars(vcf_noticia_imagen_url($noticiaDetalle['imagen_destacada'], $base ?? '', $noticiaDetalle['categoria_slug'] ?? null)) ?>');">
                 <div class="news-detail-hero-overlay">
                     <div class="container">
                         <?php if (!empty($noticiaDetalle['categoria_nombre'])): ?>

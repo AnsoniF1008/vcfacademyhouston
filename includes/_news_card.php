@@ -20,7 +20,7 @@ $_nc_base = $base ?? '';
 <article class="news-card">
     <a href="<?= htmlspecialchars(vcf_noticia_url($noticia['slug'], $_nc_base)) ?>" class="news-card-link">
         <div class="news-card-image">
-            <img src="<?= htmlspecialchars(vcf_noticia_imagen_url($noticia['imagen_destacada'] ?? null, $_nc_base)) ?>"
+            <img src="<?= htmlspecialchars(vcf_noticia_imagen_url($noticia['imagen_destacada'] ?? null, $_nc_base, $noticia['categoria_slug'] ?? null)) ?>"
                  alt="<?= htmlspecialchars($noticia['imagen_alt'] ?? $noticia['titulo']) ?>"
                  loading="lazy">
 

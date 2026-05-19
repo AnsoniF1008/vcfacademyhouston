@@ -215,15 +215,29 @@ if (!function_exists('vcf_noticia_url')) {
     }
 }
 
+if (!function_exists('vcf_noticia_placeholder_path')) {
+    /**
+     * Ruta relativa del placeholder según categoría (sin imagen destacada).
+     */
+    function vcf_noticia_placeholder_path(?string $categoria_slug = null): string
+    {
+        $editorialSlugs = ['academy-news', 'training', 'player-stories'];
+        if ($categoria_slug !== null && in_array($categoria_slug, $editorialSlugs, true)) {
+            return 'assets/img/news-placeholder-editorial.jpg';
+        }
+        return 'assets/img/news-placeholder.jpg';
+    }
+}
+
 if (!function_exists('vcf_noticia_imagen_url')) {
     /**
-     * Resuelve la URL de la imagen destacada, con fallback.
+     * Resuelve la URL de la imagen destacada, con fallback por categoría.
      */
-    function vcf_noticia_imagen_url(?string $imagen, string $base = ''): string
+    function vcf_noticia_imagen_url(?string $imagen, string $base = '', ?string $categoria_slug = null): string
     {
         if (empty($imagen)) {
             $prefix = $base !== '' ? rtrim($base, '/') . '/' : '';
-            return $prefix . 'assets/img/news-placeholder.jpg';
+            return $prefix . vcf_noticia_placeholder_path($categoria_slug);
         }
         if (preg_match('#^https?://#i', $imagen)) {
             return $imagen;
