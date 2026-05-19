@@ -25,7 +25,7 @@ $statsLine = 'VCF Houston';
 if (!empty($categorias[0]['nombre'])) {
     $statsLine .= ' · ' . htmlspecialchars($categorias[0]['nombre']);
 }
-$ft = reset($juegosPorTorneo);
+$ft = !empty($torneosActivos) ? reset($torneosActivos) : reset($juegosPorTorneo);
 if ($ft) {
     $statsLine .= ' · ' . htmlspecialchars($ft['nombre_torneo']);
 }

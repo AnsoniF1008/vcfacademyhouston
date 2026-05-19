@@ -1,65 +1,70 @@
 <section id="tournaments" class="vcf-section--dark vcf-redesign-legacy">
     <div class="vcf-section__inner">
     <div class="container">
-        <h2 class="vcf-section-title vcf-section-title-line">Upcoming Tournaments & Matchday</h2>
-        <p class="vcf-section-desc">Track our teams' progress as they compete in Houston's premier youth leagues. Check schedules, field locations, and results here.</p>
+        <div class="tournaments-section tournaments-section--embedded">
+        <div class="section-header">
+            <span class="section-bar" aria-hidden="true"></span>
+            <h2 class="section-title vcf-section-title vcf-section-title-line">Upcoming Tournaments &amp; Matchday</h2>
+        </div>
+        <p class="section-subtitle vcf-section-desc">Track our teams' progress as they compete in Houston's premier youth leagues. Check schedules, field locations, and results here.</p>
 
-        <?php if (count($juegosPorTorneo) > 0): ?>
-            <?php foreach ($juegosPorTorneo as $tid => $bloque): ?>
-                <h3 class="vcf-torneo-title mt-4 mb-2"><?= htmlspecialchars($bloque['nombre_torneo']) ?><?= $bloque['temporada'] ? ' — ' . htmlspecialchars($bloque['temporada']) : '' ?></h3>
-                <div class="vcf-table-wrap">
-                    <table class="vcf-table">
-                        <thead>
-                            <tr>
-                                <th>Day &amp; Date</th>
-                                <th>Time</th>
-                                <th>Opponent</th>
-                                <th>Location</th>
-                                <th>Status</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($bloque['juegos'] as $j): ?>
-                                <?php
-                                $lugar = ($j['sede_nombre'] && $j['cancha']) ? $j['sede_nombre'] . ' - ' . $j['cancha'] : ($j['cancha'] ?? $j['sede_nombre'] ?? '—');
-                                $gameTs = strtotime($j['fecha'] . ' ' . (!empty($j['hora']) ? $j['hora'] : '23:59:59'));
-                                $isPast = $gameTs < time();
-                                if ($isPast) {
-                                    $estado = 'finalizado';
-                                    $canAddCalendar = false;
-                                } else {
-                                    $estado = $j['estado'] ?? 'proximo';
-                                    $canAddCalendar = ($estado === 'proximo' || $estado === 'live');
-                                }
-                                ?>
-                                <tr>
-                                    <td><?= date('D, M j', strtotime($j['fecha'])) ?></td>
-                                    <td><?= (!empty($j['hora'])) ? date('g:i A', strtotime($j['hora'])) : '—' ?></td>
-                                    <td><?php if (!empty($j['rival'])): ?><span class="vcf-opponent"><?= htmlspecialchars($j['rival']) ?></span><?php else: ?>—<?php endif; ?></td>
-                                    <td><?= htmlspecialchars($lugar) ?></td>
-                                    <td>
-                                        <?php if ($estado === 'live'): ?>
-                                            <span class="vcf-badge-live">Live</span>
-                                        <?php elseif ($estado === 'finalizado'): ?>
-                                            <span class="vcf-badge-finalizado">Finished</span>
-                                        <?php else: ?>
-                                            <span class="vcf-badge-proximo">Upcoming</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="vcf-table-actions">
-                                        <a href="<?= htmlspecialchars($base ?? '') ?>/match.php?id=<?= (int) $j['id'] ?>" class="vcf-btn-link" title="View match details">Details</a>
-                                        <?php if ($canAddCalendar): ?>
-                                            <a href="<?= htmlspecialchars($base ?? '') ?>/calendar.php?id=<?= (int) $j['id'] ?>" class="vcf-btn-calendar" target="_blank" rel="noopener noreferrer" title="Add to my calendar">Add to calendar</a>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endforeach; ?>
+        <?php if (empty($torneosActivos) && empty($torneosPasados)): ?>
+            <div class="empty-state">
+                <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                <p>No tournaments scheduled yet. Check back soon!</p>
+            </div>
         <?php endif; ?>
+
+        <?php foreach ($torneosActivos as $tid => $torneo): ?>
+            <article class="tournament-block tournament-active">
+                <header class="tournament-header">
+                    <div class="tournament-title-row">
+                        <span class="status-dot active" aria-hidden="true"></span>
+                        <h3 class="tournament-name">
+                            <?= htmlspecialchars($torneo['nombre_torneo']) ?>
+                            <?php if (!empty($torneo['temporada'])): ?>
+                                <span class="tournament-season">— <?= htmlspecialchars($torneo['temporada']) ?></span>
+                            <?php endif; ?>
+                        </h3>
+                        <span class="badge badge-active">Active</span>
+                    </div>
+                </header>
+                <?php include __DIR__ . '/../_tournament_table.php'; ?>
+            </article>
+        <?php endforeach; ?>
+
+        <?php if (!empty($torneosPasados)): ?>
+            <details class="past-tournaments-wrapper">
+                <summary class="past-tournaments-toggle">
+                    <span class="toggle-icon" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+                    <span class="toggle-text">View past tournaments</span>
+                    <span class="toggle-count">(<?= count($torneosPasados) ?>)</span>
+                </summary>
+                <div class="past-tournaments-list">
+                    <?php foreach ($torneosPasados as $tid => $torneo): ?>
+                        <article class="tournament-block tournament-past">
+                            <header class="tournament-header">
+                                <div class="tournament-title-row">
+                                    <span class="status-dot finished" aria-hidden="true"></span>
+                                    <h3 class="tournament-name">
+                                        <?= htmlspecialchars($torneo['nombre_torneo']) ?>
+                                        <?php if (!empty($torneo['temporada'])): ?>
+                                            <span class="tournament-season">— <?= htmlspecialchars($torneo['temporada']) ?></span>
+                                        <?php endif; ?>
+                                    </h3>
+                                    <span class="badge badge-finished">Finished</span>
+                                    <?php if (!empty($torneo['ultimo_juego'])): ?>
+                                        <span class="tournament-date"><?= date('M Y', strtotime($torneo['ultimo_juego'])) ?></span>
+                                    <?php endif; ?>
+                                </div>
+                            </header>
+                            <?php include __DIR__ . '/../_tournament_table.php'; ?>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+            </details>
+        <?php endif; ?>
+        </div>
 
         <?php if (count($topScorers) > 0): ?>
         <div class="mt-4 mb-4">
@@ -184,12 +189,6 @@
             </div>
         <?php endif; ?>
 
-        <?php if (count($juegosPorTorneo) === 0): ?>
-            <div class="vcf-empty-state">
-                <i class="fas fa-futbol vcf-empty-state-icon" aria-hidden="true"></i>
-                <p>No matches scheduled yet.</p>
-            </div>
-        <?php endif; ?>
     </div>
     </div>
 </section>

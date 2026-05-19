@@ -2772,3 +2772,373 @@ body.vcf-page-home .vcf-header.vcf-header-scrolled {
     }
 }
 
+/* Tournaments — active vs past (home) */
+.tournaments-section--embedded {
+    padding: 0;
+    background: transparent;
+}
+
+.tournaments-section {
+    padding: 4rem 0;
+    background: #0d0d0d;
+    color: #fff;
+}
+
+.tournaments-section .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.tournaments-section .section-bar {
+    display: inline-block;
+    width: 6px;
+    height: 32px;
+    background: #FF6600;
+    border-radius: 2px;
+}
+
+.tournaments-section .section-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+.tournaments-section .section-subtitle {
+    color: #999;
+    margin-bottom: 2.5rem;
+    font-size: 0.95rem;
+}
+
+.tournament-block {
+    margin-bottom: 2.5rem;
+    background: #181818;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tournament-block.tournament-active {
+    border-left: 4px solid #FF6600;
+    box-shadow: 0 4px 12px rgba(255, 102, 0, 0.1);
+}
+
+.tournament-block.tournament-past {
+    border-left: 4px solid #444;
+    opacity: 0.88;
+}
+
+.tournament-block.tournament-past:hover {
+    opacity: 1;
+}
+
+.tournament-header {
+    padding: 1rem 1.25rem;
+    background: rgba(255, 102, 0, 0.06);
+    border-bottom: 1px solid rgba(255, 102, 0, 0.15);
+}
+
+.tournament-past .tournament-header {
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tournament-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.tournament-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin: 0;
+    color: #FF6600;
+    letter-spacing: 0.5px;
+    flex: 1;
+}
+
+.tournament-past .tournament-name {
+    color: #ccc;
+}
+
+.tournament-season {
+    color: #888;
+    font-weight: 400;
+    font-size: 0.9em;
+}
+
+.tournament-date {
+    color: #777;
+    font-size: 0.85rem;
+    margin-left: auto;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status-dot.active {
+    background: #00C853;
+    box-shadow: 0 0 8px rgba(0, 200, 83, 0.6);
+    animation: pulse-dot 2s infinite;
+}
+
+.status-dot.finished {
+    background: #555;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.6; transform: scale(1.15); }
+}
+
+.tournaments-section .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: 'Oswald', sans-serif;
+}
+
+.badge-active {
+    background: #00C853;
+    color: #000;
+}
+
+.badge-finished {
+    background: #333;
+    color: #999;
+    border: 1px solid #444;
+}
+
+.tournament-table-wrapper {
+    overflow-x: auto;
+}
+
+.tournament-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.tournament-table thead th {
+    background: #0a0a0a;
+    color: #888;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #222;
+}
+
+.tournament-table tbody td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #1f1f1f;
+    color: #ddd;
+}
+
+.tournament-table tbody tr:hover {
+    background: rgba(255, 102, 0, 0.04);
+}
+
+.tournament-table .past-game {
+    opacity: 0.75;
+}
+
+.tournament-table .upcoming-game {
+    background: rgba(255, 102, 0, 0.02);
+}
+
+.tournament-table .game-opponent {
+    color: #FF6600;
+    font-weight: 600;
+}
+
+.location-link {
+    color: #ddd;
+    text-decoration: none;
+    border-bottom: 1px dashed #555;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.location-link:hover {
+    color: #FF6600;
+    border-bottom-color: #FF6600;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.status-upcoming  { background: #FF6600; color: #000; }
+.status-badge.status-finished  { background: #2a2a2a; color: #888; border: 1px solid #333; }
+.status-badge.status-live      { background: #e53935; color: #fff; animation: pulse-dot 1.5s infinite; }
+.status-badge.status-cancelled { background: #444; color: #bbb; text-decoration: line-through; }
+.status-badge.status-postponed { background: #f9a825; color: #000; }
+
+.btn-details {
+    display: inline-block;
+    padding: 5px 14px;
+    background: transparent;
+    border: 1px solid #FF6600;
+    color: #FF6600;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+}
+
+.btn-details:hover {
+    background: #FF6600;
+    color: #000;
+}
+
+.past-tournaments-wrapper {
+    margin-top: 2.5rem;
+    border-top: 1px solid rgba(255, 102, 0, 0.15);
+    padding-top: 1.5rem;
+}
+
+.past-tournaments-toggle {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #FF6600;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-size: 0.85rem;
+    padding: 0.9rem 1.25rem;
+    background: rgba(255, 102, 0, 0.06);
+    border-radius: 6px;
+    list-style: none;
+    user-select: none;
+    transition: background 0.2s ease;
+    border: 1px solid rgba(255, 102, 0, 0.2);
+}
+
+.past-tournaments-toggle:hover {
+    background: rgba(255, 102, 0, 0.12);
+    border-color: rgba(255, 102, 0, 0.4);
+}
+
+.past-tournaments-toggle::-webkit-details-marker { display: none; }
+.past-tournaments-toggle::marker { content: ''; }
+
+.toggle-icon {
+    display: inline-block;
+    transition: transform 0.25s ease;
+}
+
+details[open] .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.toggle-count {
+    opacity: 0.7;
+    font-weight: 400;
+    margin-left: auto;
+}
+
+.past-tournaments-list {
+    margin-top: 1.5rem;
+    padding-left: 0.5rem;
+    border-left: 2px solid rgba(255, 102, 0, 0.1);
+}
+
+.tournaments-section .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #666;
+    background: #141414;
+    border-radius: 8px;
+    border: 1px dashed #333;
+}
+
+.tournaments-section .empty-state i {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    display: block;
+    color: #FF6600;
+    opacity: 0.5;
+}
+
+.empty-games {
+    padding: 1.5rem;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .tournament-table thead {
+        display: none;
+    }
+
+    .tournament-table tbody tr {
+        display: block;
+        padding: 1rem;
+        border: 1px solid #222;
+        border-radius: 6px;
+        margin-bottom: 0.75rem;
+    }
+
+    .tournament-table tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.4rem 0;
+        border-bottom: none;
+    }
+
+    .tournament-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #888;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+    }
+
+    .tournament-table tbody td.game-actions::before {
+        content: none;
+    }
+
+    .tournaments-section .tournament-name {
+        font-size: 0.95rem;
+    }
+
+    .tournament-date {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 0.25rem;
+    }
+}
+

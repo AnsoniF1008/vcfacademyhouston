@@ -3,9 +3,37 @@ require __DIR__ . '/includes/auth.php';
 require_permission('torneos');
 require __DIR__ . '/includes/csrf.php';
 require __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/page_cache.php';
 
 $message     = '';
 $messageType = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'toggle_archived') {
+    header('Content-Type: application/json');
+    if (!csrf_verify()) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'Invalid CSRF token']);
+        exit;
+    }
+    $id = (int) ($_POST['id'] ?? 0);
+    $archivado = (int) ($_POST['archivado'] ?? 0) === 1 ? 1 : 0;
+    if ($id <= 0) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Invalid ID']);
+        exit;
+    }
+    try {
+        $pdo->prepare('UPDATE torneos_info SET archivado = ? WHERE id = ?')->execute([$archivado, $id]);
+        admin_log($archivado ? 'torneos.archive' : 'torneos.unarchive', 'Tournament id ' . $id . ($archivado ? ' archived' : ' activated'));
+        vcf_page_cache_clear();
+        echo json_encode(['success' => true, 'archivado' => $archivado]);
+    } catch (PDOException $e) {
+        error_log('Toggle archivado: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'DB error']);
+    }
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify()) {
@@ -42,7 +70,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$torneos = $pdo->query("SELECT id, nombre_torneo, temporada FROM torneos_info ORDER BY nombre_torneo")->fetchAll();
+$hasArchivadoCol = false;
+try {
+    $stCol = $pdo->query("SHOW COLUMNS FROM torneos_info LIKE 'archivado'");
+    $hasArchivadoCol = $stCol && $stCol->fetch();
+} catch (PDOException $e) {
+    // ignore
+}
+$archivadoSelect = $hasArchivadoCol ? ', archivado' : ', 0 AS archivado';
+$torneos = $pdo->query("
+    SELECT id, nombre_torneo, temporada{$archivadoSelect},
+           (SELECT COUNT(*) FROM juegos WHERE torneo_id = torneos_info.id) AS total_juegos
+    FROM torneos_info
+    ORDER BY " . ($hasArchivadoCol ? 'archivado ASC, ' : '') . "nombre_torneo
+")->fetchAll();
 
 $editing = null;
 if (isset($_GET['edit'])) {
@@ -99,12 +140,30 @@ require __DIR__ . '/../includes/header.php';
                     <?php else: ?>
                         <div class="table-responsive admin-table-wrap">
                             <table class="table table-dark table-sm">
-                                <thead><tr><th>Tournament</th><th>Season</th><th></th></tr></thead>
+                                <thead>
+                                    <tr>
+                                        <th>Tournament</th>
+                                        <th>Season</th>
+                                        <th>Games</th>
+                                        <?php if ($hasArchivadoCol): ?><th>Status</th><?php endif; ?>
+                                        <th></th>
+                                    </tr>
+                                </thead>
                                 <tbody>
                                     <?php foreach ($torneos as $t): ?>
-                                        <tr>
+                                        <tr data-torneo-id="<?= (int) $t['id'] ?>" class="<?= !empty($t['archivado']) ? 'row-archived' : '' ?>">
                                             <td><?= htmlspecialchars($t['nombre_torneo']) ?></td>
                                             <td><?= $t['temporada'] !== null ? htmlspecialchars($t['temporada']) : '—' ?></td>
+                                            <td><?= (int) ($t['total_juegos'] ?? 0) ?></td>
+                                            <?php if ($hasArchivadoCol): ?>
+                                            <td>
+                                                <label class="archive-toggle" title="<?= !empty($t['archivado']) ? 'Archived — shown in past section' : 'Active on home page' ?>">
+                                                    <input type="checkbox" class="js-archive-checkbox" data-id="<?= (int) $t['id'] ?>" <?= !empty($t['archivado']) ? 'checked' : '' ?>>
+                                                    <span class="toggle-slider"></span>
+                                                    <span class="toggle-label"><?= !empty($t['archivado']) ? 'Archived' : 'Active' ?></span>
+                                                </label>
+                                            </td>
+                                            <?php endif; ?>
                                             <td>
                                                 <a href="juegos.php?torneo_id=<?= (int) $t['id'] ?>" class="btn btn-sm btn-admin-primary">Manage games</a>
                                                 <a href="torneos.php?edit=<?= (int) $t['id'] ?>" class="btn btn-sm btn-outline-secondary">Edit</a>
@@ -125,4 +184,51 @@ require __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
+<?php if ($hasArchivadoCol): ?>
+<script>
+(function () {
+    const csrfToken = <?= json_encode(csrf_token()) ?>;
+    document.querySelectorAll('.js-archive-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', async function () {
+            const id = this.dataset.id;
+            const archivado = this.checked ? 1 : 0;
+            const row = this.closest('tr');
+            const label = row.querySelector('.toggle-label');
+            this.disabled = true;
+            try {
+                const formData = new FormData();
+                formData.append('action', 'toggle_archived');
+                formData.append('id', id);
+                formData.append('archivado', String(archivado));
+                formData.append('csrf_token', csrfToken);
+                const res = await fetch(window.location.pathname, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    row.classList.toggle('row-archived', archivado === 1);
+                    label.textContent = archivado === 1 ? 'Archived' : 'Active';
+                } else {
+                    this.checked = !this.checked;
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            } catch (err) {
+                this.checked = !this.checked;
+                alert('Network error: ' + err.message);
+            } finally {
+                this.disabled = false;
+            }
+        });
+    });
+})();
+</script>
+<style>
+.archive-toggle { display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; user-select: none; }
+.archive-toggle input[type="checkbox"] { position: absolute; opacity: 0; pointer-events: none; }
+.toggle-slider { position: relative; width: 36px; height: 20px; background: #00C853; border-radius: 10px; transition: background 0.2s ease; }
+.toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.2s ease; }
+.archive-toggle input:checked + .toggle-slider { background: #666; }
+.archive-toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+.toggle-label { font-size: 0.85rem; font-weight: 600; color: #ccc; }
+.row-archived { opacity: 0.65; }
+</style>
+<?php endif; ?>
 <?php require __DIR__ . '/../includes/footer.php'; ?>

@@ -12,6 +12,8 @@ vcf_page_cache_start(900);
 
 $sedes = [];
 $juegosPorTorneo = [];
+$torneosActivos   = [];
+$torneosPasados   = [];
 $proximoJuego = null;
 $proximosJuegos = [];
 $jugadorMes = null;
@@ -35,22 +37,79 @@ try {
 }
 
 try {
+    $nowHouston = new DateTime('now', new DateTimeZone('America/Chicago'));
+    $today      = $nowHouston->format('Y-m-d');
+
+    $hasArchivado = false;
+    try {
+        $st = $pdo->query("SHOW COLUMNS FROM torneos_info LIKE 'archivado'");
+        $hasArchivado = $st && $st->fetch();
+    } catch (PDOException $e) {
+        // Column may not exist yet — site still works without manual archive
+    }
+
+    $selectArchivado = $hasArchivado ? ', t.archivado' : '';
+
     $stmt = $pdo->query("
-        SELECT j.id, j.torneo_id, j.fecha, j.hora, j.rival, j.cancha, j.sede_id, j.ubicacion_mapa_url, j.estado, j.categoria,
-               t.nombre_torneo, t.temporada, s.nombre AS sede_nombre
+        SELECT j.id, j.torneo_id, j.fecha, j.hora, j.rival, j.cancha, j.sede_id,
+               j.ubicacion_mapa_url, j.estado, j.categoria,
+               t.nombre_torneo, t.temporada{$selectArchivado},
+               s.nombre AS sede_nombre
         FROM juegos j
         JOIN torneos_info t ON t.id = j.torneo_id
         LEFT JOIN sedes s ON s.id = j.sede_id
         ORDER BY j.fecha ASC, j.hora ASC
     ");
-    $todosJuegos = $stmt->fetchAll();
+    $todosJuegos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
     foreach ($todosJuegos as $j) {
         $tid = (int) $j['torneo_id'];
+
         if (!isset($juegosPorTorneo[$tid])) {
-            $juegosPorTorneo[$tid] = ['nombre_torneo' => $j['nombre_torneo'], 'temporada' => $j['temporada'], 'juegos' => []];
+            $juegosPorTorneo[$tid] = [
+                'id'             => $tid,
+                'nombre_torneo'  => $j['nombre_torneo'],
+                'temporada'      => $j['temporada'],
+                'archivado'      => $hasArchivado ? (int) $j['archivado'] : 0,
+                'juegos'         => [],
+                'tiene_futuros'  => false,
+                'ultimo_juego'   => null,
+                'proximo_juego'  => null,
+            ];
         }
+
         $juegosPorTorneo[$tid]['juegos'][] = $j;
+
+        if ($j['fecha'] >= $today) {
+            $juegosPorTorneo[$tid]['tiene_futuros'] = true;
+            if ($juegosPorTorneo[$tid]['proximo_juego'] === null
+                || $j['fecha'] < $juegosPorTorneo[$tid]['proximo_juego']) {
+                $juegosPorTorneo[$tid]['proximo_juego'] = $j['fecha'];
+            }
+        }
+
+        if ($juegosPorTorneo[$tid]['ultimo_juego'] === null
+            || $j['fecha'] > $juegosPorTorneo[$tid]['ultimo_juego']) {
+            $juegosPorTorneo[$tid]['ultimo_juego'] = $j['fecha'];
+        }
     }
+
+    foreach ($juegosPorTorneo as $tid => $torneo) {
+        $esActivo = $torneo['tiene_futuros'] && $torneo['archivado'] === 0;
+        if ($esActivo) {
+            $torneosActivos[$tid] = $torneo;
+        } else {
+            $torneosPasados[$tid] = $torneo;
+        }
+    }
+
+    uasort($torneosActivos, function ($a, $b) {
+        return strcmp($a['proximo_juego'] ?? '9999', $b['proximo_juego'] ?? '9999');
+    });
+
+    uasort($torneosPasados, function ($a, $b) {
+        return strcmp($b['ultimo_juego'] ?? '0000', $a['ultimo_juego'] ?? '0000');
+    });
 } catch (PDOException $e) {
     error_log('Juegos query: ' . $e->getMessage());
 }
