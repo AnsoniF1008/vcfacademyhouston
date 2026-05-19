@@ -165,6 +165,24 @@ try {
     error_log('Ultimos resultados datetime: ' . $e->getMessage());
 }
 
+// No duplicar en "Latest Results" partidos ya listados en torneos pasados
+$juegosEnTorneosPasados = [];
+foreach ($torneosPasados as $torneo) {
+    foreach ($torneo['juegos'] as $j) {
+        $hasScore = (isset($j['goles_vcf']) && $j['goles_vcf'] !== null)
+            || (isset($j['goles_rival']) && $j['goles_rival'] !== null);
+        if ($hasScore && !empty($j['id'])) {
+            $juegosEnTorneosPasados[(int) $j['id']] = true;
+        }
+    }
+}
+if (!empty($juegosEnTorneosPasados)) {
+    $ultimosResultados = array_values(array_filter(
+        $ultimosResultados,
+        static fn(array $r): bool => empty($juegosEnTorneosPasados[(int) ($r['id'] ?? 0)])
+    ));
+}
+
 $seasonStats = ['W' => 0, 'L' => 0, 'D' => 0, 'GF' => 0, 'GA' => 0, 'PTS' => 0, 'played' => 0, 'CS' => 0, 'on_fire' => false];
 $partidosConScore = [];
 try {
