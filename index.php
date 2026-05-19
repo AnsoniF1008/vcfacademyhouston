@@ -53,6 +53,7 @@ try {
     $stmt = $pdo->query("
         SELECT j.id, j.torneo_id, j.fecha, j.hora, j.rival, j.cancha, j.sede_id,
                j.ubicacion_mapa_url, j.estado, j.categoria,
+               j.goles_vcf, j.goles_rival, j.rival_logo_url,
                t.nombre_torneo, t.temporada{$selectArchivado},
                s.nombre AS sede_nombre
         FROM juegos j

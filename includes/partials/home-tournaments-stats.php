@@ -58,7 +58,11 @@
                                     <?php endif; ?>
                                 </div>
                             </header>
-                            <?php include __DIR__ . '/../_tournament_table.php'; ?>
+                            <?php
+                            $resultsRequireScore = true;
+                            include __DIR__ . '/../_tournament_results_table.php';
+                            unset($resultsRequireScore);
+                            ?>
                         </article>
                     <?php endforeach; ?>
                 </div>
@@ -96,97 +100,11 @@
 
         <?php if (count($ultimosResultados) > 0): ?>
             <h3 class="vcf-torneo-title mt-5 mb-2">Latest Results</h3>
-            <div class="vcf-table-wrap">
-                <table class="vcf-table vcf-table-results">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Home</th>
-                            <th>Score</th>
-                            <th>Away</th>
-                            <th>Info</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($ultimosResultados as $r): ?>
-                            <?php
-                            $gv = (int) ($r['goles_vcf'] ?? 0);
-                            $gr = (int) ($r['goles_rival'] ?? 0);
-                            $hasScore = (isset($r['goles_vcf']) && $r['goles_vcf'] !== null) || (isset($r['goles_rival']) && $r['goles_rival'] !== null);
-                            if ($hasScore) {
-                                if ($gv > $gr) {
-                                    $resultOutcome = 'W';
-                                    $vcfClass = 'vcf-result-winner';
-                                    $rivalClass = 'vcf-result-loser';
-                                    $scoreVcfClass = 'vcf-result-winner';
-                                    $scoreRivalClass = 'vcf-result-loser';
-                                } elseif ($gv < $gr) {
-                                    $resultOutcome = 'L';
-                                    $vcfClass = 'vcf-result-loser';
-                                    $rivalClass = 'vcf-result-winner';
-                                    $scoreVcfClass = 'vcf-result-loser';
-                                    $scoreRivalClass = 'vcf-result-winner';
-                                } else {
-                                    $resultOutcome = 'D';
-                                    $vcfClass = $rivalClass = 'vcf-result-draw';
-                                    $scoreVcfClass = $scoreRivalClass = 'vcf-result-draw';
-                                }
-                            } else {
-                                $resultOutcome = null;
-                                $vcfClass = $rivalClass = $scoreVcfClass = $scoreRivalClass = 'vcf-result-draw';
-                            }
-                            $rivalName = !empty($r['rival']) ? htmlspecialchars($r['rival']) : '—';
-                            $rivalLogoUrl = !empty($r['rival_logo_url']) ? $r['rival_logo_url'] : null;
-                            ?>
-                            <tr>
-                                <td><?= date('M j', strtotime($r['fecha'])) ?></td>
-                                <td>
-                                    <span class="vcf-result-team">
-                                        <?php if ($vcf_crest_file): ?>
-                                            <img src="<?= $base ?? '' ?>/assets/img/<?= $vcf_crest_file ?>" alt="VCF Houston" class="vcf-team-logo" width="28" height="28" loading="lazy">
-                                        <?php else: ?>
-                                            <span class="vcf-team-logo vcf-team-logo-placeholder" aria-hidden="true"><i class="fas fa-shield"></i></span>
-                                        <?php endif; ?>
-                                        <span class="<?= $vcfClass ?>">VCF Houston</span>
-                                    </span>
-                                </td>
-                                <td class="vcf-score-cell">
-                                    <?php if ($hasScore): ?>
-                                        <span class="<?= $scoreVcfClass ?>"><?= $gv ?></span> – <span class="<?= $scoreRivalClass ?>"><?= $gr ?></span>
-                                    <?php else: ?>
-                                        <span class="vcf-result-draw">—</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <span class="vcf-result-team">
-                                        <?php if ($rivalLogoUrl): ?>
-                                            <img src="<?= htmlspecialchars($rivalLogoUrl) ?>" alt="<?= $rivalName ?>" class="vcf-team-logo" width="28" height="28" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">
-                                            <span class="vcf-team-logo vcf-team-logo-placeholder" style="display:none;" aria-hidden="true"><i class="fas fa-shield"></i></span>
-                                        <?php else: ?>
-                                            <span class="vcf-team-logo vcf-team-logo-placeholder" aria-hidden="true"><i class="fas fa-shield"></i></span>
-                                        <?php endif; ?>
-                                        <span class="<?= $rivalClass ?>"><?= $rivalName ?></span>
-                                    </span>
-                                </td>
-                                <td class="vcf-table-actions">
-                                    <?php if ($resultOutcome === 'W'): ?>
-                                        <span class="vcf-badge-w">W</span>
-                                    <?php elseif ($resultOutcome === 'L'): ?>
-                                        <span class="vcf-badge-l">L</span>
-                                    <?php elseif ($resultOutcome === 'D'): ?>
-                                        <span class="vcf-badge-d">D</span>
-                                    <?php else: ?>
-                                        <span class="vcf-result-draw">—</span>
-                                    <?php endif; ?>
-                                    <?php if (!empty($r['id'])): ?>
-                                        <a href="<?= htmlspecialchars($base ?? '') ?>/match.php?id=<?= (int) $r['id'] ?>" class="vcf-btn-link ms-2" title="View match details">Details</a>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+            <?php
+            $matchResultsRows = $ultimosResultados;
+            include __DIR__ . '/../_tournament_results_table.php';
+            unset($matchResultsRows);
+            ?>
         <?php endif; ?>
 
     </div>

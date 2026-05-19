@@ -3142,3 +3142,12 @@ details[open] .toggle-icon {
     }
 }
 
+/* Results inside past tournament blocks */
+.tournament-past .tournament-results-wrap {
+    padding: 0 0.25rem 0.5rem;
+}
+
+.tournament-past .tournament-results-table {
+    margin-top: 0;
+}
+
