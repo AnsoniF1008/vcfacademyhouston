@@ -253,7 +253,13 @@ $use_local_swiper_css = file_exists($vendor_root . '/swiper/swiper-bundle.min.cs
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Hanken+Grotesk:wght@400;600;700&family=Barlow+Condensed:wght@400;600;700;800;900&display=swap" rel="stylesheet" crossorigin>
+    <?php /* Non-render-blocking fonts: fetch as low-priority via media="print",
+             then flip to all on load. display=swap paints text immediately in a
+             fallback font and swaps when the webfont arrives (brief FOUT, never
+             a blank). <noscript> keeps it working with JS disabled. */ ?>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Hanken+Grotesk:wght@400;600;700&family=Barlow+Condensed:wght@400;600;700;800;900&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Hanken+Grotesk:wght@400;600;700&family=Barlow+Condensed:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Hanken+Grotesk:wght@400;600;700&family=Barlow+Condensed:wght@400;600;700;800;900&display=swap" rel="stylesheet"></noscript>
     <?php if (isset($hero_mobile_path) && !empty($hero_mobile_path) && isset($preload_image_path) && $preload_image_path !== ''): ?>
     <link rel="preload" as="image" href="<?= $base ?>/<?= htmlspecialchars($hero_mobile_path) ?>" media="(max-width: 768px)" fetchpriority="high">
     <link rel="preload" as="image" href="<?= $base ?>/<?= htmlspecialchars($preload_image_path) ?>" media="(min-width: 769px)" fetchpriority="high">
