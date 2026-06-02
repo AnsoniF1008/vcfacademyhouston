@@ -75,3 +75,23 @@ if (!function_exists('vcf_rate_limit_check')) {
         return true;
     }
 }
+
+if (!function_exists('vcf_client_ip')) {
+    /**
+     * Best-effort client IP for rate-limiting / dedup. Honours the first
+     * X-Forwarded-For hop (Hostinger/Cloudflare sit in front of PHP) and
+     * falls back to REMOTE_ADDR. Capped at 45 chars (IPv6 max) and never
+     * empty so it is always usable as a rate-limit identity.
+     */
+    function vcf_client_ip(): string
+    {
+        $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '';
+        if (strpos($ip, ',') !== false) {
+            $ip = trim(explode(',', $ip)[0]);
+        }
+        if (strlen($ip) > 45) {
+            $ip = substr($ip, 0, 45);
+        }
+        return $ip !== '' ? $ip : '0.0.0.0';
+    }
+}

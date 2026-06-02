@@ -53,8 +53,16 @@ $messageType = '';
 $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_once __DIR__ . '/includes/rate_limit.php';
+    // Throttle before any DB write: 5 submissions per 10 min per IP is plenty
+    // for a human registering, but stops bots from flooding `inscripciones`.
+    if (!vcf_rate_limit_check('join-form', vcf_client_ip(), 5, 600)) {
+        http_response_code(429);
+        $message = 'Too many submissions. Please wait a few minutes and try again.';
+        $messageType = 'danger';
+    }
     // Honeypot: bots fill this hidden field, humans leave it empty
-    if (!empty($_POST['website'])) {
+    elseif (!empty($_POST['website'])) {
         $success = true; // Silently discard — bot thinks it succeeded
         $message = 'Thank you for your interest! We have received your registration and will contact you soon.';
         $messageType = 'success';
