@@ -16,13 +16,16 @@ if (!isset($noticia) || !is_array($noticia)) {
     return;
 }
 $_nc_base = $base ?? '';
+require_once __DIR__ . '/vcf_picture.php';
 ?>
 <article class="news-card">
     <a href="<?= htmlspecialchars(vcf_noticia_url($noticia['slug'], $_nc_base)) ?>" class="news-card-link">
         <div class="news-card-image">
-            <img src="<?= htmlspecialchars(vcf_noticia_imagen_url($noticia['imagen_destacada'] ?? null, $_nc_base, $noticia['categoria_slug'] ?? null)) ?>"
-                 alt="<?= htmlspecialchars($noticia['imagen_alt'] ?? $noticia['titulo']) ?>"
-                 loading="lazy">
+            <?= vcf_picture(
+                vcf_noticia_imagen_url($noticia['imagen_destacada'] ?? null, $_nc_base, $noticia['categoria_slug'] ?? null),
+                (string) ($noticia['imagen_alt'] ?? $noticia['titulo']),
+                ['loading' => 'lazy']
+            ) ?>
 
             <?php if (!empty($noticia['categoria_nombre'])): ?>
                 <span class="news-category-badge"

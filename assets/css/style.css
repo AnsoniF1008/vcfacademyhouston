@@ -27,6 +27,12 @@
     outline: none;
 }
 
+/* <picture> (WebP fallback wrapper) is layout-neutral so existing
+   `.foo img` rules keep matching the inner <img> unchanged. */
+picture {
+    display: contents;
+}
+
 :root {
     /* Core palette */
     --vcf-black: #000000;
