@@ -24,6 +24,7 @@ if (!headers_sent()) {
 
 require __DIR__ . '/../config/database.php';
 require __DIR__ . '/includes/csrf.php';
+require_once __DIR__ . '/../includes/rate_limit.php';
 
 $error = '';
 
@@ -35,16 +36,38 @@ if (isset($_SESSION['login_attempts_time']) && (time() - $_SESSION['login_attemp
 $attempts = (int) ($_SESSION['login_attempts_count'] ?? 0);
 $max_attempts = 5;
 
-$is_locked = $attempts >= $max_attempts;
+// ── IP-based throttle (persistent backstop) ───────────────────────────
+// The per-session counter above resets the moment an attacker clears the
+// vcf_admin_sess cookie, so on its own it does nothing against scripted
+// brute force. This file-based counter is keyed by IP and survives across
+// sessions: 10 failed attempts in 15 min locks the IP regardless of how
+// many fresh cookies it cycles through. The limit is deliberately higher
+// than the per-session 5 so a shared/NAT'd network of legit admins isn't
+// locked out by one person's typo.
+$ip_fail_bucket = 'admin-login-fail';
+$ip_window_sec  = 900;
+$ip_max_fails   = 10;
+$client_ip      = vcf_client_ip();
+$ip_fail_hits   = vcf_rate_limit_hits($ip_fail_bucket, $client_ip, $ip_window_sec);
+$ip_locked      = count($ip_fail_hits) >= $ip_max_fails;
+
+$is_locked = ($attempts >= $max_attempts) || $ip_locked;
 $lockout_remaining = 0;
-if ($is_locked && !empty($_SESSION['login_attempts_time'])) {
-    $lockout_remaining = max(0, (int) $_SESSION['login_attempts_time'] + $window_sec - time());
+if ($is_locked) {
+    if (!empty($_SESSION['login_attempts_time'])) {
+        $lockout_remaining = max($lockout_remaining, (int) $_SESSION['login_attempts_time'] + $window_sec - time());
+    }
+    // IP lock clears when the oldest failure in the window ages out.
+    if ($ip_locked && !empty($ip_fail_hits)) {
+        $lockout_remaining = max($lockout_remaining, (int) $ip_fail_hits[0] + $ip_window_sec - time());
+    }
+    $lockout_remaining = max(0, $lockout_remaining);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify()) {
         $error = 'Invalid request. Please try again.';
-    } elseif ($attempts >= $max_attempts) {
+    } elseif ($attempts >= $max_attempts || $ip_locked) {
         $error = 'Too many login attempts. Try again in 15 minutes.';
     } else {
         $user = trim($_POST['username'] ?? '');
@@ -74,6 +97,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $_SESSION['login_attempts_count'] = $attempts + 1;
             $_SESSION['login_attempts_time'] = $_SESSION['login_attempts_time'] ?? time();
+            // Persistent, cookie-proof failure count for this IP.
+            vcf_rate_limit_record($ip_fail_bucket, $client_ip, $ip_window_sec);
             try {
                 $log = $pdo->prepare('INSERT INTO admin_activity_log (user_id, username, action, details) VALUES (NULL, ?, \'auth.login_fail\', ?)');
                 $log->execute([$user, $_SERVER['REMOTE_ADDR'] ?? '']);
@@ -105,7 +130,10 @@ if (file_exists($root . '/assets/img/vfc-crest.svg')) {
   <link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Non-render-blocking fonts (display=swap → instant fallback text, swap on load) -->
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600&display=swap">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
   <link rel="stylesheet" href="../assets/css/vcf-admin-login.css?v=1">
 </head>
 <body>

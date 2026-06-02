@@ -75,3 +75,88 @@ if (!function_exists('vcf_rate_limit_check')) {
         return true;
     }
 }
+
+if (!function_exists('vcf_rate_limit_file')) {
+    /** Resolve the on-disk JSON path for a (bucket, client) pair. */
+    function vcf_rate_limit_file(string $bucket, string $clientId): string
+    {
+        $bucket = preg_replace('/[^a-z0-9_-]/i', '', $bucket) ?: 'default';
+        $hash = sha1($bucket . '|' . $clientId);
+        $dir = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'vcf_rl';
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0700, true);
+        }
+        return $dir . DIRECTORY_SEPARATOR . $hash . '.json';
+    }
+}
+
+if (!function_exists('vcf_rate_limit_hits')) {
+    /**
+     * Read-only: return the recorded hit timestamps still inside the window,
+     * sorted ascending. Unlike vcf_rate_limit_check() this does NOT record a
+     * new hit — use it to *inspect* a counter (e.g. "is this IP locked out?")
+     * without consuming an attempt.
+     *
+     * @return int[] timestamps within the window (oldest first)
+     */
+    function vcf_rate_limit_hits(string $bucket, string $clientId, int $windowSeconds): array
+    {
+        $file = vcf_rate_limit_file($bucket, $clientId);
+        if (!is_file($file)) {
+            return [];
+        }
+        $raw = @file_get_contents($file);
+        if (!$raw) {
+            return [];
+        }
+        $decoded = json_decode($raw, true);
+        if (!is_array($decoded)) {
+            return [];
+        }
+        $windowStart = time() - $windowSeconds;
+        $hits = [];
+        foreach ($decoded as $ts) {
+            $ts = (int) $ts;
+            if ($ts >= $windowStart) {
+                $hits[] = $ts;
+            }
+        }
+        sort($hits);
+        return $hits;
+    }
+}
+
+if (!function_exists('vcf_rate_limit_record')) {
+    /**
+     * Append a single hit for a (bucket, client) pair. Pair with
+     * vcf_rate_limit_hits() to build a "record-on-failure" throttle (e.g.
+     * count only failed logins, not every page view of the login form).
+     */
+    function vcf_rate_limit_record(string $bucket, string $clientId, int $windowSeconds = 3600): void
+    {
+        $file = vcf_rate_limit_file($bucket, $clientId);
+        $hits = vcf_rate_limit_hits($bucket, $clientId, $windowSeconds);
+        $hits[] = time();
+        @file_put_contents($file, json_encode($hits), LOCK_EX);
+    }
+}
+
+if (!function_exists('vcf_client_ip')) {
+    /**
+     * Best-effort client IP for rate-limiting / dedup. Honours the first
+     * X-Forwarded-For hop (Hostinger/Cloudflare sit in front of PHP) and
+     * falls back to REMOTE_ADDR. Capped at 45 chars (IPv6 max) and never
+     * empty so it is always usable as a rate-limit identity.
+     */
+    function vcf_client_ip(): string
+    {
+        $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '';
+        if (strpos($ip, ',') !== false) {
+            $ip = trim(explode(',', $ip)[0]);
+        }
+        if (strlen($ip) > 45) {
+            $ip = substr($ip, 0, 45);
+        }
+        return $ip !== '' ? $ip : '0.0.0.0';
+    }
+}
