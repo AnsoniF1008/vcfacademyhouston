@@ -12,11 +12,18 @@ $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_once __DIR__ . '/includes/rate_limit.php';
+    require_once __DIR__ . '/includes/public_csrf.php';
     // Throttle before any DB write: 5 messages per 10 min per IP is enough
     // for a real visitor, but stops bots from flooding `contact_messages`.
     if (!vcf_rate_limit_check('contact-form', vcf_client_ip(), 5, 600)) {
         http_response_code(429);
         $message = 'Too many messages. Please wait a few minutes and try again.';
+        $messageType = 'danger';
+    }
+    // CSRF: reject cross-site forged POSTs (session-less, cache-safe origin check).
+    elseif (!vcf_verify_same_origin()) {
+        http_response_code(403);
+        $message = 'Your request could not be verified. Please reload the page and try again.';
         $messageType = 'danger';
     }
     // Honeypot: bots fill this hidden field, humans leave it empty
