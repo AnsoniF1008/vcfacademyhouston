@@ -43,9 +43,15 @@ ErrorDocument 404 /404.php
     Header always set Strict-Transport-Security "max-age=15552000; includeSubDomains"
 
     # Content Security Policy:
-    # - 'unsafe-inline' on scripts/styles is needed because the templates use inline styles and inline scripts.
-    # - Tighten with nonces in the future once inline scripts have been refactored.
-    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; img-src 'self' https: data: blob:; media-src 'self' https: blob:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+    # - 'unsafe-inline' on scripts/styles is still required: the templates use
+    #   ~13 inline <script> blocks, ~31 inline event handlers (onsubmit/onload/
+    #   onerror) and ~194 inline style="" attributes. Removing it needs a
+    #   nonce migration AND refactoring every inline handler (nonces don't
+    #   authorise on*= attributes) and every style attribute — a dedicated,
+    #   separately-tested effort, not a header tweak. See docs/CSP-NONCE-PLAN.md.
+    # - object-src 'none': block <object>/<embed>/<applet> injection (unused here).
+    # - upgrade-insecure-requests: auto-upgrade any stray http subresource to https.
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; img-src 'self' https: data: blob:; media-src 'self' https: blob:; connect-src 'self'; object-src 'none'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
 </IfModule>
 
 # Block access to dotfiles, source backups and configuration files at the root.
