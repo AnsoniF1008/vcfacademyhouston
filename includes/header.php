@@ -274,6 +274,7 @@ $use_local_swiper_css = file_exists($vendor_root . '/swiper/swiper-bundle.min.cs
     <?php if (!empty($is_admin)): ?><link rel="stylesheet" href="<?= $base ?>/assets/css/admin.css?v=6"><?php endif; ?>
 </head>
 <body<?php if ($body_class !== ''): ?> class="<?= htmlspecialchars($body_class) ?>"<?php endif; ?>>
+    <a class="vcf-skip-link" href="#vcf-main">Skip to main content</a>
     <?php if (!empty($vcf_public_redesign) && !$is_admin): ?>
     <?php require __DIR__ . '/vcf-public-nav.php'; ?>
     <?php elseif (!empty($is_admin)): ?>
@@ -318,4 +319,4 @@ $use_local_swiper_css = file_exists($vendor_root . '/swiper/swiper-bundle.min.cs
         </nav>
     </header>
     <?php endif; ?>
-    <main>
+    <main id="vcf-main" tabindex="-1">

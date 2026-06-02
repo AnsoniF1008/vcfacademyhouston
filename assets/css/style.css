@@ -3,6 +3,30 @@
  * Redesign: Clean, Sporty, High Contrast. Base #FFFFFF, contrast #000000, accent #FF6600
  */
 
+/* Accessibility: skip-to-content link, hidden until keyboard-focused. */
+.vcf-skip-link {
+    position: absolute;
+    left: 8px;
+    top: -48px;
+    z-index: 2000;
+    padding: 10px 16px;
+    background: #FF6600;
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 0 0 6px 6px;
+    transition: top 0.15s ease-in-out;
+}
+.vcf-skip-link:focus {
+    top: 0;
+    outline: 3px solid #fff;
+    outline-offset: 2px;
+}
+/* The <main> target receives focus on skip; never show a focus ring on it. */
+#vcf-main:focus {
+    outline: none;
+}
+
 :root {
     /* Core palette */
     --vcf-black: #000000;

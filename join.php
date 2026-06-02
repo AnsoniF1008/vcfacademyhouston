@@ -116,7 +116,7 @@ require __DIR__ . '/includes/header.php';
         <p class="vcf-section-desc">Register your interest in joining VCF Academy Houston. Fill out the form below and our team will get in touch with you about next steps, tryouts, and program details.</p>
 
         <?php if ($message): ?>
-            <div class="alert alert-<?= $messageType ?> mb-4 vcf-alert"><?= htmlspecialchars($message) ?></div>
+            <div id="join-form-status" class="alert alert-<?= $messageType ?> mb-4 vcf-alert" role="alert" aria-live="assertive"><?= htmlspecialchars($message) ?></div>
         <?php endif; ?>
 
         <?php if (!$success): ?>
@@ -129,26 +129,27 @@ require __DIR__ . '/includes/header.php';
                             <label for="hp_website">Website</label>
                             <input type="text" id="hp_website" name="website" tabindex="-1" autocomplete="off" value="">
                         </div>
+                        <?php $join_invalid = $messageType === 'danger' ? ' aria-invalid="true"' : ''; ?>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label vcf-form-label">Parent / Guardian Name</label>
-                                <input type="text" class="form-control vcf-form-control" name="parent_name" required value="<?= htmlspecialchars($_POST['parent_name'] ?? '') ?>">
+                                <label class="form-label vcf-form-label" for="parent_name">Parent / Guardian Name</label>
+                                <input type="text" id="parent_name" class="form-control vcf-form-control" name="parent_name" required<?= $join_invalid ?> value="<?= htmlspecialchars($_POST['parent_name'] ?? '') ?>">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label vcf-form-label">Email</label>
-                                <input type="email" class="form-control vcf-form-control" name="email" required value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+                                <label class="form-label vcf-form-label" for="email">Email</label>
+                                <input type="email" id="email" class="form-control vcf-form-control" name="email" required<?= $join_invalid ?> value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
                             </div>
                             <div class="col-12">
-                                <label class="form-label vcf-form-label">Phone (optional)</label>
-                                <input type="tel" class="form-control vcf-form-control" name="phone" value="<?= htmlspecialchars($_POST['phone'] ?? '') ?>">
+                                <label class="form-label vcf-form-label" for="phone">Phone (optional)</label>
+                                <input type="tel" id="phone" class="form-control vcf-form-control" name="phone" value="<?= htmlspecialchars($_POST['phone'] ?? '') ?>">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label vcf-form-label">Child's Name</label>
-                                <input type="text" class="form-control vcf-form-control" name="child_name" required value="<?= htmlspecialchars($_POST['child_name'] ?? '') ?>">
+                                <label class="form-label vcf-form-label" for="child_name">Child's Name</label>
+                                <input type="text" id="child_name" class="form-control vcf-form-control" name="child_name" required<?= $join_invalid ?> value="<?= htmlspecialchars($_POST['child_name'] ?? '') ?>">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label vcf-form-label">Age Category</label>
-                                <select class="form-select vcf-form-control" name="child_category" required>
+                                <label class="form-label vcf-form-label" for="child_category">Age Category</label>
+                                <select id="child_category" class="form-select vcf-form-control" name="child_category" required<?= $join_invalid ?>>
                                     <option value="">Select category</option>
                                     <?php foreach ($categorias as $cat): ?>
                                         <option value="<?= htmlspecialchars($cat['nombre']) ?>" <?= ($_POST['child_category'] ?? '') === $cat['nombre'] ? 'selected' : '' ?>>
@@ -164,8 +165,8 @@ require __DIR__ . '/includes/header.php';
                                 </select>
                             </div>
                             <div class="col-12">
-                                <label class="form-label vcf-form-label">Additional message (optional)</label>
-                                <textarea class="form-control vcf-form-control" name="message" rows="3"><?= htmlspecialchars($_POST['message'] ?? '') ?></textarea>
+                                <label class="form-label vcf-form-label" for="message">Additional message (optional)</label>
+                                <textarea id="message" class="form-control vcf-form-control" name="message" rows="3"><?= htmlspecialchars($_POST['message'] ?? '') ?></textarea>
                             </div>
                         </div>
                         <div class="mt-4">

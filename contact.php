@@ -79,7 +79,7 @@ $hasDirect = $pubEmail !== '' || $pubPhone !== '' || $ig !== '' || $fb !== '' ||
         <p class="vcf-section-desc mb-4">Have questions about our programs, training schedules, or training locations? Get in touch with the VCF Academy Houston team.</p>
 
         <?php if ($message): ?>
-            <div class="alert alert-<?= $messageType ?> mb-4 vcf-alert"><?= htmlspecialchars($message) ?></div>
+            <div id="contact-form-status" class="alert alert-<?= $messageType ?> mb-4 vcf-alert" role="alert" aria-live="assertive"><?= htmlspecialchars($message) ?></div>
         <?php endif; ?>
 
         <?php if (!$success): ?>
@@ -114,6 +114,7 @@ $hasDirect = $pubEmail !== '' || $pubPhone !== '' || $ig !== '' || $fb !== '' ||
             <div class="col-lg-8">
                 <div class="vcf-sede-card p-4 vcf-page-card">
                     <h2 class="h6 mb-3" style="color:var(--vcf-orange);font-family:var(--font-display);text-transform:uppercase;letter-spacing:0.08em;">Send a message</h2>
+                    <?php $contact_invalid = $messageType === 'danger' ? ' aria-invalid="true"' : ''; ?>
                     <form method="post" action="">
                         <!-- Honeypot anti-spam: hidden from humans, filled by bots -->
                         <div style="display:none" aria-hidden="true">
@@ -121,20 +122,20 @@ $hasDirect = $pubEmail !== '' || $pubPhone !== '' || $ig !== '' || $fb !== '' ||
                             <input type="text" id="hp_website" name="website" tabindex="-1" autocomplete="off" value="">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label vcf-form-label">Name</label>
-                            <input type="text" class="form-control vcf-form-control" name="name" required value="<?= htmlspecialchars($_POST['name'] ?? '') ?>">
+                            <label class="form-label vcf-form-label" for="contact_name">Name</label>
+                            <input type="text" id="contact_name" class="form-control vcf-form-control" name="name" required<?= $contact_invalid ?> value="<?= htmlspecialchars($_POST['name'] ?? '') ?>">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label vcf-form-label">Email</label>
-                            <input type="email" class="form-control vcf-form-control" name="email" required value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+                            <label class="form-label vcf-form-label" for="contact_email">Email</label>
+                            <input type="email" id="contact_email" class="form-control vcf-form-control" name="email" required<?= $contact_invalid ?> value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label vcf-form-label">Subject</label>
-                            <input type="text" class="form-control vcf-form-control" name="subject" required value="<?= htmlspecialchars($_POST['subject'] ?? '') ?>">
+                            <label class="form-label vcf-form-label" for="contact_subject">Subject</label>
+                            <input type="text" id="contact_subject" class="form-control vcf-form-control" name="subject" required<?= $contact_invalid ?> value="<?= htmlspecialchars($_POST['subject'] ?? '') ?>">
                         </div>
                         <div class="mb-4">
-                            <label class="form-label vcf-form-label">Message</label>
-                            <textarea class="form-control vcf-form-control" name="message" rows="5" required><?= htmlspecialchars($_POST['message'] ?? '') ?></textarea>
+                            <label class="form-label vcf-form-label" for="contact_message">Message</label>
+                            <textarea id="contact_message" class="form-control vcf-form-control" name="message" rows="5" required<?= $contact_invalid ?>><?= htmlspecialchars($_POST['message'] ?? '') ?></textarea>
                         </div>
                         <button type="submit" class="vcf-btn-cta">Send Message</button>
                         <a href="<?= $base ?? '' ?>/index.php" class="btn btn-outline-light ms-2">Back to Home</a>
