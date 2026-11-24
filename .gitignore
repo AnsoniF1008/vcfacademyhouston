@@ -1,45 +1,11 @@
-# Uploaded content (jugador del mes photos)
-assets/uploads/*
-!assets/uploads/.gitkeep
-!assets/uploads/.htaccess
-!assets/uploads/noticias/
-assets/uploads/noticias/*
-!assets/uploads/noticias/.gitkeep
-
-# Page cache (HTML snapshots, regenerated automatically)
-cache/page/*
-!cache/page/.gitkeep
-!cache/page/.htaccess
-# API responses cache (e.g. /api/star-results.php → /cache/api/star_results_<id>.json)
-cache/api/*
-!cache/api/.gitkeep
-!cache/api/.htaccess
-# Circuit breaker state file (managed at runtime by config/database.php)
-cache/db_blocked_until.txt
-!cache/.htaccess
-
-# Export for migration (SQL dumps and build)
-export/
-valencia-website.zip
-
-# Backup from production (Hostinger)
-backup/
-
-# Config con credenciales (no subir a git)
-config/database.local.php
-config/deploy-credentials.php
-config/deploy-ftp.txt
-config/site.php
-
-# Reference/import working folders (not part of the live site)
-_import_*/
-_redesign_*/
-
-# OS
+node_modules/
+.next/
+out/
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+.env
+.env.local
+tsconfig.tsbuildinfo
 .DS_Store
-Thumbs.db
-
-# IDE
-.idea/
-.vscode/
-*.sublime-*
